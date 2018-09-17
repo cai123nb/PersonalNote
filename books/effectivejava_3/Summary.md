@@ -9,4 +9,4 @@
 
 * [Creating and Destroying Objects](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/Creating&Destroying.md)
 
-* [Creating and Destroying Objects](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/MethodsCommonToAllObjects.md)
+* [Methods Common to All Objects](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/MethodsCommonToAllObjects.md)
