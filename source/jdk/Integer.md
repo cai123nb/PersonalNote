@@ -91,8 +91,9 @@ public final class Integer extends Number implements Comparable<Integer> {
 	 * the representation of the magnitude will not be the zero
 	 * character.  The following ASCII characters are used as digits:
 	 *
-	 * 返回的string类型,第一位要么为负号(-), 要么为第一位非0的数字. 
+	 * 返回的string类型,第一位要么为负号(-), 要么为第一位非0的数字(正数). 
 	 *
+	 * 下面为进制中可能使用的字母：
 	 * <blockquote>
 	 *   {@code 0123456789abcdefghijklmnopqrstuvwxyz}
 	 * </blockquote>
@@ -132,7 +133,7 @@ public final class Integer extends Number implements Comparable<Integer> {
 			//使用快速版本,进行转换
 			return toString(i);
 		}
-		//一个数组存储
+		//新建数组进行存储，最长为33字符(二进制的时候, 一位符号)
 		char buf[] = new char[33];
 		boolean negative = (i < 0);
 		int charPos = 32;
@@ -141,7 +142,7 @@ public final class Integer extends Number implements Comparable<Integer> {
 			i = -i;  //i取负值
 		}
 		
-		//相当于i的绝对值要大于radix(|i| > radix)
+		//相当于i的绝对值要大于radix ==> (|i| > radix)
 		while (i <= -radix) {
 			//取最后一位数字,并获取对应的编码
 			buf[charPos--] = digits[-(i % radix)];
@@ -149,7 +150,7 @@ public final class Integer extends Number implements Comparable<Integer> {
 		}
 		//存储第一位数字
 		buf[charPos] = digits[-i];
-
+		//存储符号位
 		if (negative) {
 			buf[--charPos] = '-';
 		}
@@ -454,7 +455,7 @@ public final class Integer extends Number implements Comparable<Integer> {
 			i = -i;
 		}
 
-		// Generate two digits per iteration, 每次处理两位
+		// Generate two digits per iteration, 每次处理两位, 知道小于65536(2^16)
 		while (i >= 65536) {
 			q = i / 100;
 		// really: r = i - (q * 100);
@@ -601,16 +602,16 @@ public final class Integer extends Number implements Comparable<Integer> {
 				// Accumulating negatively avoids surprises near MAX_VALUE
 				// 这里进行累计是使用负数的形式（累加使用减法）
 				
-				//使用Character.digit()来获取对应字符所代表的值
+				//使用Character.digit()来获取对应字符所代表的值(不在范围内范围-1)
 				digit = Character.digit(s.charAt(i++),radix);
-				if (digit < 0) {
+				if (digit < 0) { //该位数必须大于0
 					throw NumberFormatException.forInputString(s);
 				}
-				if (result < multmin) {
+				if (result < multmin) { //该位数不能超过了最大值
 					throw NumberFormatException.forInputString(s);
 				}
-				result *= radix;
-				if (result < limit + digit) {
+				result *= radix; //result累乘
+				if (result < limit + digit) { //判断加上digit之后是否超出了范围
 					throw NumberFormatException.forInputString(s);
 				}
 				result -= digit;
@@ -707,7 +708,7 @@ public final class Integer extends Number implements Comparable<Integer> {
 					NumberFormatException(String.format("Illegal leading minus sign " +
 													   "on unsigned string %s.", s));
 			} else {
-				//如果String s的代表的数字大小不超过有符号的范围，直接调用有符号转换
+				//如果String s的代表的数字大小不超过有符号的范围，直接调用有符号转换(int转换为10进制最多9位)
 				if (len <= 5 || // Integer.MAX_VALUE in Character.MAX_RADIX is 6 digits 36进制有符号最多6位
 					(radix == 10 && len <= 9) ) { // Integer.MAX_VALUE in base 10 is 10 digits 10进制最多9位
 					return parseInt(s, radix);
