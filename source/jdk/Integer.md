@@ -1037,7 +1037,7 @@ public final class Integer extends Number implements Comparable<Integer> {
 	 * {@code null} and is an {@code Integer} object that
 	 * contains the same {@code int} value as this object.
 	 *
-	 * 重载equals方法，比较内部的value值，不比较地址
+	 * 覆盖Object的equals方法，比较内部的value值，不比较地址
 	 *
 	 * @param   obj   the object to compare with.
 	 * @return  {@code true} if the objects are the same;
@@ -1377,11 +1377,13 @@ public final class Integer extends Number implements Comparable<Integer> {
 	 *
 	 * 无符号除法，通过转换为无符号long型进行计算
 	 *
-	 * <p>Note that in two's complement(补充) arithmetic(算术), the three other
+	 * <p>Note that in two's complement(补码) arithmetic(算术), the three other
 	 * basic arithmetic operations of add, subtract, and multiply are
 	 * bit-wise identical if the two operands are regarded as both
 	 * being signed or both being unsigned. Therefore(因此) separate {@code
 	 * addUnsigned}, etc. methods are not provided.
+	 *
+	 * 对于加减乘其余3中计算, 都是按位运算的, 无论是否有符号, 不用重新定义.
 	 *
 	 * @param dividend the value to be divided
 	 * @param divisor the value doing the dividing
@@ -1454,7 +1456,7 @@ public final class Integer extends Number implements Comparable<Integer> {
 		i |= (i >>  4); //填充最高位右边四位为1，这时填充了7位
 		i |= (i >>  8); //填充最高位右边八位为1，这时填充了15位
 		i |= (i >> 16); //填充最高位右边十六位为1，这时填充了31位
-		//减法的时候保证了i最高位后面全为1,减法之后保证i后面全为0
+		//现在保证了保证了i最高位后面全为1,减法之后保证i后面全为0
 		return i - (i >>> 1);
 	}
 
@@ -1563,48 +1565,57 @@ public final class Integer extends Number implements Comparable<Integer> {
 	 * @since 1.5
 	 */
 	 /*
-	 原理解析： 设 i = b31 x 2^31 + b30 x 2^30 + ... + b1 x 2^1 + b0 x 2^0
-		我们最终需要达成的目标是：b31 + b30 + ... + b1 + b0
-		第一步：i = i - ((i >>> 1) & 0x55555555) ===> 提取2位数
-		i >>> 1 = 0 x 2^31 + b31 x 2^30 + b30 x 2^29 + ... + b2 x 2^1 + b1 x 2^0
-		0x55555555: 0101 0101 0101 0101 0101 0101 0101 0101
-		(i >>> 1) & 0x55555555 = b31 x 2^30 + b29 x 2^28 + ...+ b3 x 2^2 + b1 x 2^0
-		i - ((i >>> 1) & 0x55555555) =
-			b31 x 2^31 + (b30 - b31) x 2^30 + b29 x 2^29 + (b28 - b29) x 2^28 + ...
-			+ b3 x 2^3 + (b2 -b3) x 2^2 + b1  x 2^1  + (b0 - b1) x 2^0
-		   = (b31 + b30) x 2^30 + (b29 + b28) x 2^28 + ... + (b3 + b2) x 2^2 + (b1 + b0) x 2^0
-		第二步：i = (i & 0x33333333) + ((i >>> 2) & 0x33333333); ==>提取4位
-		i = (b31 + b30) x 2^30 + (b29 + b28) x 2^28 + ... + (b3 + b2) x 2^2 + (b1 + b0) x 2^0
-		0x33333333 = 0011 0011 0011 0011 0011 0011 0011 0011
-		i & 0x33333333 = (b29 + b28) x 2^28 + (b29 + b28) x 2^24 + ... + (b5 + b4) x 2^4 + (b1 + b0) x 2^0
-		i >>> 2 = (b31 + b30) x 2^28 + (b29 + b28) x 2^26 + ... + (b5 + b4) x 2^2 + (b3 + b2) x 2^0
-		i >>> 2 & 0x33333333 =
-			(b31 + b30) x 2^28 + (b27 + b26) x 2^24 + ... + (b7 + b6) x 2^4 + (b3 + b2) x 2^0
-		相加 = (b31 + b30 + b29 + b28) x 2^28 + ... + (b3 + b2 + b1 + b0) x 2^0
-		第三步：i = (i + (i >>> 4)) & 0x0f0f0f0f =     ===>提取8位
-			(b31 + b30 +...+ b25 + b24) x 2^24 + (b23 + b22 +...+ b17 + b16) x 2^16 +...+(b7 + b6 +...+b0) x 2^0
-		第四步：i = i + (i >>> 8) =          ===>提取16位
-			(b31 + b30 + ... + b24) x 2^24 +...+ (b15 + b14 +...+b0) x 2^0
-		第五步: i = i + (i >>> 16);         ===>提取32位
-			(b31 + b30 + ... + b24) x 2^24 +...+ (b31 + b30 +...+ b1 + b0) x 2^0
-		最后一步：
-		i = i + (i >>> 16); int有32bit最多有32位，取最后5位bit位(2^5)存储的和即可。
-		原理解析2： 以2位为标准,将2bit内存有多少位1存入该bit中,如01需要存储一位,存储成01.11有两位存储为10.我们就可以
-	得到00 = 00 - 00, 01 = 01 - 00/ 10 - 01, 10 = 11 - 01.存储的计算方法为: x = i - (i >>> 1). 但是如果位数不止2位呢,
-	就会出现冲突,如1110,应该存储为1001(前2个2位1,后两个1位1),应该减去0101,我们就不能简单的使用i>>>1,因为前面的移位
-	动作会影响到后面的位数. 移位之后变成0111,之前第三位应该位0的,被上一位抢占了位置.我们可以发现,我们2位中移位之后前面
-	都是补0操作,那我们可以手动把这些占据的位置给重新置为0, 0111 & 0101 = 0101,这里就将第三位被强占的位置重新置为了0.
-	所以在面对多位计算的时候,我们可以将占位符先置为0: & 0101 0101 即 & 0x55555555. 这里的第一步就是计算每两位中有几个1,
-	并存储到本地. 这时候, 存储当前情况应该如下: AABB CCDD EEFF ...., 每两位存储该两位中1的个数. 我们需要计算4位bit中存
-	在几个1,即AA + BB, CC + DD, AABB & 0011 = 00BB,这样可以取到BB的值(同理CCDD & 0011 == DD), (i >>> 2) & 0011 = 00AA,
-	可以取到AA的值(同理BBCC & 0011=CC(BB移动过来了,但是不影响CC的取值)). 即00BB 00DD + 00AA 00CC,这样前4个bit为就可以存储
-	AA + BB的值,即前4个bit位中1个数的值. 所以第二步就是计算每4位bit中1的个数并存储到该位置中.这时候的数据应该如下: 
-	AAAA BBBB CCCC,这时候我们需要计算前8位中的bit值, 这时候我们进行移位即可, AAAA BBBB CCCC DDDD + 0000 AAAA BBBBB CCCC
-	我们可以发现我们需要只是第二部分(BBBB + AAAA)和第四部分(DDDD + CCCC), 所以我们 &0f0f0f0f,去掉中间部分.所以第三步就是
-	存储前8位中1的个数并存储在8位bit中. 这时候的数据应该是: AAAA AAAA BBBB BBBB CCCC CCCC DDDD DDDD,那我们计算同理计算前
-	16位的1的个数:0000 0000 AAAA AAAA BBBB BBBB CCCC CCCC, 相加得到:(A)(A+B)(B+C)(C+D), 这里的第一部分是由信息丢失的,所以
-	第四步是计算前16位的和, 最后一步计算32位,同理移位 可得: (A)(A+B)(A+B+C)(A+B+C+D),同样存在数据丢失,但我们只需要最后一个
-	部分的信息. int有32bit最多有32位，取最后5位bit位(2^5)存储的和即可, 所以&0x3f即可.
+	原理解析： 设 i = b31 x 2^31 + b30 x 2^30 + ... + b1 x 2^1 + b0 x 2^0
+	我们最终需要达成的目标是：b31 + b30 + ... + b1 + b0
+	第一步：i = i - ((i >>> 1) & 0x55555555) ===> 提取2位数
+	i >>> 1 = 0 x 2^31 + b31 x 2^30 + b30 x 2^29 + ... + b2 x 2^1 + b1 x 2^0
+	0x55555555: 0101 0101 0101 0101 0101 0101 0101 0101
+	(i >>> 1) & 0x55555555 = b31 x 2^30 + b29 x 2^28 + ...+ b3 x 2^2 + b1 x 2^0
+	i - ((i >>> 1) & 0x55555555) =
+		b31 x 2^31 + (b30 - b31) x 2^30 + b29 x 2^29 + (b28 - b29) x 2^28 + ...
+		+ b3 x 2^3 + (b2 -b3) x 2^2 + b1  x 2^1  + (b0 - b1) x 2^0
+	   = (b31 + b30) x 2^30 + (b29 + b28) x 2^28 + ... + (b3 + b2) x 2^2 + (b1 + b0) x 2^0
+	第二步：i = (i & 0x33333333) + ((i >>> 2) & 0x33333333); ==>提取4位
+	i = (b31 + b30) x 2^30 + (b29 + b28) x 2^28 + ... + (b3 + b2) x 2^2 + (b1 + b0) x 2^0
+	0x33333333 = 0011 0011 0011 0011 0011 0011 0011 0011
+	i & 0x33333333 = (b29 + b28) x 2^28 + (b29 + b28) x 2^24 + ... + (b5 + b4) x 2^4 + (b1 + b0) x 2^0
+	i >>> 2 = (b31 + b30) x 2^28 + (b29 + b28) x 2^26 + ... + (b5 + b4) x 2^2 + (b3 + b2) x 2^0
+	i >>> 2 & 0x33333333 =
+		(b31 + b30) x 2^28 + (b27 + b26) x 2^24 + ... + (b7 + b6) x 2^4 + (b3 + b2) x 2^0
+	相加 = (b31 + b30 + b29 + b28) x 2^28 + ... + (b3 + b2 + b1 + b0) x 2^0
+	第三步：i = (i + (i >>> 4)) & 0x0f0f0f0f =     ===>提取8位
+		(b31 + b30 +...+ b25 + b24) x 2^24 + (b23 + b22 +...+ b17 + b16) x 2^16 +...+(b7 + b6 +...+b0) x 2^0
+	第四步：i = i + (i >>> 8) =          ===>提取16位
+		(b31 + b30 + ... + b24) x 2^24 +...+ (b15 + b14 +...+b0) x 2^0
+	第五步: i = i + (i >>> 16);         ===>提取32位
+		(b31 + b30 + ... + b24) x 2^24 +...+ (b31 + b30 +...+ b1 + b0) x 2^0
+	最后一步：
+	i = i + (i >>> 16); int有32bit最多有32位，取最后5位bit位(2^5)存储的和即可。
+	
+	原理解析2： 以2位为标准,将2bit内存有多少位1存入该bit中,如01需要存储一位,存储成01.
+	11有两位存储为10.我们就可以 得到00 = 00 - 00, 01 = 01 - 00/ 10 - 01, 10 = 11 - 01.
+	存储的计算方法为: x = i - (i >>> 1). 但是如果位数不止2位呢, 就会出现冲突,如1110,
+	应该存储为1001(前2个2位1,后两个1位1),应该减去0101,我们就不能简单的使用i>>>1,
+	因为前面的移位 动作会影响到后面的位数. 移位之后变成0111,之前第三位应该为0的,
+	被上一位抢占了位置.我们可以发现,我们2位中移位之后前面 都是补0操作,
+	那我们可以手动把这些占据的位置给重新置为0, 0111 & 0101 = 0101,
+	这里就将第三位被强占的位置重新置为了0. 所以在面对多位计算的时候,
+	我们可以将占位符先置为0: & 0101 0101 即 & 0x55555555. 
+	这里的第一步就是计算每两位中有几个1, 并存储到本地. 这时候, 存储当前情况应该如下: 
+	AABB CCDD EEFF ...., 每两位存储该两位中1的个数. 我们需要计算4位bit中存 在几个1,
+	即AA + BB, CC + DD, AABB & 0011 = 00BB,这样可以取到BB的值(同理CCDD & 0011 == DD), 
+	(i >>> 2) & 0011 = 00AA, 可以取到AA的值(同理BBCC & 0011=CC(BB移动过来了,但是不影响CC的取值)). 
+	即00BB 00DD + 00AA 00CC,这样前4个bit为就可以存储 AA + BB的值,即前4个bit位中1个数的值. 
+	所以第二步就是计算每4位bit中1的个数并存储到该位置中.这时候的数据应该如下:  
+	AAAA BBBB CCCC,这时候我们需要计算前8位中的bit值, 这时候我们进行移位即可, AAAA BBBB 
+	CCCC DDDD + 0000 AAAA BBBBB CCCC 我们可以发现我们需要只是第二部分(BBBB + AAAA)和
+	第四部分(DDDD + CCCC), 所以我们 &0f0f0f0f,去掉中间部分.所以第三步就是 
+	存储前8位中1的个数并存储在8位bit中. 这时候的数据应该是: AAAA AAAA BBBB BBBB CCCC 
+	CCCC DDDD DDDD,那我们计算同理计算前 16位的1的个数:0000 0000 AAAA AAAA BBBB BBBB 
+	CCCC CCCC, 相加得到:(A)(A+B)(B+C)(C+D), 这里的第一部分是由信息丢失的,所以 
+	第四步是计算前16位的和, 最后一步计算32位,同理移位可得: (A)(A+B)(A+B+C)(A+B+C+D),
+	同样存在数据丢失,但我们只需要最后一个 部分的信息. int有32bit最多有32位，
+	取最后5位bit位(2^5)存储的和即可, 所以&0x3f即可.
 	 */
 	public static int bitCount(int i) {
 		// HD, Figure 5-2
@@ -1631,8 +1642,8 @@ public final class Integer extends Number implements Comparable<Integer> {
 	 * ignored, even if the distance is negative: {@code rotateLeft(val,
 	 * distance) == rotateLeft(val, distance & 0x1F)}.
 	 *
-	 * 注意移动32位是个空操作,没有影响, 并且推荐 distance & 0x1F , 前面的距离都是32的
-	 * 倍数是个空操作, 只用取后5位bit为代表的距离.
+	 * 注意移动32倍位是个空操作,没有影响, 并且推荐 distance & 0x1F,前面的距离都是32的
+	 * 倍数是个空操作, 只用取后5位bit为代表的距离. 就算是负数也是一样,只取后5位即可.
 	 *
 	 * @param i the value whose bits are to be rotated left
 	 * @param distance the number of bit positions to rotate left
@@ -1642,11 +1653,12 @@ public final class Integer extends Number implements Comparable<Integer> {
 	 * @since 1.5
 	 */
 	public static int rotateLeft(int i, int distance) {
-		//首先向左移动dis的距离,右边空出dis的位数被补0
-		//无符号右移动32 - dis的距离进行, 取或填充0的位置.
-		//注意这里取的距离是负数,Java中对负数移位取后5位值,而Java使用补码存储负数
-		//补码=反码(原码取反)+1, 反码 + 原码 = 1 1111 = 31, 补码加了1操作,即:
-		//补码 + 原码 = 32, 即移动的距离为 32 - dis
+		//首先向左移动dis的距离,右边空出dis的位数被补0. ==> i << distance
+		//无符号右移动32 - dis的距离进行, 取或填充0的位置. ==> i >>> -distance
+		//为什么-distance为32 - dis. 负数移位同样取后5位, 负数为补码(反码+1),
+		//原码(正数) + 补码(负数) = 原码 + 反码 + 1, 由于原码和反码对应位取反
+		//肯定最后结果为1 1111, +1之后为10 0000为32. 负数 = 32 - dis.
+		//如5的原码:0 0101, 补码为: 1 1011(值为27)
 		return (i << distance) | (i >>> -distance);
 	}
 
@@ -1700,10 +1712,10 @@ public final class Integer extends Number implements Comparable<Integer> {
 		i = (i & 0x33333333) << 2 | (i >>> 2) & 0x33333333;
 		//同理，以8位为标准移动位置，DCBA HGFE ==> HGFE DCBA
 		i = (i & 0x0f0f0f0f) << 4 | (i >>> 4) & 0x0f0f0f0f;
-		//i << 24，将最后8位bit启动到最前面
-		//((i & 0xff00) << 8),取倒数第二个8位bit并移动到第二位
-		//((i >>> 8) & 0xff00)取第三个8位bit并移动到第二位, 
-		//(i >>> 24)将第一个8位移动到最后面
+		//i << 24，将最后8位bit启动到最前面(第一位)
+		//((i & 0xff00) << 8),取倒数第三个8位bit并移动到第二位
+		//((i >>> 8) & 0xff00)取第二个8位bit并移动到第三位, 
+		//(i >>> 24)将第一个8位移动到第四位
 		// A B C D (8位为基准) ==> D C B A 
 		i = (i << 24) | ((i & 0xff00) << 8) |
 			((i >>> 8) & 0xff00) | (i >>> 24);
@@ -1715,7 +1727,7 @@ public final class Integer extends Number implements Comparable<Integer> {
 	 * return value is -1 if the specified value is negative; 0 if the
 	 * specified value is zero; and 1 if the specified value is positive.)
 	 *
-	 * 0返回0,正数返回1,负数返回-1
+	 * 传递的值如果为0返回0,正数返回1,负数返回-1
 	 *
 	 * @param i the value whose signum is to be computed
 	 * @return the signum function of the specified {@code int} value.
@@ -1724,6 +1736,7 @@ public final class Integer extends Number implements Comparable<Integer> {
 	public static int signum(int i) {
 		// HD, Section 2-7
 		//0 ==> 0 | 0 = 0; 正数: 0 | 1 = 1 ,负数: -1 | 0 = -1
+		//注意第一个是有符号右移(正数补0,负数补1),第二个为无符号右移(补0)
 		return (i >> 31) | (-i >>> 31);
 	}
 
