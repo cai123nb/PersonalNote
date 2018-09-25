@@ -1,4 +1,4 @@
-# Integer
+# Short
 
 ```java
 package java.lang;

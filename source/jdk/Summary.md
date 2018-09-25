@@ -13,7 +13,15 @@
 
 * [Integer](https://github.com/cai123nb/PersonalNote/blob/master/source/jdk/Integer.md)
 
-* [Void](https://github.com/cai123nb/PersonalNote/blob/master/source/jdk/Void.md)
+* [Byte](https://github.com/cai123nb/PersonalNote/blob/master/source/jdk/Byte.md)
+
+* [Float](https://github.com/cai123nb/PersonalNote/blob/master/source/jdk/Float.md)
+
+* [Double](https://github.com/cai123nb/PersonalNote/blob/master/source/jdk/Double.md)
+
+* [Short](https://github.com/cai123nb/PersonalNote/blob/master/source/jdk/Short.md)
+
+* [Long](https://github.com/cai123nb/PersonalNote/blob/master/source/jdk/Long.md)
 
 ## java.util.
 

@@ -3,7 +3,8 @@
 ## IEEE754简述
 IEEE754: `The IEEE Standard for Floating-Point Arithmetic (IEEE 754) is a technical standard for floating-point computation established in 1985 by the Institute of Electrical and Electronics Engineers (IEEE).`; 其中Java中的float则对应IEEE754中的单精度浮点数, double则对应IEEE754中的双精度浮点数.这里简述一下IEEE754中对浮点数的定义, 详细请查阅该文档或[wikipedia](https://en.wikipedia.org/wiki/IEEE_754).
 
-IEEE754中32位浮点数的格式(也就是单精度浮点数,float)为: 1bit符号 + 8bit阶码 + 23bit尾数. 共32位bit. 
+IEEE754中32位浮点数的格式(也就是单精度浮点数,float)为: `1bit符号 + 8bit阶码 + 23bit尾数`. 共32位bit. 
+
 + 1bit符号: 用1个bit位来存储正负值, 0代表正浮点数, 1表示负浮点数. 
 + 8bit阶码: 用8个bit位来存储阶码, 这里用的是无符号值, 即最大值为255(2^8 - 1). 但是使用`偏移量(biased)`的方式来区分正负, 默认为最大值的一半127(255/2). 即实际的阶码值为: 阶码 - 偏移量(这里为127).
 + 23bit尾数: 用23个bit位来存储尾数, 即有效位数, 注意这里有一个隐藏的尾数1(默认的约定, 用于规范浮点数的表示, 详细看下面的范例), 即实际的尾数值应该为: 1 + 尾数.
@@ -11,6 +12,7 @@ IEEE754中32位浮点数的格式(也就是单精度浮点数,float)为: 1bit符
 值计算方式: (-1)^符号 x (1 + 尾数) x 2^(阶码 - 127).
 
 如2进制的: -0.11, 是如何存储的呢? 
+
 + 首先转换为标准的计算格式: -0.11 = (-1)^1 x (1 + 0.1) x 2^(-1).
 + 符号位肯定是1, 表明这个浮点数是负数. 1位bit表示为1.
 + 阶码位为实际阶码位 + 127 (因为存储的值要减去127进行偏移), 为 -1 + 127 = 126, 8位bit表示为: 01111110.
@@ -18,6 +20,7 @@ IEEE754中32位浮点数的格式(也就是单精度浮点数,float)为: 1bit符
 + 最终存储在内存中数据为(用`,`区分不同的位含义): 1,01111110,10000...(22个0)
 
 那10进制的: 100.25如何存储的呢?
+
 + 首先转换为二进制数为: 1100100.01
 + 转换为标准的计算格式: (-1)^0 x (1 + 0.10010001) x 2^6
 + 符号位为0, 表明这个浮点数是正数. 1位bit表示为0.
@@ -26,12 +29,14 @@ IEEE754中32位浮点数的格式(也就是单精度浮点数,float)为: 1bit符
 + 最终存储在内存中数据为(用`,`区分不同的位含义): 0,10000101,10010001000...(15个0)
 
 特殊的值: 
+
 + 真值0: 阶码位和尾数位都为0, 根据符号位的区分可以分为正真值0和负真值0. 一般阶码的最小值-127(0-127)不用在范围内, 而是用来表示0这一特殊标示.
 + 无穷大: 阶码位全为1, 尾数位全为0, 则视为无穷大, 根据符号位的区分可以分为正无穷大和负无穷大. 所以一般阶码的最大值128(255-127)不用在范围内, 而是用于表示无穷大这个特殊标记.
 + 由于上面两个特殊位的占据, 阶码的范围在从`-(最大值/2 - 1)`到`最大值/2`之间.
 
 
 范围和精度:
+
 + float和double的组成: Float, `1bit符号 +8bit阶码 + 23bit尾数`. Double, `1bit符号 +11bit阶码 + 52bit尾数`.
 + 由于尾数默认为1 + 尾数(尾数全是小数点之后的值), 主要是由阶码进行控制. 阶码最大值代表绝对值的最大的数,阶码的最小值则代表绝对值最小的数. float位: -2^126 - 2^127. double: -2^1022 - 2^1023(注意,这里只是粗略值).
 + 精度则是主要由尾数组成, float: 2^23 = 8388608(共7位), double: 2^52 = 4503599627370496(共16位), 所以float的精度为6-7位, double的精度为15-16位.  
@@ -131,10 +136,11 @@ public final class Float extends Number implements Comparable<Float> {
 	 * hexadecimal floating-point literal {@code 0x0.000002P-126f}
 	 * and also equal to {@code Float.intBitsToFloat(0x1)}.
 	 *
-	 * 绝对最小值(绝对值最小值), 大小等价于: Float.intBitsToFloat(0x1)
+	 * 绝对最小值(绝对值绝对最小值(没有隐藏尾数1)), 大小等价于: Float.intBitsToFloat(0x1)
 	 * 0,00000001,000...1(22个0): 符号位为0, 阶码为最小值-126(1-127),尾数为
-	 * 0x000002(即最后一个小数为0). 值为0x0.000002 x 2^-126. 
+	 * 0x000002(即最后一个小数为1). 值为0x0.000002 x 2^-126. 
 	 * 相当于10进制中的:1.4 x 10^-45.
+	 * 注意这里的格式不是标准的格式(没有隐藏1)。
 	 *
 	 */
 	public static final float MIN_VALUE = 0x0.000002P-126f; // 1.4e-45f
@@ -754,7 +760,7 @@ public final class Float extends Number implements Comparable<Float> {
 	 * Returns a hash code for a {@code float} value; compatible with
 	 * {@code Float.hashCode()}.
 	 * 
-	 * Float哈希码的计算方法
+	 * Float哈希码的计算方法, 转换位对应32bit位的int类型数值.
 	 *
 	 * @param value the value to hash
 	 * @return a hash code value for a {@code float} value.
@@ -815,7 +821,8 @@ public final class Float extends Number implements Comparable<Float> {
 	 * according to the IEEE 754 floating-point "single format" bit
 	 * layout.
 	 *
-	 * 将Float转换为对应32bit的int值. 注意这里进行了范围校验.
+	 * 将Float转换为对应32bit的int值. 注意这里进行了范围校验.如果超出范围
+	 * 统一返回一个相同的NaN值.
 	 *
 	 * <p>Bit 31 (the bit that is selected by the mask
 	 * {@code 0x80000000}) represents the sign of the floating-point
@@ -860,7 +867,7 @@ public final class Float extends Number implements Comparable<Float> {
 	 * according to the IEEE 754 floating-point "single format" bit
 	 * layout, preserving Not-a-Number (NaN) values.
 	 *
-	 * 本地方法, 将float中使用的32bit转换为对应bit位的int值.
+	 * 本地方法, 将float中使用的32bit转换为对应bit位的原生int值.
 	 *
 	 * <p>Bit 31 (the bit that is selected by the mask
 	 * {@code 0x80000000}) represents the sign of the floating-point
@@ -1009,7 +1016,7 @@ public final class Float extends Number implements Comparable<Float> {
 	 *    new Float(f1).compareTo(new Float(f2))
 	 * </pre>
 	 *
-	 * 静态工具类来实现比较两个float值.等0大1小-1.
+	 * 静态工具方法来实现比较两个float值.等0大1小-1.
 	 *
 	 *
 	 * @param   f1        the first {@code float} to compare.
