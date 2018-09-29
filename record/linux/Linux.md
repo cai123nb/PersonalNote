@@ -8,6 +8,8 @@
 `df -h`: 查看磁盘的使用情况
 `echo "" > filename`: 清空filename文件内容
 
+
+
 ## travis CI使用
 准备条件: 在travis ci中进行登录并绑定你需要CI的项目, 根据文档添加.travis.yml文件.
 

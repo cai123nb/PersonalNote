@@ -353,3 +353,304 @@ Object提供了原始的toString方法: 对象的类名 + `@` + 十六进制的�
 
 总而言之, 为你每一个可实例化的对象重写`toString`方法, 除非父类已经重写了合适的格式. 这会让类更加容易使用和调试. 同时toString方法应该返回一个简洁漂亮的String格式.
 
+## Item 13: Override clone judiciously
+`Cloneable`接口被设计成一个简单的声明式接口, 没有任何方法. 只是用来决定Object中的`clone()`方法的可用性. 如果一个对象实现了`Cloneable`接口, 那就说明这个对象支持克隆功能, Object's的`clone()`方法应该返回一个域拷贝的新对象, 否则的话调用该方法则会抛出一个`CloneNotSupportedException`异常.
+
+理论上来说实际上只要一个对象实现了`Cloneable`接口, 那么就应该重写`clone()`方法来提供一个合适public的`clone()`方法. 这个机制是非常脆弱的, 危险的, 超语言的(创建一个对象却不调用对象的构造函数).
+
+`clone()`方法的一般约定为:
+
+```java
+x.clone() != x;							//Must be true, clone object is not the same
+x.clone().getClass() == x.getClass();	//Must be true, class is the same 
+x.clone().equals(x);					//Not absolute require.
+```
+
+一般约定调用clone()方法时, 首先调用super.clone()进行clone(有点类似构造函数). 通过这个约定, 可以保证上述的第二个约定一定可以完成. 当然你可以直接调用构造函数进行直接创建对象, 这样的话可能存在问题: 如果子类调用`super.clone()`方法, 返回的class和当前的克隆对象的class就不相同. 子类就不能满足第二条约定, 除非将`clone()`方法声明为`final`, 这样就不用担心(但是子类就无法重写了). 不推荐使用构造函数, 而是推荐使用`super.clone()`. 另外不可变的类不应该重写这个方法(防止无用拷贝). 这是一个标准的`clone()`函数.
+
+```java
+//Clone method for class with no references to mutable state
+@Override
+public PhoneNumber clone() {
+	try {
+		return (PhoneNumber) super.clone();
+	} catch (CloneNotSupportedException e) {
+		throw new AssertionError();	//Can't happen
+	}
+}
+```
+
+为了让`clone()`函数正确执行, `PhoneNumber`必须实现`Cloneable`接口. 来保证方法调用不会抛出异常. 这里的返回的是PhoneNumber利用了Java的`covariant return types`, 返回的是Object的子类, 是允许的. 并且放在try语句中, 保证如果类没有实现接口的话, 报出异常. 这适用于类里面所有的变量都是原始数据类型或不变的(即final的).
+
+对于那些存在可变变量的对象, 直接调用`super.clone()`将会导致严重的错误:
+
+```java
+public class Stack {
+	private Object[] elements;
+	private int size = 0;
+	private static final int DEFAULT_INITIAL_CAPACITY = 16;
+	
+	public Stack() {
+		this.elements = new Object[DEFAULT_INITIAL_CAPACITY];
+	}
+	
+	public void push(Object e) {
+		ensureCapacity();
+		elements[size++] = e;
+	}
+	
+	public Object pop() {
+		if (size == 0) 
+			throw new EmptyStackException();
+		Object result = elements[--size];
+		elements[size] = null;	//Eliminate obsolete reference
+		return result;
+	}
+	
+	//Ensure space for at least one more element
+	private void ensureCapacity() {
+		if (elements.length == size)
+			elements = Arrays.copyOf(elements, 2 * size + 1);
+	}
+}
+```
+
+如果在Stack类的clone方法中直接返回`super.clone()`方法, 那么返回的对象拥有正确的size值, 但是在`elements`上却是指向同一个数组, 并没有进行拷贝. 修改原数组中对象时, 克隆的数组中也进行了变化. 这破坏了克隆的不变性. 
+
+最简单解决方法就是在`clone()`实现构造函数的功能, 返回一个全新的对象(为可变对象进行克隆). 因为你必须保证克隆出来的对象不会影响原来的对象.
+
+```java
+//Clone method for class with references to mutable state
+@Override
+public Stack clone() {
+	try {
+		Stack result = (Stack) super.clone();
+		result.elements = elements.clone();
+		return result;
+	} catch (CloneNotSupportedException e) {
+		throw new AssertionError();
+	}
+}
+```
+
+注意这里的`result.elements = elements.clone();`, 中数组没有进行类型转换, 因为数组的clone函数会根据实际情况进行返回, 不需要进行转换(数组的拷贝特别适合克隆). 注意这里也可能存在一个问题, 那就是如果将elements设置为final的, 那这个解决方法就不能生效了(因为你无法重新赋值elements).  并且这是设计的Bug(一直存在的): Cloneable与final引用(指向可变对象)不兼容. 除非这个可变对象可以安全的分享给所有克隆对象.
+
+并且有时候单纯对可变成员对象进行clone也不能很好的解决问题. 如当你克隆`HashTable`时, `HashTable`使用`Entry[] buckets`来存储对象, 而`Entry`为一个单链表形式.
+
+```java
+public class HashTable  implements Cloneable {
+	private Entry[] buckets = ...;
+	private static class Entry {
+		final Object key;
+		Object value;
+		Entry next;
+		
+		Entry(Object key, Object value, Entry next) {
+			this.key = key;
+			this.value = value;
+			this.next = next;
+		}
+	}
+	...
+}
+```
+
+当你简单的使用数组的拷贝:
+
+```java
+//Broken clone method - result in shared mutable state!
+@Override
+public HashTable clone() {
+	try {
+		HashTable result = (HashTable) super.clone();
+		result.buckets = buckets.clone();
+		return result;
+	} catch (CloneNotSupportedException e) {
+		throw new AssertionError();
+	}
+}
+```
+
+看起来很完美, buckets变成一个新的buckets存储新的对象列表. 但是内部存在一个问题, 虽然buckets中对象是新的对象. 但是对象内的链表却是指向原来的(即只修改了链表头的对象, 剩余部分并没有修改). 这样就破坏了clone的不变性, 使用的时候可能造成不确定行为.
+
+为了解决这个问题, 那就必须处理内部的所有的链表对象. 其中一个解决方法如下:
+
+```java
+public class HashTable  implements Cloneable {
+	private Entry[] buckets = ...;
+	private static class Entry {
+		final Object key;
+		Object value;
+		Entry next;
+		
+		Entry(Object key, Object value, Entry next) {
+			this.key = key;
+			this.value = value;
+			this.next = next;
+		}
+		
+		Entry deepCopy() {
+			return new Entry(key, value, next == null ? null : next.deepCopy());
+		}
+	}
+	@Override
+	public HashTable clone() {
+		try {
+			HashTable result = (HashTable) super.clone();
+			result.buckets = buckets.clone();
+			for (Entry entry: result.buckets)
+				if (entry != null) 
+					entry = entry.deepCopy();
+			return result;
+		} catch (CloneNotSupportedException e) {
+			throw new AssertionError();
+		}
+	}
+	...
+}
+```
+
+这是一种解决方法, 并且运行时也可以达到我们的要求. 但是这里隐藏一个问题, 那就是deepCopy()方法使用了递归进行完成, 如果链表足够长的话, 就很有可能导致Stack over flow的问题. 因此改进的方法为修改递归为循环.
+
+```java
+Entry deepCopy() {
+	Entry result = new Entry(key, value, next);
+	for (Entry p = result; p.next != null; p = p.next) 
+		p.next = new Entry(p.next.key, p.next.value, p.next.next);
+	return result;
+}
+```
+
+虽然这解决了我们的问题, 但是这个clone方法没有我们预想的跑的那么快, 也破坏了clone方法的简单和优雅的特性.
+
+类似构造函数, clone方法内部不能调用任何可重写的方法. 一旦你这么做了, 如果子类重写了这些方法, 会给clone函数带来不可预知的风险. 另外, 在Object的clone方法中抛出了CloneNotSupportedException, 但是如果你实现Cloneable接口, 并不需要抛出这个异常(因为并不会出现), 可以进行省略来简化使用. 如果要设计一个类用来继承, 那么推荐不实现Cloneable接口, 模仿Object的方法进行抛出异常. 由子类自行决定是否实现clone方法. 因为一旦父类实现了该接口, 那么子类也必须进行维护, 以保证兼容性. 甚至有些限制方法, 禁止子类实现该接口:
+
+```java
+@Override
+protected final Object clone() throws CloneNotSupportedException {
+	throw new CloneNotSupportedException();
+}
+```
+
+另外当你写一个线程安全的类时, 记住让clone方法进行同步, 就像别的方法一样.
+
+总而言之, 所有实现了Cloneable接口的类都应该重写clone方法(以public的形式), 返回的类型为自己本身. 首先调用`super.clone()`, 然后修复需要修复的成员变量(指向可变类型的变量): 对于指向任何可变对象的引用, 对该可变变量进行深拷贝, 然后将引用指向新的拷贝. 一般的做法就是对其可变变量进行克隆, 虽然这不是最好的解决方法. 对于不可变的变量和原始类型数据, 则不需要进行`修复`, 但是也有一些例外, 如serial number或其他unique id, 这些虽然是不变, 仍然需要进行修复.
+
+换句话说, 付出这么多努力来维护clone方法是必须的吗? 答案是否定的, 但是如果父类实现了Cloneable接口, 那当然没有别的选择, 自能进行维护. 否则的话, 还有一些更好的方法来实现`对象拷贝`. 那就是: `copy constructor`和`copy factory`. 传递一个对象, 然后拷贝发返回一个新的对象.
+
+```java
+//Copy constructor
+public Yum(Yum yum) { ... };
+
+//Copy factory
+public static Yum newInstance(Yum yum) { ... };
+```
+
+相比clone方法, 这种方式有很多好处:
+
++ 不依赖特殊的, 充满风险的创建方式(clone不调用构造函数).
++ 不和final域使用冲突.
++ 不会抛出异常
++ 不需要显式转换.
++ 可以更加参数进行自定义返回对象. 正如`conversion constructor`和`conversion factories`. 
+
+使用Cloneable接口时, 需要经常想到这个方法的带来的负面影响. 用于继承的类不推荐实现该接口, final类也不推荐实现该接口. 并且作为对象的拷贝功能, 构造函数和静态工厂类往往更加合适. 最好使用该方法对象, 那一定是数组.
+
+## Item 14: COnsider implementing Comparable
+不像别的方法都是定义在Obect对象内, ‘public int compareTo(T o);‘, compareTo方法是定义在Comparable接口中的一个单独的方法. 这个方法有点类似`equals`方法, 但是作用要更大一点, 提供次序的比较. 一般来说一个对象实现了`Comparable`接口, 意味着这个对象的实例默认拥有次序. 如对于这类对象的数组a, 如果需要进行排序:
+
+```java
+Arrays.sort(a);
+```
+
+如果需要对一个String数组进行去重和排序:
+
+```java
+Set<String> set = new TreeSet<>();
+Collections.addAll(s, args);
+System.out.println(s);
+```
+
+上面这些数组排序和集合排序等操作都是依赖于对象中`compareTO`方法. 而`compareTo`方法的定义如下:
+
+Compares this object with the specified object for order.  Returns a negative integer, zero, or a positive integer as this object is less than, equal to, or greater than the specified object.
+
+在`compareTo`方法中, 使用sgn来处理返回值, 负数返回-1, 正数1, 相等0. 方法的约定为:
+
++ 对于所有的x和y, sign(x.compareTo(y)) == -sign(y.compareTo(x)).
++ 比较需要有传递性: if (x.compareTo(y) > 0 && y.compareTo(z) > 0) then x.compareTo(z) must >0.
++ if (x.compareTo(y) == 0), then ( sign(x.compareTo(z)) == sign(y.compareTo(z)));
++ 强烈要求 if (x.compareTo(y) == 0) then x.equals(y) == true. 如果不满足这个条件, 应该在注释中显示说明这一点. 如`Note: This class has a natural ordering that is inconsistent with equals.`;
+
+`compareTo`方法的限制没有`equals`方法那么复杂, 因为`equals`方法面对的是所有的对象, 而`compareTo`一般用于相同对象之间的比较(即类相同), 一般用于内部比较. 当出现不同的类型进行比较的时候, 往往会抛出异常. 
+
+有点类似`hashCode`函数, 如果不遵守`hashCode`的约定, 就会让很多依赖`hashCode`的方法或者对象就会出错。 如果不遵守`compareTo`方法的约定, 那么很多依赖`compareTo`的方法和对象就会出错. 如排序的集合: TreeMap, TreeSet, 集合工具类Clollections数组工具类Arrays中的排序和搜索功能.
+
+前三个规定有点类似`equals`中的限制: 对称性, 传递性, 自反性. 因此这里也存在同样的限制: 如果想通过继承一个对象来添加新的属性, 而这个对象实现了Comparable接口, 那也会破坏这三条特性(详细查看Item10), 推荐使用组合的形式完成.
+
+最后一条限制, 强烈推荐兼容equals方法, 如果不兼容equals方法, 在一些集合类中容易出现问题. 因为默认的等价判断应该是使用equals方法, 但是有些集合类中使用的是compareTo进行替换, 如果compareTo不兼容equals方法的话, 会导致严重的后果. 如BigDecimal类中compareTo方法就不兼容equals方法, 如果往一个HashSet中添加new BigDecimal("1.0")和new BigDecimal("1.00"), 那么可以成功添加两个不同的对象. 但是如果你使用TreeSet的话, 就会只添加一个对象. 因为二者等价关系的判断是不一样的. 并且这种问题是很难发现的.
+
+在compareTo方法中, 按照顺序比较对象内所有的成员(即递归地调用compareTo方法), 如果有一个成员对象没有实现Comparable接口或者你需要自定义排序的规则, 可以使用Comparator, 自己进行构造一个特殊的比较器进行比较.
+
+```java
+public final class CaseInsensitiveString implements Comparable<CaseInsensitiveString> {
+	public int compareTo(CaseInsensitiveString cis) {
+		return String.CASE_INSENSITIVE_ORDER.compare(s, cis);
+	}
+	... //Remainder omitted
+}
+```
+
+在compareTo方法中比较原始类型数据时, 推荐使用对应装箱类中的工具方法, 如Integer.compare, Float.compare等. 而不是显式的使用`<>`, 可以很好的提高代码的阅读性, 减少犯错机会.
+
+如果一个对象有多个成员变量, 那么比较时候的排序就非常重要了. 一般推荐先从最重要的成员进行比较, 轮流进行比较. 如:
+
+```java
+public int compareTo(PhoneNumber pn) {
+	int result = Short.compare(areaCode, pn.areaCode);
+	if (result == 0) {
+		result = Short.compare(prefix, pn.prefix);
+		if (result == 0)
+			result = Short.compare(lineNum, pn.lineNum);
+	}
+	return result;
+}
+```
+
+在Java8中, Comparator接口被广泛使用. 通过Comparator接口可以很快的构建一个良好的比较器, 虽然会带来一些性能上的损失. 在使用比较器的时候, 推荐预先构建好静态的对象(static), 并让命名简单明了.
+
+```java
+private static final Comparator<PhoneNumber> COMPARATOR = comparingInt((PhoneNumber pn) -> pn.areaCode)
+	.thenComparingInt(pn -> pn.prefix)
+	.thenComparingInt(pn -> pn.lineNum);
+
+public int compareTo(PhoneNumber pn) {
+	return COMPARATOR.compare(this, pn);
+}
+```
+
+注意这里使用了Lambda表达式, 并且后续的传递对象并没有进行类型转换(PhoneNumber), 因为JVM足够聪明可以识别. 需要注意的是, 有些Comparator使用hashCode进行比较:
+
+```java
+static Comparator<Object> hashCodeOrder = new Comparator<>() {
+	public int compare(Object o1, Object o2) {
+		return o1.hashCode() -  o2.hashCode();
+	}
+}
+``` 
+
+这是非常危险的, 因为可能存在Integer的溢出或者浮点数(浮点数存储方式的不同). 正确的方法应该使用Integer.compare方法.
+
+```java
+static Comparator<Object> hashCodeOrder = new Comparator<>() {
+	public int compare(Object o1, Object o2) {
+		return Integer.compare(o1.hashCode(), o2.hashCode());
+	}
+}
+//Simply
+static Comparator<Object> hashCodeOrder = Comparator.comparingInt(o -> o.hashCode());
+```
+
+总而言之, 当你实现一个值类型, 并且有敏感的次序的时候. 推荐实现Compreable接口. 这样在数组或者集合中时可以很容易被排序或者查找. 另外不要显式使用`<>`, 而是使用原始类型封装类的compare方法进行比较或者使用Comparator进行比较.
+
+
