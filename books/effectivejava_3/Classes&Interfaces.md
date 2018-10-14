@@ -312,3 +312,242 @@ class Sub extends Super {
 总而言之, 实现一个用于继承的类是非常复杂的. 必须在所有调用可重写方法的地方进行合理的标注, 并且给出可重写方法的详细描述, 并且进行永久维护. 如果这个类没有被继承的需求, 声明为`final`或者声明所有的构造函数为`private`.
 
 ## Item 20: Prefer interface to abstract classes 
+在Java中提供了两种机制来实现类型声明, 允许不同实现: 接口和抽象类. 随着`default method`的引入, 两种机制都允许内部定义和实现方法. 唯一的区别就是, 抽象类只支持单继承, 如果需要使用抽象类的话, 就只能继承它. 而接口没有这么多限制, 只要遵守对应的限制, 实现要求的方法即可声明实现接口.
+
+在新的类中引入一个新的接口是非常容易的, 只要添加对应的方法实现, 遵守对应的限制, 然后在类定义中声明`implements xxx`即可. 但是如果想让一个现有的类继承一个新的抽象类的话, 一般来说是非常困难的. 大多数的类本身就有父类. 如果两个类需要继承同一个类, 只有将该类当做两个类的父类, 让两个类同时继承. 但是这样会带来一些副作用: 两个类的子类都会默认继承该类, 无论是否需要.
+
+接口对于`混合类型(mixed)`是完美的实现, 混合类型: 即一个类在实现本身需求时, 另外提供一些可选操作. 如`Comparable`接口暗示了这个类的实例可以进行有序的比较. 这种添加可选的功能的接口, 一般称作`混合接口`. 而对于抽象类则非常困难, 因为抽象类只能支持单继承.
+
+另外接口还可以实现多继承, 这在类中是不可能实现的. 如我们定义两个接口: Singer, SongWriter.
+
+```java
+public interface Singer {
+	AudioClip sing(Song s);
+}
+
+public interface SongWriter {
+	Song compose(int chartPosition);
+}
+```
+
+而现实生活中有很多人即是歌手也是写曲人. 这时候可以同时实现两个接口, 或者直接使用一个新的接口同时继承两个接口.
+
+```java
+public interface SingerSongWriter extends Singer, SongWriter {
+	AudioClip strum();
+	void actSensitive();
+}
+```
+
+在这个新的接口中, 还可以添加一些新的方法. 这提供了一种极大的灵活性.
+
+接口还提供了安全的, 有用的功能增强方法: 通过Item 18介绍的组合方法. 而对于抽象类的话, 就只能通过继承来实现. 这种方式是脆弱的, 没有想象中的那么强大.
+
+在Java8中引入了default方法, 给接口带来极大的便利性, 你可以在接口中添加自己想实现的方法来拓展接口的功能, 而那些实现了接口的类无需进行修改. 虽然这种方式带来了很大的便利性, 但是default方法也有一定的限制. 如接口中没办法实现Objects的一些默认方法, 如equals, toString, hashCode方法. 另外接口中所有的对象都是public static, 不可以存储实例对象(都是静态的). 这些要求限制了default方法的范围, 只能在有限的区域内添加.
+
+组合接口的优点和抽象类的优点, 也就产生了一种新的方式来实现类定义: 主干抽象类(Skeletal implementation class). 即声明一个抽象类来实现对应的接口, 由接口实现主要的功能, 然后在抽象类中实现在接口中不能实现的方法. 主干抽象类的命名规范一般为: Abstract + interface name. 如在java集合框架中的: AbstractCollection, AbstractSet, AbstractList, AbstractMap等等. 合适定义主干抽象类, 可以很快的从这个类构建出自定义的类.
+
+```java
+static List<Integer> intArrayAsList(int[] a) {
+	Objects.requireNonNull(a);
+	return new AbstractList<>(){
+		@Override
+		public Integer get(int i){
+			return a[i];
+		}
+		@Override 
+		public Inreger set(int i, Integer val) {
+			int oldVal = a[i];
+			a[i] = val;
+			return oldVal;
+		}
+		@Override
+		public int size() {
+			return a.length;
+		}
+	};
+}
+```
+
+这里使用简单的匿名类就可以构造出想要的对象, 就是借助了AbstractList的便利. 主干抽象类提供了完备的支持, 使用起来也非常简单. 最直接的方法就是继承它, 如果一个类没办继承它的话, 那直接实现该接口即可. 甚至, 实现接口后, 在内部实现一个private的内部类继承自主干抽象类, 接口中定义的方法都可以重定向到内部类来实现. 这种机制也就是俗称的`模拟多继承(simulated multiple inheritance)`. 和组合有点类似, 原理都是相同的. 提供了多继承的优点, 规避了其的缺点.
+
+书写一个主干抽象类也是非常容易的. 首先了解这个接口, 区分那些方法是主要的, 需要类自己实现的, 将将这些方法声明为abstract. 然后对于可实现的方法(包括Objects的一些方法, 如toString, equals等), 添加自己的实现. 另外这个抽象类不像接口, 你可以添加任何你想要添加的实例, 方法来实现想要的功能. 这里以`Map.Entry`接口为例:
+
+```java
+interface Entry<K,V> {
+	K getKey();
+
+	V getValue();
+
+	V setValue(V value);
+
+	boolean equals(Object o);
+
+	int hashCode();
+
+	//... Other is omitted
+}
+```
+
+对应的主干抽象类为:
+
+```java
+public static class SimpleEntry<K,V>
+        implements Entry<K,V>, java.io.Serializable
+{
+	private static final long serialVersionUID = -8499721149061103585L;
+
+	private final K key;
+	private V value;
+
+	/**
+	 * Creates an entry representing a mapping from the specified
+	 * key to the specified value.
+	 *
+	 * @param key the key represented by this entry
+	 * @param value the value represented by this entry
+	 */
+	public SimpleEntry(K key, V value) {
+		this.key   = key;
+		this.value = value;
+	}
+
+	/**
+	 * Creates an entry representing the same mapping as the
+	 * specified entry.
+	 *
+	 * @param entry the entry to copy
+	 */
+	public SimpleEntry(Entry<? extends K, ? extends V> entry) {
+		this.key   = entry.getKey();
+		this.value = entry.getValue();
+	}
+
+	/**
+	 * Returns the key corresponding to this entry.
+	 *
+	 * @return the key corresponding to this entry
+	 */
+	public K getKey() {
+		return key;
+	}
+
+	/**
+	 * Returns the value corresponding to this entry.
+	 *
+	 * @return the value corresponding to this entry
+	 */
+	public V getValue() {
+		return value;
+	}
+
+	/**
+	 * Replaces the value corresponding to this entry with the specified
+	 * value.
+	 *
+	 * @param value new value to be stored in this entry
+	 * @return the old value corresponding to the entry
+	 */
+	public V setValue(V value) {
+		V oldValue = this.value;
+		this.value = value;
+		return oldValue;
+	}
+
+	/**
+	 * Compares the specified object with this entry for equality.
+	 * Returns {@code true} if the given object is also a map entry and
+	 * the two entries represent the same mapping.  More formally, two
+	 * entries {@code e1} and {@code e2} represent the same mapping
+	 * if<pre>
+	 *   (e1.getKey()==null ?
+	 *    e2.getKey()==null :
+	 *    e1.getKey().equals(e2.getKey()))
+	 *   &amp;&amp;
+	 *   (e1.getValue()==null ?
+	 *    e2.getValue()==null :
+	 *    e1.getValue().equals(e2.getValue()))</pre>
+	 * This ensures that the {@code equals} method works properly across
+	 * different implementations of the {@code Map.Entry} interface.
+	 *
+	 * @param o object to be compared for equality with this map entry
+	 * @return {@code true} if the specified object is equal to this map
+	 *         entry
+	 * @see    #hashCode
+	 */
+	public boolean equals(Object o) {
+		if (!(o instanceof Map.Entry))
+			return false;
+		Map.Entry<?,?> e = (Map.Entry<?,?>)o;
+		return eq(key, e.getKey()) && eq(value, e.getValue());
+	}
+
+	/**
+	 * Returns the hash code value for this map entry.  The hash code
+	 * of a map entry {@code e} is defined to be: <pre>
+	 *   (e.getKey()==null   ? 0 : e.getKey().hashCode()) ^
+	 *   (e.getValue()==null ? 0 : e.getValue().hashCode())</pre>
+	 * This ensures that {@code e1.equals(e2)} implies that
+	 * {@code e1.hashCode()==e2.hashCode()} for any two Entries
+	 * {@code e1} and {@code e2}, as required by the general
+	 * contract of {@link Object#hashCode}.
+	 *
+	 * @return the hash code value for this map entry
+	 * @see    #equals
+	 */
+	public int hashCode() {
+		return (key   == null ? 0 :   key.hashCode()) ^
+			   (value == null ? 0 : value.hashCode());
+	}
+
+	/**
+	 * Returns a String representation of this map entry.  This
+	 * implementation returns the string representation of this
+	 * entry's key followed by the equals character ("<tt>=</tt>")
+	 * followed by the string representation of this entry's value.
+	 *
+	 * @return a String representation of this map entry
+	 */
+	public String toString() {
+		return key + "=" + value;
+	}
+}
+```
+
+这里的抽象主干类添加了equals, toString等方法的具体实现, 实现了接口中没办法实现的操作. 另外添加了Serializable接口的支持. 
+
+这里需要注意的是, 抽象主干类是专门用于继承的, 所以需要遵守Item 19的要求, 为所有可重写方法提供良好的注释, 并且在所有调用的地方进行标注. 这里为了页面简单, 就没有详细说明, 这点需要注意.
+
+总而言之, 接口是实现类型定义很好的选择, 支持多继承等等. 当你书写一个接口时, 推荐提供一个对应的主干抽象类来实现对应的功能.
+
+## Item 21: Design interfaces for posterity
+在Java8之前向接口中添加方法是不可接收的, 其它实现了这个接口的类, 会因为缺少对应的方法而出现编译问题. 在Java8之后, 这变得不再是问题, 你可以添加default方法, 默认提供一个实现方法, 并不会影响现有的类. 但是向现有的接口(之前存在的)添加默认方法还是存在一定的风险.
+
+默认方法提供了一个默认的方法实现版本支持, 如果向现有的接口中添加default方法是非常危险的, 这是没有保障的. 默认方法无法保证在任何条件下都可以在已有的代码中正确执行. 并且这个添加是强制的, 没有进过任何使用者的同意. 而在Java8之前, 默认的约定是接口不添加任何方法实现.
+
+在Java8中有大量的默认方法被添加进集合框架中, 其中大部分是用于支持`Lambda`表达式, 其中大部分的代码都是精心设计的, 在一般情况下都可以良好运行. 但是这也没办法保证在任何环境中都可以正确运行. 如集合中的`removeIf`方法:
+
+```java
+//Default method added to the Collection interface in Java8
+default boolean removeIf(Predicate<? super E> filter) {
+	Objects.requireNonNull(filter);
+	boolean result = false;
+	for (Iterator<E> it = iterator(); it.hasNext();) {
+		if (filter.test(it.next())) {
+			it.remove();
+			result = true;
+		}
+	}
+	retirm result;
+}
+```
+
+`removeIf`方法接收一个Predicate类型的参数, 然后递归遍历集合中的所有的对象, 如果满足predicate的判断, 就进行移除. 这个代码看起来是没有问题的, 在大多数情况下都可以正确运行. 但是不幸的是, 在现实生活中还是存在意外: org.apache.commons.collections4. - collection.SynchronizedCollection. 对于`SynchronizedCollection`, 除了提供基本的java.util中类似的功能, 还支持客户端传递对象进行同步操作. 即内部所有的方法都是同步的, 在执行之前, 都需要获取对应对象的锁, 然后委派给内部实现进行操作. 就是一个组合类, 或者称装饰类. 到现在为止, 这个集合被广泛使用但是还没有重写`removeIf`方法. 意味着如果在Java8的环境中, 该集合就会默认实现该方法, 而该方法破坏了该集合的承诺: 任何操作都是同步的. 如果客户端不小心调用了该方法, 那么整个程序就很可能产生`ConcurrentModificationException`或者一些其他不可预料的行为.
+
+为了防止这类事情的发生, 那这些代码的撰写者就必须手动重写这些默认方法, 这就非常依赖代码的维护人员了, 这是非常不可靠的. 你无法确定他们什么时候会进行维护, 以致于现在很多代码还没有实现对应的默认方法. 
+
+另外现在的默认方法存在编译成功,但是运行失败的风险. 虽然不是很常见, 但是还是存在这个风险的. 在Java8发布之后, 很多现有的代码都受到了影响.
+
+因此向现有的接口添加默认方法是非常危险的, 应该尽量避免. 除非这个需求是非常重要的, 无法避免的. 这时候也应该好好考虑下, 添加这个方法, 是否会对现有的实现带来影响. 最好的方法还是创建接口之初, 就实现了这些默认方法, 提供默认的实现版本. 需要注意的是, 默认方法的本质不是用来移除或修改现有的方法, 不应该打破现有的使用. 因此在添加默认方法的时候, 需要非常小心. 最好的测试方法还是书写不同的接口实现类来进行测试, 至少保证三个不同的版本的接口实现类, 最大限度的减少风险. 虽然可以通过后续的发布进行修补问题, 但是你不能指望着它.
+
+## Item 22: User interface only to define types
