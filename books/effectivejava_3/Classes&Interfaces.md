@@ -551,3 +551,214 @@ default boolean removeIf(Predicate<? super E> filter) {
 因此向现有的接口添加默认方法是非常危险的, 应该尽量避免. 除非这个需求是非常重要的, 无法避免的. 这时候也应该好好考虑下, 添加这个方法, 是否会对现有的实现带来影响. 最好的方法还是创建接口之初, 就实现了这些默认方法, 提供默认的实现版本. 需要注意的是, 默认方法的本质不是用来移除或修改现有的方法, 不应该打破现有的使用. 因此在添加默认方法的时候, 需要非常小心. 最好的测试方法还是书写不同的接口实现类来进行测试, 至少保证三个不同的版本的接口实现类, 最大限度的减少风险. 虽然可以通过后续的发布进行修补问题, 但是你不能指望着它.
 
 ## Item 22: User interface only to define types
+接口常常用来定义一种类型或者行为, 经常使用接口来声明一个对象, 具体的实现由具体实现该接口的类进行完成. 这就是接口的设计目的. 并且我们应该避免设计接口来做其他的事. 其中一件经常做的事就是: 常量接口. 即在接口中单纯地声明和存储常量, 如果一个类需要使用到这些常量的话, 就通过实现接口的方式可以简单获取到. 如:
+
+```java
+public interface PhysicalConstants {
+	//Avogaro's number (l/mol)
+	static final double AVOGADROS_NUMBER = 6.022_140_857e23;
+	//Boltzmann constant (J/K)
+	static final double BOLTZMANN_CONSTANT = 1.380_648_52e-23;
+	//Mass of the electron (kg)
+	static final double ELECTRON_MASS = 9.109_383_56e-31;
+}
+```
+
+这是一种非常糟糕的实现, 这不仅会严重的污染了代码, 还容易会让人困惑. 实现这个接口会将接口中所有的常量携带, 并且如果以后随着版本更迭, 如果修改了这个类不再需要接口中的参数, 那么为了兼容性还是需要实现该接口. 并且如果任何一个非final的类实现了该接口, 那么它的所有子类都会默认实现该接口. 这就造成了极大的代码污染. 在Java库中有很多类似的使用, 如`java.io.ObjectStreamConstants`, 这些都是不应该去模仿的.
+
+如果你想要导出静态常量, 这里有一些别的解决方法. 如果这些常量是和类或者接口紧密相关的, 那么你应该直接写在类定义中. 如`Integer`,`Double`中的`MIN_VALUE`和`MAX_VALUE`. 如果这些变量最好以枚举的形式存储, 那么就定义为枚举类型. 否则的话, 可以创建一个不可实例化工具类来存储这些常量即可.
+
+```java
+public class PhysicalConstants {
+	private PhysicalConstants(){};	//Prevent instantiation
+	
+	pulic static final double AVOGADROS_NUMBER = 6.022_140_857e23;
+	//Boltzmann constant (J/K)
+	pulic static final double BOLTZMANN_CONSTANT = 1.380_648_52e-23;
+	//Mass of the electron (kg)
+	pulic static final double ELECTRON_MASS = 9.109_383_56e-31;
+}
+```
+
+注意这里数字采用了下标符进行书写, 这是在Java7后被支持的. 推荐在位数较多的时候, 进行这样的书写, 可以极大的方便阅读. 一般3位一个下标符号. 并且如果需要对一个常量频繁调用的话, 可以使用一个方法进行封装, 减少常量名的书写次数.
+
+```java
+import xxx.PhysicalConstants;
+
+public class Test {
+	double atoms(double mols) {
+		return AVOGADROS_NUMBER * mols;
+	}
+	
+	...//Other is omitted
+}
+```
+
+总而言之, 接口应该只用于定义类型, 不应该用于其他用途.
+
+## Item 23: Prefer class hierarchies to tagged classes.
+偶尔我们会设计一些类用于多个对象, 然后使用tag值来进行区分. 如:
+
+```java
+class Figure {
+	enum Shape {RECTANGLE, CIRCLE};
+	
+	//Tag field
+	final Shape shape;
+	
+	//field for rectangle
+	double length;
+	double width;
+	
+	//field for circle
+	double radius;
+	
+	Figure(double radius) {
+		shape = Shape.CIRCLE;
+		this.radius = radius;
+	}
+	
+	Figure(double length, double width) {
+		shape = Shape.RECTANGLE;
+		this.length = length;
+		this.width = width;
+	}
+	
+	double area(){
+		switch(shape) {
+			case RECTANGLE:
+				return length * width;
+			case CIRCLE:
+				return Math.PI * (radius * radius);
+		}
+	}
+}
+```
+
+这种类也就是常称的标记类(`Tagged class`). 这种类有很多缺点, 如混合了很多重复代码, 如枚举类型, tag field, `switch`语句等. 可读性非常差. 内部的`field`不能声明为final, 除非初始化的时候也将不相干的属性初始化. 内存的利用率也非常的低: 只用到了一部分的属性. 并且修改起来非常容易出错.
+
+幸运的是对于面向对象编程的Java来说, 有一个很好的解决方法, 那就是继承. 标记类可以看做一种劣质的继承实现. 首先需要声明一个抽象类定义抽象方法, 这个方法是依赖tag值进行实现的. 如果上面Figure类只有一个: `area()`. 如果还有其他相同的方法或者共有的属性可以放在该抽象父类中. 然后用不同的子类存储属于自己的独一无二的属性和方法.
+
+```java
+abstract class Figure {
+	abstract double area();
+}
+
+class Circle extends Figure {
+	final double radius;
+	
+	Circle(double radius) { this.radius = radius; }
+	
+	@Override
+	double area() {
+		return Math.PI * (radius * radius);
+	}
+}
+
+class Rectangle extends Figure {
+	final double length;
+	final double width;
+	
+	Rectangle(double length, double width) {
+		this.length = length;
+		this.width = width;
+	}
+	
+		@Override
+	double area() {
+		return length * width;
+	}
+}
+```
+
+这种通过继承的方式消除了标记类所有的缺点. 减少了重复的代码, 避免被无关的属性拖累, 提供了极大的灵活性进行修改(通过继承), 所有的域都是final的(即不变类)等等. 注意这里为了简化篇幅, 没有提供public的域获取方法, 而是通过属性直接获取. 如果需要使用的时候, 推荐使用public accessor方法, 并将属性设为private.
+
+总而言之, 尽量减少标记类的使用, 如果你尝试去写标记类的时候, 考虑一下使用继承, 往往可以提供了一个更好的实现版本.
+
+## Item 24: Favor static member classes over nonstatic
+Java中经常用到内部类, 而内部类的使用就是用于服务外部类. 如果内部类需要在多个外部类中使用, 那推荐将这个类取出来, 声明为外部类使用. 内部类主要分为: 静态成员类(`static member class`), 非静态成员类(`nonstatic member class`), 匿名类(`anonymous class`)和局部类(`local class`). 
+
+静态成员类是最简单的内部类版本, 作为一个普通的类声明在另一个类内部, 拥有外部类的所有成员的访问权限, 即使是private. 对于外部类来说, 和其它静态成员对象有类似的访问权限. 如果声明为private, 那么就只有外部类可以访问到. 常用的用途是作为public helper class, 为外部类提供服务. 如在一个`Calculator`类内部定义一个`Operation`公共静态类, 这样外面的类使用时, 可以使用`Calculator.Operation.PLUS`来访问使用.
+
+非静态成员类和静态成员类非常类似, 语法上唯一的区别就是没有`static`修饰符. 但是本质上却非常不同, 一个非静态成员内部类实例肯定是关联一个外部类实例的. 即如果创建一个外部类, 就会默认携带一个关联的非静态内部类的. 对于每个实例来说是一一对应的. 而静态成员内部类是不会关联具体的外部类实例的. 非静态成员内部类与外部类之间的关联是在内部类实例化的时候就创建了, 后面是不能修改的. 一般是通过外部类实例方法调用内部类的构造函数, 一般是不会通过`enclosingInstance.new MemberClass(args)`来进行构建的. 正如你预期的, 这会来一些空间和时间上的负担.
+
+非静态内部类的使用一般用于`Adapter`类型, 允许给父类提供一些额外的功能或者提供额外的辅助类. 如:
+
+```java
+public class MySet<E> extends AbstractSet<E> {
+	...//other method is omitted
+	
+	@Override
+	public Iterator<E> iterator() {
+		return new MyIterator();
+	}
+	
+	private class MyIterator implements Iterator<E> {
+		...
+	}
+}
+```
+
+如果你定义的内部类不需要访问外部类的成员对象, 那么就应该定义为静态的. 如果定义为了非静态的, 则任何外部类的实例都会默认关联一个内部类的实例, 并且这种类型的内部类很难被垃圾回收, 只要外部类引用存活的话. 
+
+`private static member class`私有的成员内部类一般的用途是作为外部类的组件. 如, Map对象中的Entry类, map中使用entry来存储每一个键值对, 然后存储entry数据. 而Entry类的`getValue,getKey,setValue`等方法是不需要访问外部类map的内部对象的, 所以定义为static, 而且单个entry是没有含义的, 组合成map才有作用. 所以最终, `private static`就变成了最好的选择.
+
+匿名类是没有名字的, 在声明的时候同时实例化. 可以插入在任何块中(如语句,表达式,块代码). 匿名类有非常多的限制, 如只能在声明的时候实例化, 不能使用`instanceof`判断, 不能同时实现多个接口或者继承类的同时实现接口, 代码长度不能太长,否则影响可读性等. 在`Lambda`表达式出来之前, 匿名类常常用来完成一些简单的处理功能. 但是现在`Lambda`表达式往往可以更好的胜任. 现在主要用于静态工厂方法, 如前面的Item20的`intArrayAsList`.
+
+局部类是四种类型中最少被使用的, 和匿名类一样, 只不过有了名字. 可以在任何代码块中插入, 并且可以向普通类一样拥有成员等等. 需要注意的是应该尽量保持简洁, 否则影响可读性.
+
+总而言之, 四种不同的内部类各有特性, 适合不同的场所. 如果一个内部类需要在外部可见, 或者代码过长, 使用成员内部类. 如果成员内部类需要访问外部类的信息, 那就设置为非静态的, 否则就设置为静态的. 如果一个类只用于一个方法内部或者静态工厂方法, 那就使用匿名类. 否则就声明为局部类.
+
+## Item 25: Limit source files to a single top-level class 
+Java编译器是允许在一个.java文件中创建多个顶级类的(将多个类并列声明在一个java文件中). 但是不推荐这样做, 这样存在类重复定义的风险. 
+
+```java 
+//File 1 : Main.java 
+public class Main {
+	public static void main(String[] args) {
+		System.out.println(Utensil.NAME + Deseert.NAME);
+	}
+}
+
+//File 2 : Utensil.java
+//Two classes define in one file. 
+class Utensil {
+	static final String NAME = "pan";
+}
+
+class Dessert {
+	static final String NAME = "cake";
+}
+
+//File 3 : Deseert.java
+//Two classes define in one file. 
+class Utensil {
+	static final String NAME = "pot";
+}
+
+class Dessert {
+	static final String NAME = "pie";
+}
+```
+
+当你运行`javac Main.java`或者`javac Main.java Utensil.java`时是打印出来: `pancake`. 运行`javac Utensil.java Main.java`, 打印出来`pot pie`. 如果运行`javac Main.java Dessert.java`, 这时候就会报重复定义的错误. 编译器会在两个文件中都查找到相同的类定义. 而出现这个问题是取决于你传递的顺序, 这是不可接受的.
+
+如果要在同一个java文件中定义多个类也非常简单, 将一个类设为主类, 其余类设置成静态内部类即可. 
+
+```java
+public class Main {
+	public static void main(String[] args) {
+		System.out.println(Utensil.NAME + Deseert.NAME);
+	}
+	
+	private static class Utensil {
+		static final String NAME = "pan";
+	}
+
+	private static class Dessert {
+		static final String NAME = "cake";
+	}
+}
+```
+
+总而言之, 不要在一个文件中定义多个顶级类, 防止出现重复定义.
