@@ -556,7 +556,7 @@ public static Yum newInstance(Yum yum) { ... };
 
 使用Cloneable接口时, 需要经常想到这个方法的带来的负面影响. 用于继承的类不推荐实现该接口, final类也不推荐实现该接口. 并且作为对象的拷贝功能, 构造函数和静态工厂类往往更加合适. 最好使用该方法对象, 那一定是数组.
 
-## Item 14: COnsider implementing Comparable
+## Item 14: Consider implementing Comparable
 不像别的方法都是定义在Obect对象内, ‘public int compareTo(T o);‘, compareTo方法是定义在Comparable接口中的一个单独的方法. 这个方法有点类似`equals`方法, 但是作用要更大一点, 提供次序的比较. 一般来说一个对象实现了`Comparable`接口, 意味着这个对象的实例默认拥有次序. 如对于这类对象的数组a, 如果需要进行排序:
 
 ```java
