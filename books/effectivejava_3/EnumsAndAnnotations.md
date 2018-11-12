@@ -492,3 +492,285 @@ private static void test(Collection<? extends Operation> opSet, double x, double
 但是通过实现接口来模拟继承, 有一个小小的缺点, 那就是代码有些冗余. 比如前面的`ExtendedOperation`和`BasicOperation`都含有`Symble`的读取和`toString`, 这就造成了冗余. 如果这部分很少的话, 那没问题, 如果这部分非常多的话. 就需要构建静态帮助类来解决问题了.
 
 总而言之, 当你需要实现枚举继承时, 可以通过实现接口的方式模拟继承.
+
+## Item 39: Prefer annotations for naming patterns.
+在Java很多的框架中, 使用`命名模式`是非常常见的. 通过特殊的名称来暗示这个对象或者方法需要特殊的对待. 如在`JUnit`的第四个版本之前, `Junit`需要所有需要进行测试的方法名都要以`test`开头. 这种模式存在着非常多的问题, 首先就是打字错误会导致静默的错误, 如果你将`test`错误的拼写成了`tset`, 那么`Junit`并不会报任何错误, 只是单纯地将该方法略过. 第二就是没有办法保证所有的方法只会在要求的对象中执行, 如果我们将一个类设计成`TestSafetyMechanisms`这时候希望`Junnit`就会默认测试该类中的所有方法. 但是非常不幸的是, 并不会理解这个类, 更不会执行相关的测试. 第三就是命名模式处理相关参数的值. 
+
+自从注解的出现之后, 这些问题都解决了. 这里以开发自己的简单测试框架为例讲述相关的注解的使用. 假设我们想单纯地声明一个注解, 来指定某些方法需要进行测试, 如果抛出异常则失败. 
+
+```java
+import java.lang.annotation.*;
+
+/**
+ * This annotation only use on
+ * parameterless static methods.
+ *
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface Test {
+}
+```
+
+这个注解简单命名为`Test`, 其中`@Retention`和`@Target`时元注解, 使用来修饰注释的注释. 其中第一个的含义为, 该注释在运行时保留. 第二个则是该注释作用于方法. 简单的使用案例为:
+
+```java
+public class Sample {
+    @Test public static void m1() {}    //Test should pass
+    public static void m2() {}
+    @Test public static void m3() { //Test should fail
+        throw new RuntimeException("Boom");
+    }
+    public static void m4() {}
+    @Test public void m5() {}  //INVALID USE: nonstatic method
+    public static void m6() {}
+    @Test public static void m7() {
+        throw new RuntimeException("Crash");
+    }
+    public static void m8();
+}
+```
+
+这里的方法, 按照我们的设计应该有1个通过, 2个失败, 1个不合理. 但是注释并不会对代码有任何作用, 这需要我们进行自定义的处理：
+
+```java
+import java.lang.reflect.*;
+
+public class RunTests {
+    public static void main(String[] args) throw Exception {
+        int tests = 0;
+        int passed = 0;
+        Class<?> testClass = class.forName(args[0]);
+        for (Method m : testClass.getDeclaredMethods()) {
+            if (m.isAnnotationPresent(Test.class)) {
+                tests++;
+                try {
+                    m.invoke(null);
+                    passed++;
+                } catch(InvocationTargetException wrappedExc) {
+                    Throwable exc = wrappedExc.getCause();
+                    System.out.println(m + " failed: " + exc);
+                } catch(Exception exc) {
+                    System.out.printf("Invalid @Test: " + m);
+                }
+            }
+        }
+        System.out.printf("Passed: %d, Failed: %d", passed, tests - passed);
+    }
+}
+```
+
+接下来, 让我们更进一步来让注解只处理制定的异常：
+
+```java
+//Annotation type with a parameter
+import java.lang.annotation.*;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface ExceptionTest {
+    Class<? extends Throwable> value();
+}
+```
+
+注意这里使用有界通配符来匹配参数为`Throwable`. 使用案例为：
+
+```java
+//Program containing annotations with a parameter
+public class Sample2 {
+    @ExceptionTest(ArithmeticException.class)
+    public static void m1() {   // Test should pass
+        int i = 0;
+        i = i / 0;
+    }
+    @ExceptionTest(ArithmeticException.class)
+    public static void m2() {   // Test should fail(wrong exception)
+        int[] a = new int[0];
+        int i = a[1];
+    }
+    @ExceptionTest(ArithmeticException.class)
+    public static void m3(){}   //Should fail (no exception)
+}
+
+
+//Check annotation
+...
+if (m.isAnnotationPresent(ExceptionTest.class)) {
+    tests++;
+    try {
+        m.invoke(null);
+    } catch(InvocationTargetException wrappedExc) {
+        Throwable exc = wrappedExc.getCause();
+        Class<? extends Throwable> excType = m.getAnnotation(ExceptionTest.class).value();
+        if (excType.isInstance(exc)) {
+            passed++;
+        } else {
+            System.out.printf("Test %s failed: expected %s, got %s%n",
+                m, excType.getName(), exc);
+        }
+    } catch(Exception exc) {
+        System.out.println("Invalid @Test: " + m);
+    }
+}
+...
+```
+
+然后让我们在进一步, 如果需要设计一个注解来处理多个不同的异常, 简单的声明为数组即可：
+
+```java
+//Annotation type with a parameter
+import java.lang.annotation.*;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface ExceptionTest {
+    Class<? extends Throwable>[] value();
+}
+
+//Use case
+//Code containing an annotation with an array parameter
+@ExceptionTest({ IndexOutOfBoundsException.class, NullPointerException.class})
+public static void doubleBad() {
+    List<String> list = new ArrayList<>();
+    list.addAll(5, null);
+}
+
+
+//Check annotation
+...
+if (m.isAnnotationPresent(ExceptionTest.class)) {
+    tests++;
+    try {
+        m.invoke(null);
+    } catch(InvocationTargetException wrappedExc) {
+        Throwable exc = wrappedExc.getCause();
+        Class<? extends Throwable>[] excTypes = m.getAnnotation(ExceptionTest.class).value();
+        int oldPassed = passed;
+        for (Class<? extends Exception> excType : excTypes) {
+            if (excType.isInstance(exc)) {
+                passed++;
+                break;
+            } 
+        }
+        if (passed == oldPassed)
+            System.out.printf("Test %s failed: %s %sn", m, exc);
+    } catch(Exception exc) {
+        System.out.println("Invalid @Test: " + m);
+    }
+}
+...
+```
+
+在Java8之后添加了一个新的元注解来进行标明重复的注释`@Repeatable`. 如
+
+```java
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+@Repeatable(ExceptionTestContainer.class)
+public @interface ExceptionTest {
+    Class<? extends Throwable> value();
+}
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface ExceptionTestContainer {
+    ExceptionTest[] value();
+}
+
+
+//Use case
+@ExceptionTest(IndexOutOfBoundException.class)
+@ExceptionTest(NullPointerException.class)
+public static void doublyBad(){...}
+```
+
+通过合成一个容器注解来实现功能重复的效果. 但是这里在检测的时候会存在一个问题, 那就是如果存在重复注释的话调用`isAnnotationPresent`时返回的是容器注解, 但是没有重复的话又是基本的注解. 就需要检查两次. 并且获取的时候需要使用`getAnnotationByType`进行声明获取类型.
+
+```java
+if (m.isAnnotationPresent(ExceptionTest.class) || m.isAnnotationPresent(ExceptionTestContainer.class)) {
+    tests++;
+    try {
+        m.invoke(null);
+    } catch(InvocationTargetException wrappedExc) {
+        Throwable exc = wrappedExc.getCause();
+        Class<? extends Throwable>[] excTypes = m.getAnnotationByType(ExceptionTest.class);
+        int oldPassed = passed;
+        for (Class<? extends Exception> excType : excTypes) {
+            if (excType.isInstance(exc)) {
+                passed++;
+                break;
+            } 
+        }
+        if (passed == oldPassed)
+            System.out.printf("Test %s failed: %s %sn", m, exc);
+    } catch(Exception exc) {
+        System.out.println("Invalid @Test: " + m);
+    }
+}
+```
+
+虽然`@Repeatable`可以获得较好的可读性, 但是会导致一些冗余代码. 这里需要程序员自己衡量是否使用. 虽然这里的测试框架只是一个简单的玩具, 但是为我们介绍了注释的使用. 因此, 尽量不要使用命名模式而是使用注释来替代.
+
+总而言之， 尽量不要使用命名模式而是使用注释来替代.
+
+## Item40: Consistently use the Override annotation.
+合理的使用`@Override`注释可以防止出现很多潜在的问题: 如你不会错误的添加一些新的方法, 保证重写的方法可以被正确识别.如:
+
+```java
+publc class Bigram {
+    private final char first;
+    private final char second;
+
+    public Bigram(char first, char second) {
+        this.first = first;
+        this.second = second;
+    }
+
+    public boolean equals(Bigram b) {
+        return b.first == first && b.second == second;
+    }
+
+    public int hashCode() {
+        return 31 * first + second;
+    }
+
+    public static void main(String[] args) {
+        Set<Bigram> s = new HashSet<>();
+        for (int i = 0; i < 10; i++)
+            for (char ch = 'a'; ch <= 'z'; ch++) 
+                s.add(new Bigram(ch, ch));
+        System.out.println(s.size());
+    }
+}
+```
+
+这里就存在一个严重的问题, 本来预想中的最后的输出为26, 但是答案却是260. 这就是因为`equals()`方法没有被正确执行. 本以为我们的`equals()`方法可以正确重写,但是答案是否定的.
+
+```java
+ @Override
+public boolean equals(Bigram b) {
+    return b.first == first && b.second == second;
+}
+
+//通过添加@Override,编译器会帮我们判断方法是否正确重写,这时候就会出现问题: not override or implement a method from a supertype
+
+@Override
+public boolean equals(Object o) {
+    if (!(o instanceof Bigram))
+        return false;
+    Bigram b = (Bigram) o;
+    return b.frist = first && b.second == second;
+}
+```
+
+总而言之, 为每一个重写的方法添加`Override`注释, 可以为我们带来极大的安全性和便利性.
+
+## Item 41: Use marker interfaces to define types
+`marker interface`即标识接口, 内部没有实现方法, 只是单纯的标识这个类具有某些特殊功能. 如`Serializable`接口可以标识一个可以被正确的被序列化(`ObjectOutputStream`).
+
+这时候你也许会想到`Item 39`所说的, 为什么不使用注释来完成这项功能呢. 其实两者都有各自的优缺点. 其中标识接口最大的好处就是, 标识接口可以被实现, 而注释不可以. 这样可以允许你接受特定接口类型的参数进行编程, 并且在编译期进行类型校验. 第二就是, 标识接口可以更加精确的命中目标. 如: `Set`接口就是一个典型的`restricted marker interface`, 继承自`Collection`接口, 但是并没有添加任何新的方法, 只是对其中某些方法进行了一些特殊的限定. 这就是一个很好的使用案例.
+
+那注释相比下有什么优势呢? 首先注释的对象不仅仅是类和接口, 可以是成员变量, 方法等等. 如果你要标识的对象不仅仅是类和接口(即@Target(ElementType.TYPE)), 这是只能使用注释. 另外如果实在一个大型框架中, 且这个框架重度使用注释, 如`Spring boot`这时可以考虑使用注释.
+
+总而言之, 注释和标识接口各有各的优缺点. 如果只想定义一个类型, 没有任何的内部方法, 这时候可以使用标识接口, 可以带来更好的编码安全和体验. 如果标识的对象不仅仅是类和接口, 或者在一个重度使用注释的框架下, 那就可以考虑使用注释. 但是如果你发现注释的对象是类和接口(@Target(ElementType.METHOD)), 这时候可以好好考虑一下, 是不是标识接口更加合适呢.
+

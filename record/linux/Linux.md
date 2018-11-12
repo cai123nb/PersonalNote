@@ -8,6 +8,14 @@
 `df -h`: 查看磁盘的使用情况
 `echo "" > filename`: 清空filename文件内容
 
+## Nginx配置X-Frame-Options头
+配置X-Frame-Options头可以防止网站被嵌入到别的网站中的Frame中进行劫持攻击. 配置文件: /etc/nginx/conf.d/default.conf
+在Server下配置:
+
+``` 
+//设置只有在相同源地址时才可以进行嵌入
+add_header X-Frame-Options SAMEORIGIN;
+```
 
 
 ## travis CI使用
