@@ -130,3 +130,157 @@ len -> new int[len];
 总而言之, 相比Lambdas, 方法引用往往可以提供更好的简洁性和代码可读性, 推荐使用方法引用, 除非不满足这两个条件时.
 
 ## Item 44: Favor the use of standard functional interfaces.
+自从Java引入Lambdas之后, 我们设计API时就需要合理的考虑Lambdas的作用了. 如之前的`模板方法模式(Template Method Pattern)`: 通过父类抽取和抽象化公共的属性和行为, 然后由子类通过继承的方式来进行重写来完成特定的功能. 这个模式就变得没有那么大的吸引力了: 因为可以接收函数对象来进行封装处理过程, 设置将函数对象设置为内部的成员变量, 通过构造函数或者静态实例函数进行传递. 而具体的实现过程就可以由调用者来制定. 这里需要考虑的是正确的函数式对象的参数和返回值类型.
+
+这里以`LinkedHashMap`为例, 假设我们使用该对象进行缓存操作, 但是缓存需要限制大小, 不能无限的增长. 这里通过调用一个方法进行判断, 如果超出了限制就需要进行移除最早放入的对象.
+
+```java
+protected boolean removeEldestEntry (Map.Entry<k,V> eldest) {
+    return size() > 100;
+} 
+```
+
+这里的实现是可以完成任务的, 但是使用Lambdas可以更好. 可以存储一个对应的函数式对象进行处理特定的需求, 这里需要注意一点的是函数式对象是没办法访问到实例的. 而这个方法是实例方法, 通过调用实例的`size()`方法获取数量然后进行处理. 而函数式对象是不可以获取实例的, 因此需要传递实例对象:
+
+```java 
+//Unnecessary functional interface; use a standard one instead.
+@FunctionalInterface
+interface EldestEntryRemovalFunction<K,V> {
+    boolean remove(Map<K,V) map, Map.Entry<K,V> eldest);
+}
+```
+
+虽然这个接口是可以正确执行, 但是确是多余的. 因为`java.uti.funtion`包中内置非常多的函数式接口可以很完美的解决这个问题. **如果有标准的函数式接口可以很好的完成需求的话,那优先使用该接口而不是自己单独构建一个接口.** 这样可以减少很多冗余代码, 并且可以增强互通性. 正如上面的这个需求, `Predicate`接口就可以很好的完成需求, 之类使用了两个参数, 这里可以使用变种: `BiPredicate<Map<K,V>, Map.Entry<K,V>>`进行替换.
+
+在`java.util.function`中含有43个接口定义, 这里不需要全部都熟读于心, 只需要知道6类基本的类型及其派生类型的变种方式即可. 6大基本类型:
+
++ UnaryOperator: 结果和参数都是相同类型的参数, T apply(T t), String::toLowerCase
+
++ BinaryOperator: 接收两个相同类型参数返回相同类型的对象, T apply(T t1, T t2), BigInteger::add
+
++ Predicate: 接收参数返回boolean类型结果, boolean test(T t), Collection::isEmpty
+
++ Function: 接收参数和返回结果类型不一致, R apply(T t), Arrays::asList
+
++ Supplier: 不接收参数返回对象, T get(), Instant::now
+
++ Consumer: 不返回对象进行消耗参数, void accept(T t), System.out::println
+
+6大基本类型为3个原始数据类型:int, long, double派生出不同参数的接口函数. 如: `DoubleFunction<R>`: 接收double类型的参数返回对象, `DoublePredicate`: 接收double类型参数返回boolean类型, `LongBinaryOperator`: 接收两个long类型的参数返回long类型的结果.
+
+另外对于`Function`接口还有其它变形, `Function<T,R>`中的定义是参数和返回类型始终不一样, 如果相同可以使用`UnaryOperator`进行替代. 如果参数和返回结果都是原始数据类型的话, 就是用`SrcToResult`命名模式(6种): LongToIntegerFunction, DoubleToIntFunction, IntToLongFunction等等. 
+
+第三种情况就是对参数个数的变形, 如接收两个参数的接口: `BiPredicate<T,U>`, `BiFunction<T,U,R>`, `BiConsumer<T,U>`. 其中`BiFunction<T,U,R>`也针对`int`,`long`,`double`返回类型进行了优化派生: `ToIntBiFunction<T,U>`, `ToDoubleBiFunction<T,U>`, `ToLongBiFunction<T,U>`. 其中`BiConsumer<T,U>`对参数中存在`int`,`long`,`double`的接口进行了优化派生: `ObjDoubleConsumer<T>`, `ObjIntConsumer<T>`, `ObjLongConsumer<T>`.
+
+其中有些接口是重复了的, 如`BooleanSupplier`接口接收一个对象返回boolean类型, 但是这个和`Predicate`重复了. 但是是不推荐的, 推荐使用`Predicate`接口函数. 另外使用接口函数式优先使用派生优化的接口, 而不是原生类型, 这样可以减少在装箱之间的消耗. 
+
+这些接口类型可以满足大部分人的需求, 但是如果你发现不满足时: 如需要3个参数的`Predicate`接口, 这时候就需要你自己进行定义了. 当然也有一些特殊情况: 如`Comparator<T>`接口函数, 我们会发现本质和`ToIntBiFunction<T,T>`是一致的. 但是我们还是选择使用`Comparator<T>`, 为什么呢?: 第一, 该接口名称具有很强的文字意义. 第二, 该接口需要满足非常严格的约定. 第三, 已经被广泛使用在底层中了. 如果你发现自定义的接口虽然可以在`java.util.funtion`中有了定义, 但是满足上面的条件, 那么你还是应该单独声明一个接口.
+
+另外在声明函数式接口时, 推荐添加`@FunctionalInterface`注释来表明该接口可以被`Lambdas`使用. 另外在使用函数式对象作为参数的API时, 不要进行重载以接收不同的函数式对象, 这样会造成歧义, 尽量避免这种操作.
+
+总而言之, 使用Lambdas和函数式对象作为输入输出的趋势是不可阻挡的. 如果需要定义函数式接口时, 并且发现可以通过默认的预定义接口完成的话, 那么你需要权衡好自己定义和使用预定义接口之间的优缺点.
+
+## Item 45: Use steams judiciously.
+`streams`的API在Java8中正式引入来消除连续的冗余操作.`stream`中的元素可以来自任何地方: 集合, 数组, 文件, 伪随机生成数等, 可以是有限的, 也可以是无限的. 其中的对象既可以是对象引用, 也可以是原始数据类型: int, long, double.
+
+`stream`的处理过程叫做`pipeline`, 主要分为两种: 中间处理过程`intermediate operation`, 主要是负责对其中的元素进行转换处理或者过滤操作. 终端处理过程`terminal operation`, 主要对其中的元素进行最终的处理过程, 如存储元素到集合, 返回特定的值, 打印所有的值等等. 其中`stream`是懒加载的: 只要`terminal operation`没有创建之前, 之前的中间处理过程是不会执行的. 所以千万不要忘了添加终端处理过程.
+
+`stream`丰富的API可以为我们处理非常多复杂的运算, 但是这并不是意味着你一定要用`stream`. 合理的使用`stream`可以让我们的代码更加简单和清晰, 如果错误的使用, 则会让我们的代码可读性和维护性变得非常的差.
+
+假设我们有这么一个需求, 有一个文件, 内部存储着非常多的单词, 取出其中的单词按照包含的字母进行分类, 统一放入在一起. 最后如果分类中单词的数量大于一定的要求, 就进行输出. 如`staple`单词分类为`aelpst`, `petals`同样分类为`aelpst`. 接下来进行最初的版本(没有使用stream):
+
+```java
+public class Anagrams {
+    public static void main(String[] args) {
+        File dictionary = new File(args[0]);
+        int minGroupSize = Integer.parseInt(args[1]);
+    
+        Map<String, Set<String>> groups = new HashMap<>();
+        try (Scanner s = new Scanner(dictionary)) {
+            while (s.hasNext()) {
+                String word = s.next();
+                groups.computeIfAbsent(alphabetize(word), (unused) -> new TreeSet<>()).add(word);
+            }
+        }
+
+        for(Set<String> group : groups.values())
+            if (group.size() >= minGroupSize)
+                System.out.println(gourp.size() + " : " + group);
+    }
+
+    private static String alphabetize(String s) {
+        char[] a = s.toCharArray();
+        Arrays.sort(a);
+        return new String(a);
+    }
+}
+```
+
+接下来, 我们进行完全的`stream`化处理:
+
+```java 
+public class Anagrams {
+    public static void main(String[] args)  throws IOException {
+        Path dictionary = Paths.get(args[0]);
+        int miniGroupSize = Integer.parseInt(args[1]);
+
+        try (Stream<String> words = Files.lines(dictionary)) {
+            words.collect(
+                    groupingBy(word -> word.chars().sorted()
+                            .collect(StringBuilder::new, (sb, c) -> sb.append((char) c), StringBuilder::append)
+                            .toString()))
+                    .values().stream()
+                    .filter(group -> group.size() >= miniGroupSize)
+                    .map(group -> group.size() + " : " + group)
+                    .forEach(System.out::println);
+        }
+    }
+}
+```
+
+这时候你会发现这段代码非常难以阅读, 即使你熟悉`stream`的API, 对于那些不熟悉的人来说, 更是难以理解. **过度使用steams会让代码变得非常难以阅读**.
+
+幸运的是还有一个中间版本:
+
+```java 
+//Testeful use of streams enhances clarity and conciseness
+public class Anagrams {
+    public static void main(String[] args)  throws IOException {
+        Path dictionary = Paths.get(args[0]);
+        int miniGroupSize = Integer.parseInt(args[1]);
+
+        try (Stream<String> words = Files.lines(dictionary)) {
+            words.collect(groupingBy(word -> alphabetize(word)))
+                    .values().stream()
+                    .filter(group -> group.size() >= miniGroupSize)
+                    .map(group -> group.size() + " : " + group)
+                    .forEach(System.out::println);
+        }
+    }
+    //alphabetize method is the same as in originla version
+}
+```
+
+这段代码的可读性就非常高了, 就算不是很了解stream的人也可以大概理解这段代码. 有许许多多的代码是你不能确定是否使用`stream`可以带来更好的可读性和简洁性. 如: 
+
+```java 
+private static List<Card> newDeck() {
+    List<Card> result = new ArrayList<>();
+    for (Suit suit: Suit.values())
+        for (Rank rank : Rank.values())
+            result.add(new Card(suit, rank));
+}
+
+private static List<Card> newDeck() {
+    return Stream.of(Suit.values())
+        .flatMap(suit -> Stream.of(Rank.values())
+        .map(rank -> new Card(suit, rank)))
+        .collect(toList());
+}
+```
+
+这时候就需要看你的喜好和团队的习惯了, 如果喜欢`stream`的话, 第二个是可以的. 否则就是第一个具有更好的可读性. 当你不知道使用那种合适的话, 最好的方法就是两种都实现, 再去选择更好的一种.
+
+总而言之, 有些任务可以很好的使用streams, 有些则不能, 也有许多任务非常合适使用两者的组合. 这里没有明确的规定一定要使用哪一种, 但是当你不知道该使用那一种时, 你可以一起实现它们, 然后选择最好的一种.
+
+## 46: Prefer side-effect-free functions in streams.

@@ -61,7 +61,7 @@ int totalCalories = menu.stream()
 Stream.reduce 提供了三种类型接口
 
 ```java
-//Firest
+//First
 T reduce(T identity, BinaryOperator<T> accumulator);
 // int sum = numbers.stream().reduce(0,Integer::sum);
 
@@ -124,7 +124,7 @@ Map<Dish.Type,Map<CaloricLevel,List<Dish>>> dishesByTypeCaloricLevel =
 ```
 
 ##### 利用子组进行数据收集
-+由于groupingBy第二种构造函数的第二个参数允许不同的收集器,我们可以通过传入不同的收集器实现不同的功能,如:
+由于groupingBy第二种构造函数的第二个参数允许不同的收集器,我们可以通过传入不同的收集器实现不同的功能,如:
 
 ```java
 Map<Dish,Long> typesCount = menu.stream()
@@ -342,7 +342,7 @@ public interface Collector<T, A, R> {
 
 ```java
 public interface Collector<T, A, R> {
-	Supplier<A> supplier();
+    Supplier<A> supplier();
     BiConsumer<A, T> accumulator();
     BinaryOperator<A> combiner();
     Function<A, R> finisher();
