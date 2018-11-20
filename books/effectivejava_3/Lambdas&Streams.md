@@ -284,3 +284,76 @@ private static List<Card> newDeck() {
 总而言之, 有些任务可以很好的使用streams, 有些则不能, 也有许多任务非常合适使用两者的组合. 这里没有明确的规定一定要使用哪一种, 但是当你不知道该使用那一种时, 你可以一起实现它们, 然后选择最好的一种.
 
 ## 46: Prefer side-effect-free functions in streams.
+如果你是`streams`的新手, 那你需要对此花费一定的时间进行学习. 当你花费了一段时间学习之后, 并且使用之后, 也许你会发现好像没有什么变化. 是的, streams相比于技术, 更多的是一种规范, 一种基于函数式编程的规范, 通过这种规范可以获取良好的代码可读性和表现. 如果最大化`streams`的优点, 那就是最大化函数式编程的本质`函数式编程`: 尽可能使用`pure function`, 即输出的结果只依赖输入, 不依赖任何别的可变的对象. 保证任何时候只要输入相同, 输出也一定相同.
+
+假设需要完成一个需求, 统计一个文章内的单词格数：
+
+ ```java
+ //Uses the streams API but not paradigm -- Don't do this
+ Map<String, Long> freq = new HashMap<>();
+try (Stream<String> words = new Scanner(file).tokens()) {
+    words.forEach(word -> {
+        freq.merge(word.toLowerCase(), 1L, Long::sum)
+    });
+}
+ ```
+
+ 这段代码虽然可以正确执行, 但却是感觉有股坏味道`bad smell`. 为什么, 因为这里的forEach函数使用了Lambdas进行处理, 但是处理的过程却不是纯函数的, 依赖于外部的freq. 只是一个伪装的streams编程. 那么正确的编程为:
+
+ ```java
+ Map<String, Long> freq;
+ try (Stream<String> words = new Scanner(file).tokens()) {
+     freq = words
+        .collect(groupingBy(String::toLowerCase, counting()));
+}
+ ```
+
+这段代码和前面的代码完成一样的事, 但是更加简洁, 可读性也更好. 这里放弃了`forEach`方法, 而是使用了新的`collect`方法. 为什么放弃`forEach`方法, 因为作为一个终端操作, `forEach`对`streams`并不友好, 且不支持并行化. 因此**forEach一般只用来输出数组中的元素**. 
+
+这里使用了`collect`方法, 这是一个新的技术, 需要我们传递一个`Collector`对象。 而该对象主要定义在`java.util.stream.Collectors`中. 这里简单的介绍一下, 该类较为复杂, 总共包含39个方法, 其中甚至包含5个参数. 但是该类并没有这么复杂, 其中大部分都可以由基简单的方法进行派生.
+
+首先一类的方法主要的操作是收集`steams`中所有的元素然后将其放入集合中：toList(), toSet(), toCollection(collectionFactory). 就是简单的将元素放入到集合中或者指定类型的集合中. 如：选取频率最频繁的10个单词进行存储.
+
+```java
+List<String> topTen = freq.keySet().stream()
+    .sorted(comparing(freq::get).reversed())
+    .limit(10)
+    .collect(toList());
+```
+
+那其余36的方法是什么呢? 主要是封装将stream中的元素转换为map对象： `toMap()`. 要转换为map对象肯定要包含`key`,`value`. 最简单的版本就是`toMap(keyMapper, valueMapper)`, 参数为两个function类型函数, 分别将元素转换为key和value. 但是这个版本有个问题: 如果转换元素的时候, 出现重复的key, 那就会出现问题. 就有了第二个版本, 传递一个merge对象处理碰撞. 第三个版本则是接收第四个参数Supplier, 传递一个指定的Map类型对象实例进行自定义.
+
+```java
+//First version
+private static final Map<String, Operation> stringToEnum = 
+    Stream.of(values()).collect(toMap(Object::toString, e -> e));
+
+//Second version
+Map<Artist, Album> topHits = albums.collect(
+    toMap(Album::artist, a -> a, maxBy(comparing(Album::sales)))
+);
+
+//Third version
+toMap(keyMapper, valueMapper, (v1, v2) -> v2, TreeMap::new);
+```
+
+除了`toMap()`方法, 这里还支持通过`groupingBy`方法进行转换`map`对象：通过传递的分类方法function对streams中的元素进行分类, 相同类型的元素放在集合中. 最简单的版本只要传递一个分类的function：按照分类将不同的元素放到list中. 第二个版本则是需要传递第二个参数Collector对象, 对分类流中的元素再次进行处理: 如第一个版本的就是默认的toList(), 还可以进行count()计数, mapping()进行映射处理等. 第三个版本则是传递一个suppler容器将指定的分类中的对象存储到容器中. 另外还提供了`groupingByConcurrent`方法将元素放入到`ConcurrentHashMap`中.
+
+```java
+//First version
+words.collect(groupingBy(world -> alphabetize(word)));
+
+//Second version
+Map<String, Long> freq = words
+    .collect(groupingBy(String::toLowerCase, counting()));
+
+//Third version
+Map<City, Set<String>> namesByCity = people.stream()
+    .collect(groupingBy(Person::getCity, TreeMap::new, mapping(Person::getLastName, toSet())));
+```
+
+上面第二个版本使用了`counting()`函数来进行计数, 此外Collectors还提供了很多别的辅助方法如: `summing, averaging, maxBy, minBy`等都可以使用. 最后需要注意的一个方法是`joining`方法, 来处理字符串类型元素, 将所有元素进行组合, 可以手动传递分隔符和前后缀, 如`[came, saw, conquered]`.
+
+总而言之, 尽量使用纯函数来处理stream中的流对象, 可以很好的使用Collectors来完成我们的需求.
+
+## 47: Prefer Collection to Stream as return type.
