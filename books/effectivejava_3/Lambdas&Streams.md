@@ -354,6 +354,110 @@ Map<City, Set<String>> namesByCity = people.stream()
 
 上面第二个版本使用了`counting()`函数来进行计数, 此外Collectors还提供了很多别的辅助方法如: `summing, averaging, maxBy, minBy`等都可以使用. 最后需要注意的一个方法是`joining`方法, 来处理字符串类型元素, 将所有元素进行组合, 可以手动传递分隔符和前后缀, 如`[came, saw, conquered]`.
 
-总而言之, 尽量使用纯函数来处理stream中的流对象, 可以很好的使用Collectors来完成我们的需求.
+总而言之, 尽量使用纯函数来处理stream中的流对象, 合理地使用Collectors可以带来很好的便利性.
 
 ## 47: Prefer Collection to Stream as return type.
+许多方法返回的对象是一系列的对象. 在Java8之前返回的对象有: 集合(Collection: Set, List, Map), Iterable, 数组. 一般默认的返回是集合. 如果返回的对象流只是单纯地需要遍历, 并不需要支持集合地一些操作, 那么使用Iterable也可以. 如果对性能有严格地要求并且是原始类型数据, 那么返回数组将是最好地选择. Java8之后, 添加了Stream对象, 那相比之前地对象, Stream有什么优缺点吗?
+
+如果一个方法返回的是stream类型对象, 这时候如果你需要对这系列对象进行遍历, 这时候你会发现非常的困惑. 为什么? Stream接口并没有继承Iterable接口. 但是却有着和Iterable接口相同的方法: iterator(). 但是如果想要直接使用进行遍历的话, 却要花费一点功夫.
+
+```java
+for (ProcessHandle ph : ProcessHandle.allProcesses()::iterator) {
+    //Do something to ph
+}
+//Error won't compiler due to limitations on Java'type inference
+
+for (ProcessHandle ph : (Iterable<ProcessHandle>)ProcessHandle.allProcesses()::iterator) {
+    //Do something to ph
+}
+//Will work but too noisy and opaque to use in practice
+
+
+for (ProcessHandle ph : iterableOf(ProcessHandle.allProcesses())) {
+    //Do something to ph
+}
+
+public static <E> Iterable<E> iterableOf(Stream<E> stram) {
+    return stream::iterator;
+}
+//Look good
+```
+
+这里借助了一个辅助方法, 来将stream转化为Iterable. 如果需要使用stream, 而方法只返回Iterable对象, 怎么办呢? 同样的这里需要进行转换.
+
+```java
+//Adapter from Iterable<E> to Stream<E>
+public static <E> Stream<E> streamOf(Iterable<E> iterable) {
+    return StreamSupport.stream(iterable.spliterator(), false);
+}
+```
+
+又这里可见, 如果知道代码的使用者要使用那个类型的对象(Stream还是Iterable), 直接进行返回即可. 但是如果不清楚的话, 那么用户就需要自己进行手动转换, 会带来额外的复杂度. 这时候就可以考虑使用Collection, Collection是Iterable的子类, 并且拥有stream()方法, 同时支持遍历和Stream. 因此**Collection是公共方法返回序列对象最好的实现**. 如果这些对象不多, 可以直接新建实例存储返回(TreeSet,HashSet), 但是如果数量特别大, 就不太适合了.  这时候推荐使用自定义的集合类型(通过AbstractList).
+
+如计算一个集合的子集: {A, B, C}的子集为: {},{A},{B},{C},{A, B},{A, C},{B,C},{A,B,C}.对于N个元素的集合, 拥有2^N个子集, 这是指数集合的, 如果将一个不小的集合的所有子集放入内存中, 内存将会爆满. 这时候可以使用自定义的集合类来存储, 使用一个n个bit集合来存储所有的子集, 如果该bit的值来表示该位置的元素是否存在.
+
+```java
+public class PowerSet {
+    public static final <E> Collection<Set<E>> of(Set<E> s) {
+        List<E> src = new ArrayList<>(s);
+        if (src.size() > 30)
+            throw new IllegalArgumentException("Set too big: " + s);
+        return new AbstractList<Set<E>>() {
+            @Override public int size() {
+                return 1 << src.size();
+            }
+            @Override public boolean contains(Object o) {
+                return o instanceof Set && src.containsAll((Set)o);
+            }
+            @Override public Set<E> get(int index) {
+                Set<E> result = new HashSet<>();
+                for (int i = 0; index != 0; i++, index >>= 1)
+                    if ((index & 1) == 1)
+                        result.add(src.get(i));
+                return result;
+            }
+        };
+    }
+}
+```
+
+当然这也可以通过Stream实现, 求一个集合的所有子集, 可以从俩个个角度进行求解, 如{A, B, C}的前缀为: {A}, {A, B}, {A, B, C}. 后缀为: {A, B, C}, {B, C}, {C}. 那所有的子集为: 所有后缀的前缀. 
+
+```java
+//Returns a stream of all the sublists of its input list
+public class SubLists {
+    public static <E> Stream<List<E>> of(List<E> first) {
+        return Stream.concat(Stream.of(Collections.emptyList()), prefixes(list).flatMap(SubLists::suffixes));
+    }
+
+    private static <E> Stream<List<E>> prefixes (List<E> list) {
+        return IntStream.rangeClosed(1, list.size())
+            .mapToObj(end -> list.subList(0, end));
+    }
+
+    private static <E> Stream<List<E>> suffixes(List<E> list) {
+        return IntStream.range(0, list.size())
+            .mapToObj(start -> list.sublist(start, list.size()));
+    }
+}
+```
+
+另外Stream还能直接用来替换for-loop：
+
+```java
+for (int start = 0; start < src.size(); start++)
+    for (int end = start + 1; end < src.size(); end++)
+        System.out.println(src.subList(start, end));
+
+public static <E> Stream<List<E>> of(List<E> list) {
+    return IntStream.range(0, list.size())
+        .mapToObj(start -> 
+            IntStream.rangeClosed(start + 1, list.size())
+            .mapToObj(end -> list.subList(start, end)))
+        .flatMap(x -> x);
+}
+```
+
+总而言之, 当你需要返回一系列的元素时, 需要考虑用户可能需要遍历, 也要考虑到Stream的需求. 因此最简单的方法就是直接返回集合类型. 如果元素的数量不是很多, 可以直接使用集合实例(如ArrayList)封装返回. 否则的话, 需要自定义集合进行返回. 如果返回集合不行的话, 那就可以使用Stream或者Iterable进行返回. 在未来的Java版本, 如果Stream实现了Iterable, 那就可以优先考虑返回Stream了.
+
+## Item 48: Use caution when making streams parallel.
