@@ -461,3 +461,51 @@ public static <E> Stream<List<E>> of(List<E> list) {
 总而言之, 当你需要返回一系列的元素时, 需要考虑用户可能需要遍历, 也要考虑到Stream的需求. 因此最简单的方法就是直接返回集合类型. 如果元素的数量不是很多, 可以直接使用集合实例(如ArrayList)封装返回. 否则的话, 需要自定义集合进行返回. 如果返回集合不行的话, 那就可以使用Stream或者Iterable进行返回. 在未来的Java版本, 如果Stream实现了Iterable, 那就可以优先考虑返回Stream了.
 
 ## Item 48: Use caution when making streams parallel.
+在所有主流的编程语言中, 对于并发编程, Java一直是走在前面的. 在1996年发布时, 就提供并发支持: synchronization, wait/notify. 在JDK5中引入了`java.util.concurrent`包进行支持. Java7中引入了`fork-join`框架, 高性能的并发框架. Java8中引入了Stream也是支持并发的`parallel()`. 虽然并发编程越来越容易, 但是要写好并发程序却是一点也没有变容易. 这里看下之前的Item 45的代码:
+
+```java
+//Steam-based program to generate the first 20 Mersenne primes
+public static void main(String[] args) {
+    primes().map(p -> TWO.pow(p.intValueExact()).subtract(ONE))
+    .filter(mersenne -> mersene.isProbablePrime(50))
+    .limit(20)
+    forEach(System.out::println);
+}
+
+static Stream<BigInteger> primes() {
+    return Stream.iterate(TWO, BigInteger::nextProbablePrime);
+}
+```
+
+这段代码可以直接运行, 输出前20个质数. 偶尔, 这时我添加上并行化处理`parallel()`, 进行运算, 这时候会带来任何好的收益吗? 结果并没有, 程序卡住在哪里. 这是为什么? 因为数据的来源依赖`iterate`, 后一个值是依赖前面的值进行获取的, 也就是说每个并行线程中要获取下一个值就必须计算保留前一个值, 就相当于对每一个质数都计算了至少2次. 例外, 这里还限制了输出为20个, 对于多线程就必须控制线程之间的输出. 这里可以明显地知道: **并行化对于数据来源为iterate或者限制数据输出(中间操作包含limit)的stream不太可能带来性能上的优势**.
+
+作为一般的准则, 并行化一般适用于数据来源为ArrayList, HashMap, HashSet, ConcurrentHashMap, 数组和int range, long range. 这些数据来源非常容易切分成不同的小块, 分配给不同的的线程进行分布式执行. 这些切分操作主要事依赖`spliterator`进行完成. 另外一个原因就是这些数据结构拥有良好的引用定位功能, 内部的元素的引用都是在一起的, 减少了定位引用的时间. 其中效果最好就是数组了.
+
+同样的stream的终端操作同样会影响并行化的性能. 如一个数量很大的流, 对于内部的每一个元素, 计算时都需要和之前计算过的元素进行比较, 这就会非常影响性能. 最好的终端操作就是`reuction`, 每次都可以分布式的计算, 并且汇总到一个对象中. 如: `max`, `min`, `count`, `sum`, `anyMatch`, `allMatch`, `noneMatch`等, 就非常适合并行化处理.
+
+并行化是一个非常严格的性能优化, 内部使用`fork-join`, 一个不规范的流操作都可能导致严重的性能损耗. 因此在使用时, 一定要经过严格地测试, 最好是在实际环境中进行测试, 保证性能达到想要的要求. 
+
+虽然并行化用起来非常困难, 也不是说一定要严格避免使用它. 只要在合适的环境下使用, 甚至可以给程序带来线性级别的优化, 而你需要的只是添加一个`parallel()`语句.
+
+```java
+//Take about 31 seconds in computer pi(10^8)
+static long pi(long n) {
+    return LongStream.rangeClosed(2, n)
+        .mapToObj(BigInteger::valueOf)
+        .filter(i -> i.isProbablePrime(50))
+        .count();
+}
+
+//Take about 9.2 seconds in the same compute
+static long pi(long n) {
+    return LongStream.rangeClosed(2, n)
+        .parallel()
+        .mapToObj(BigInteger::valueOf)
+        .filter(i -> i.isProbablePrime(50))
+        .count();
+}
+```
+
+当你需要在流中使用随机值时, 可以使用`SplittableRandom`而不是`ThreadLocalRandom`. 前者专门为流设计, 拥有差不多线性的加速. 后者是为单线程设计的, 并行时会因为争抢所有权而极大降低性能.
+
+总而言之, 不要随便并行化处理流, 可能导致严重的性能问题或者更严重的效果. 如果你确定要使用的化, 一定要进行严格的测试, 当代码正确运行并且在真实的环境中可以达到你要的性能, 这时才可以放心的部署到生产环境中.
