@@ -264,3 +264,7 @@ public class Test {
 Android MVP: https://juejin.im/post/5bf787d5e51d450c487d06dd.
 
 程序员小说: https://juejin.im/post/5be15a20f265da614c4c4487.
+
+MySQL: https://time.geekbang.org/column/intro/139?utm_term=zeusR9AYC&utm_source=website&utm_medium=infoq&utm_campaign=139-presell
+
+分布式： https://www.infoq.cn/article/pdCpOo*AcZ0xuI3LP45a
