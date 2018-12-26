@@ -117,3 +117,255 @@ public Date end() {
 同样的, 当需要给外部暴露内部的对象引用时, 需要考虑一下, 如果内部引用是可变的, 那么可以接受外部进行修改内部的值吗? 如果不行, 也可以进行拷贝操作. 当然也有一些特殊情况, 如果你相信外部的调用一定不会修改内部的值, 那么你可以不进行拷贝. 如外部的调用只允许在同一个包内, 并且该包是你自己负责撰写. 但是也是需要在文档中声明清楚的.
 
 总而言之, 如果一个不变类需要获取外部的引用或者暴露内部的引用, 必须进行拷贝操作. 如果代价过于高或者可以保证调用的安全性, 那就需要在文档中进行显式的说明. 
+
+## Item 51: Design method signatures carefully.
+本节主要关注于如何设计你的API, 让它可读性更好并且减少出错的机会.
+
+首先给方法一个良好的名字是非常重要的. 首先, 名字一定要易读且符合包内别的方法一贯的风格, 避免使用特别长的名称.
+
+第二, 不要过分的提供辅助方法. 不要为了便利性, 提供非常多的辅助方法. 特别是对于接口, 那对于接口的实现者将会是灾难. 除非这个ss辅助方法经常使用, 否则的话就不要单独列出来.
+
+第三, 避免过长的参数列表, 最好不要超过4个. 过长的参数列表不仅会让用户难以理解, 还特别容易出错: 如果不小心修改了顺序并且程序没有报错, 那么结果将不会按照你的意愿执行.
+
+这里有三个方法进行缩短参数列表, 第一个就是通过分解方法, 如果方法的参数过长, 可以将方法分解成不同的子方法, 每个方法接受一部分的参数. 但是这个也有一个缺点就是会导致方法的琐碎. 当然也可以通过方法的正交来减少繁琐的方法, 即有些方法的功能是类似的话, 可以省略掉. 如: `List`接口没有提供获取第一个或者最后一个的方法, 因为这两个可以通过`indexOf`替换掉.第二个方法就是构建辅助类, 如果发现一系列的参数经常出现, 那可以进行封装成一个类. 然后接收的时候只需要接收一个类接口. 第三个方法就是结合前面两者, 通过`item 2`的`Builder`模式来进行参数传递.
+
+第四, 对于参数类型, 偏好接口而不是类. 定义接口而不是类, 可以给使用者更大的灵活性.
+
+第五, 对于两个元素的类型参数, 偏好枚举而不是`boolean`类型. 枚举类型可以带来更好的可读性和拓展性. 如温度的计量方式: `public enum TemperatureScale {FAHRENHEIT, CELSIUS}`, 后续拓展的就非常方便, 并且可读性比较好: `Thermometer.newInstance(TemperatureScale.CELSIUS)` > `hermometer.newInstance(true)`.
+
+## Item 52: Use overloading judiciously.
+我们先看一下重载的简单使用:
+
+```java
+public class CollectionClassifier {
+    public static String classify(Set<?> s) {
+        return "Set";
+    }
+
+    public static String classify(List<?> s) {
+        return "List";
+    }
+
+    public static String classify(Collection<?> c) {
+        return "Unknown Collection";
+    }
+
+    public static void main(String[] args) {
+        Collection<?> collections = {
+            new HashSet<String>(),
+            new ArrayList<Integer>(),
+            new HashMap<String, String>().values()
+        };
+
+        for (Collection<?> c : collections) {
+            System.out.println(classify(c));
+        }
+    }
+}
+```
+
+我们期待的输出是: `Set, List, Unknown Collection`. 但是结果却是输出`Unknown Collection`三次. 为什么? 因为重载是静态的, 是在编译期确定的. 与之相反的是重写, 重写是动态的, 是在运行期确定的.
+
+```java
+class Wine {
+    String name() { return "wine"; }
+}
+
+class SparklingWine extends Wine {
+    @Override
+    String name() { return "sparkling wine"; }
+}
+
+class Champagne extends Wine {
+    @Override
+    String name() { return "champagne"; }
+}
+
+public class Overriding {
+    public static void main(String[] args) {
+        List<Wine> wineList = List.of(new Wine(), new SparklingWine(), new Champagne());
+        for (Wine wine : wineList) {
+            System.out.println(wine.name);
+        }
+    }
+}
+```
+
+这个代码是可以正确运行的. 那么修复的方法是什么样的呢: 
+
+```java 
+public static String classify(Collection<?> c) {
+    return c instanceof Set ? "Set" : c instanceof List ? : "List" : "Unknown Collection";
+}
+```
+
+这里可以看出不合理的使用重载非常容易出错, 并且出现问题之后, 程序并不会报错, 只是执行不正确的方法代码, 因此尽量避免使用不合理的重载. 一般来说合理的重载就是要保证参数的数量不同. 这看起来有点严格, 但是, 更多的时候我们仅仅只需要改下方法名, 并不需要使用重载. 如`ObjectOutputStream`中输出函数, 对于不同的对象使用不同的方法名: `writeLong(), writeBoolean, writeInt`等. 
+
+对于构造函数来说, 就没有办法取不同的方法名. 但是还是可以使用别的方法的, 如静态构造函数而不是构造函数. 如果非要使用函数的方法时, 即方法名相同时, 那就尽量保证参数个数不同. 否则的话, 就需要保证参数顺序具有巨大的区别: 保证相邻参数不能合法的进行转换(`cast`).
+
+在JDK5之前, 原始类型和对象引用是非常不同的. 但是对于JDK5之后, 随着自动装箱和泛型的加入, 就非常容易困惑相关的操作. 如:`List.remove(int)和List.remove(Object), List.remove(E)和List.remove(int)`等. 并且在Java8之后, 引入到了Lambdas表达式和方法引用, 更加容易困惑.
+
+```java
+for (int i = 0; i < 3; i++) {
+    set.remove(i);
+    list.remove(Integer(i));
+}
+
+new Thread(System.out::println).start();    //compiles
+exec.submit(System.out::println);           //Not comiles
+```
+
+为什么会出现这个问题呢? submit方法还重载了一个`Callable<T>`的方法, 这和`Runnable<T>`是类似的, 编译器无法判断是哪个. 因此, 如果一个方法接收的参数**是不同的函数式接口引用, 那么就不要进行重载**.
+
+总而言之, 不要轻易的使用重载, 最好的就是使用不同的方法名. 非要使用的话, 最好保证参数的数量不同. 如果不能满足这个条件, 那么就需要保证相邻参数不会随意地转化: 即任意一组参数不能被传递给多个重载函数. 否则的话, 你就需要进行重构了.
+
+## Item 53: Use varargs judiciously.
+可变参数是一种语法糖, 用于接收和处理可变的参数类型. 本质上就是初始化一个数组进行存储. 如:
+
+```java 
+static int sum(int... args) {
+    int sum = 0;
+    for (int arg : args) {
+        sum += arg;
+    }
+    return sum;
+}
+```
+
+有时候有些可变函数的方法需要保证至少一个参数:
+
+```java 
+static int min(int... args) {
+    if (args.length == 0) {
+        throw new IllegalArgumentException("Too few arguments");
+    }
+    int min = args[0];
+    for (int i = 1; i < args.length; i++) {
+        if (args[i] < min) {
+            min = args[i];
+        }
+    }
+    return min;
+}
+```
+
+这种实现是非常丑陋的. 首先这个如果不传递参数时, 错误是发生在运行时, 而不是编译时. 你必须进行显示的错误检测. 这里有一个优化的版本, 就是使用两个参数:
+
+```java 
+static int min(int first, int... remainingArgs) {
+    int min = first;
+    for(int arg : remainingArgs) {
+        if (min < arg) {
+            min = arg;
+        }
+    }
+    return min;
+}
+```
+
+另外还有一个问题, 因为可变参数使用时也就会意味着数组的创建和初始化. 对于性能非常苛刻的情况下, 这种代价就需要考虑一下了. 当然也有一种变相的解决方法. 如果根据经验来说, 如使用3个或者以内的参数的比例高达90%, 那么就可以对前面3个参数进行自定义.
+
+```java
+public void foo() {}
+public void foo(int al){}
+public void foo(int a1, int a2){}
+public void foo(int a1, int a2, int a3){}
+public void foo(int a1, int a2, int a3, int... rest){}
+```
+
+总而言之, 合理地使用可变参数, 如果知道必须的参数数量, 可以预先定义好, 将可变的参数放在后面. 并且小心可变参数带来的性能损耗.   
+
+## Item 54: Return empty collections or arrays, not nulls.
+在我们返回数组或者集合的时候, 如果结果可能为空的话, 不要返回`null`, 而是返回一个空的集合或者数组. 这样可以带来更好的代码体验.
+
+如果为返回`null`的话, 就需要客户端每次调用的时候进行空指针判断, 非常容易出错的. 一旦忘记添加, 就会导致严重的后果. 一般标准的方法是:
+
+```java
+//返回集合
+public List<Cheese> getCheeses() {
+    return new ArrayList<>(cheesesInStock);
+}
+
+//Optimizaiton - avoid allocating empty collection 
+public List<Cheese> getCheeses() {
+    return cheesesInStock.isEmpty() ? Collections.emptyList() : new ArrayList<>(cheesesInStock);
+}
+
+public Cheese[] getCheeses() {
+    return cheesesInStock.toArray(new Cheeses[0]);
+}
+
+//Optimization - avoid allocating empty arrays
+private static final Cheese[] EMPTY_CHEESE_ARRAY = new Cheese[0];
+public Cheese[] getCheeses() {
+    return cheesesInStock.toArray(EMPTY_CHEESE_ARRAY);
+}
+```
+
+这里返回的是空的集合, 这里可以进行优化. 就是预先定义好空对象, 集合的话可以使用`Collections.emptyList()`, `Collections.emptySet()`, `Collections.emptyMap()`, 数组的话可以定义好一个空的数组(传递数组来暗示数组类型).
+
+总而言之, 使用空的集合或者数组而不是null进行返回, 可以带来更好的代码安全性.
+
+## Item 55: Return optionals judiciously.
+在Java8之前，如果不能确定某一个方法是否会返回一个确定的值，这时候有两个解决方法：如果该值为空的时候, 返回null, 或者抛出异常. 这两种实现方法都不够完美. 首先抛出异常付出的代价比较高, 需要栈帧中进行手动捕获. 返回null虽然没有这个代价, 但是要求后面的客户端使用的时候需要考虑对null的处理, 否则一不小心就会出现`NPE`.
+
+在Java8之后引入了一个新的工具类`Optional<T>`, 对结果进行封装, 结果可以为空或者不为空. 这提供了另外一种灵活性来解决这种问题. 如`Item30`中的计算最大值:
+
+```java 
+//Returns maximum value in collection - throws exception if empty
+public static <E extends Comprable<E>> E max(Collection<E> c) {
+    if (c.isEmpty()) {
+        throw new IllegalArgumentException("Empty collection");
+    }
+
+    E result = null;
+    for (E e : c) {
+        if (result == null || e.compareTo(result) > 0) {
+            result = Objects.requireNonNull(e);
+        }
+    }
+
+    return result;
+}
+
+//Optional 
+public staitc <E extends Comparable<E>> Optional<E> max(Collection<E> c) {
+    if (c.isEmpty()) {
+        return Optional.empty();
+    }
+    E result = null;
+    for (E e : c) {
+        if (result == null || e.compareTo(result) > 0) {
+            result = Objects.requireNonNull(e);
+        }
+    }
+    return Optional.of(result);
+}
+```
+
+这里对于如果为空的话返回,`Optional.empty()`. 这里可以保证`result`一定不为空, 使用了`Optional.of`进行封装. 在不能确定的情况下, 可以使用`Optional.ofNullable`进行返回, 否则的话内部就会抛出`NPE`. 这里有一个小小的约定: 既然使用了`Optional`, 那么就不要返回`null`了.
+
+`Optional<T>`更像一种设计方式, 提醒使用者, 这个方法可能返回一个空值, 你需要进行检查和处理. 另外`Optional`还提供很多辅助方法方便我们的使用.
+
+```java
+//Using optional to provide a chosen default value
+String lastWordInLexicon = max(words).orElse("No words...");
+
+//Using optional to throw a chosen exception
+Toy myToy = max(toys).orElseThrow(TempertantrumException::new);
+
+//Using optional when you know there's a return value
+Element lastNobleGas = max(Elements.NOBLE_GASES).get();
+
+//Using optional when get default value is expensive. (can compute and store first, than return by supplier)
+Integer appleCount = max(apples).orElseGet(() -> {return Apple.DEFAULT_APPLE;});
+
+//When you using optional in a stream, you can extract actual object inner.
+streamOfOptionals
+    .filter(Optional::isPresent)
+    .map(Optional::get)
+```
+
+虽然使用`Optional`可以作为一些不确定对象的返回值, 但是也有例外. **不使用Optional来包含容器类: collections, map, streams, arrays and optionals.** 这时候返回一个空的容器类往往更加恰当. 所以`Optional`的使用情况主要适合返回的值可能不存在的时候, 并且不要用于包装一些容器. 另外需要记住使用`Optional`也是意味着创建一个新的对象, 在一些对性能要求非常严格的时候, 也会需要考量的(通过多次实验). 特别是封装原始数据类型, 相当于封装了两层: 先将原始数据类型封装成对象, 然后封装进`Optional`内部. 为了减少这种损耗`Optional`提供了`OptionInt, OptionalLong, OptionalDouble`三种原始类型数据, 内部存储的对象为原始数据类型. 对于其它原始数据类型: `Boolean`, `Byte`, `Character`, `Short`和`Float`. 就没有这个待遇了, 就尽量避免使用. 另外在Map中不适合作为`key`或者`value`, 也尽量不要用作一些静态实例.
+
+总而言之, 当你确定某个方法的返回值可能为空, 并且这非常重要, 需要客户端进行特殊的处理兼容的时候, 可以考虑使用`Optional`. 反之, 需要考虑使用`Optional`带来的性能损耗, 并且避免使用在容器类中.
