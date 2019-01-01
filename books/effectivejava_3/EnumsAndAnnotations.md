@@ -1,4 +1,5 @@
 # Enums And Annotations
+
 Java中支持两种特殊的引用类型: 一种特殊的类, 枚举; 一种特殊的接口, 注释. 本章主要是讲如何高效地使用这两种类型.
 
 ## Item 34: Use enums instead of int constants.
