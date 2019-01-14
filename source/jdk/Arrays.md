@@ -1575,6 +1575,10 @@ public class Arrays {
      * Parallel prefix computation is usually more efficient than
      * sequential loops for large arrays.
      *
+     * 进行数组的累加操作, 在大数组中该方法比传统的循环具有更好的性能.
+     *
+     * 借助ArrayPrefixHelpers类(本质是ForkJoin)来完成计算.
+     *
      * @param <T> the class of the objects in the array
      * @param array the array, which is modified in-place by this method
      * @param op a side-effect-free, associative function to perform the
@@ -1592,6 +1596,8 @@ public class Arrays {
     /**
      * Performs {@link #parallelPrefix(Object[], BinaryOperator)}
      * for the given subrange of the array.
+     *
+     * 参照上面方法,新增了位置index
      *
      * @param <T> the class of the objects in the array
      * @param array the array
@@ -1613,6 +1619,8 @@ public class Arrays {
             new ArrayPrefixHelpers.CumulateTask<>
                     (null, op, array, fromIndex, toIndex).invoke();
     }
+
+    //以下为原始类型long,double,int,short,char,byte单独实现的Prefix方法(为了提高原始类型性能).
 
     /**
      * Cumulates, in parallel, each element of the given array in place,
@@ -1762,6 +1770,10 @@ public class Arrays {
      * multiple elements with the specified value, there is no guarantee which
      * one will be found.
      *
+     * 二分操作法,默认查找整个数组. 返回值为插入点, 否则为负数.
+     *
+     * 调用binarySearch0: 不检查数组范围.
+     *
      * @param a the array to be searched
      * @param key the value to be searched for
      * @return index of the search key, if it is contained in the array;
@@ -1787,6 +1799,8 @@ public class Arrays {
      * is not sorted, the results are undefined.  If the range contains
      * multiple elements with the specified value, there is no guarantee which
      * one will be found.
+     *
+     * 同上
      *
      * @param a the array to be searched
      * @param fromIndex the index of the first element (inclusive) to be
@@ -1815,6 +1829,7 @@ public class Arrays {
         return binarySearch0(a, fromIndex, toIndex, key);
     }
 
+    //二分查找的实现
     // Like public version, but without range checks.
     private static int binarySearch0(long[] a, int fromIndex, int toIndex,
                                      long key) {
@@ -2390,6 +2405,9 @@ public class Arrays {
      * elements equal to the specified object, there is no guarantee which
      * one will be found.
      *
+     * 对于Object数组的比较, 默认约束: 数组内元素必须是Comrable的, 其次数组内的元素必须是
+     * 按照比较规则升序的(这个也适用于原始数据类型数组).
+     *
      * @param a the array to be searched
      * @param fromIndex the index of the first element (inclusive) to be
      *          searched
@@ -2452,6 +2470,8 @@ public class Arrays {
      * If the array contains multiple
      * elements equal to the specified object, there is no guarantee which one
      * will be found.
+     *
+     * 泛型的实现方法, 需要手动传递一个比较器, 这时就没有要求对象一定是Comparable的.
      *
      * @param <T> the class of the objects in the array
      * @param a the array to be searched
@@ -2547,7 +2567,7 @@ public class Arrays {
         return -(low + 1);  // key not found.
     }
 
-    // Equality Testing
+    // Equality Testing 原始数据类型单独实现了的有: int, long, short, double, float, char, byte, 
 
     /**
      * Returns <tt>true</tt> if the two specified arrays of longs are
@@ -2556,6 +2576,8 @@ public class Arrays {
      * of elements in the two arrays are equal.  In other words, two arrays
      * are equal if they contain the same elements in the same order.  Also,
      * two array references are considered equal if both are <tt>null</tt>.<p>
+     *
+     *  比较两个long数组是否相等
      *
      * @param a one array to be tested for equality
      * @param a2 the other array to be tested for equality
@@ -2827,7 +2849,7 @@ public class Arrays {
         return true;
     }
 
-    // Filling
+    // Filling, 填充数组
 
     /**
      * Assigns the specified long value to each element of the specified array
@@ -3149,7 +3171,7 @@ public class Arrays {
             a[i] = val;
     }
 
-    // Cloning
+    // Cloning 数组的克隆,深拷贝
 
     /**
      * Copies the specified array, truncating or padding with nulls (if necessary)
@@ -3769,7 +3791,7 @@ public class Arrays {
         return copy;
     }
 
-    // Misc
+    // Misc 通用的工具方法
 
     /**
      * Returns a fixed-size list backed by the specified array.  (Changes to
@@ -3783,6 +3805,8 @@ public class Arrays {
      * <pre>
      *     List&lt;String&gt; stooges = Arrays.asList("Larry", "Moe", "Curly");
      * </pre>
+     *
+     * 将可变参数转换为List. 注意这里使用的是私有的静态内部类(固定长度的), 对外隐藏了实现细节.
      *
      * @param <T> the class of the objects in the array
      * @param a the array by which the list will be backed
@@ -3890,6 +3914,7 @@ public class Arrays {
         }
     }
 
+    //计算哈希值,使用31乘法.
     /**
      * Returns a hash code based on the contents of the specified array.
      * For any two <tt>long</tt> arrays <tt>a</tt> and <tt>b</tt>
@@ -4151,6 +4176,8 @@ public class Arrays {
      * one or more levels of arrays.  The behavior of such an invocation is
      * undefined.
      *
+     * 对于多维数组时, 计算哈希值时计算数组中每一个元素.
+     *
      * <p>For any two arrays <tt>a</tt> and <tt>b</tt> such that
      * <tt>Arrays.deepEquals(a, b)</tt>, it is also the case that
      * <tt>Arrays.deepHashCode(a) == Arrays.deepHashCode(b)</tt>.
@@ -4332,6 +4359,8 @@ public class Arrays {
      * space).  Elements are converted to strings as by
      * <tt>String.valueOf(int)</tt>.  Returns <tt>"null"</tt> if <tt>a</tt> is
      * <tt>null</tt>.
+     *
+     * 数组的toString方法: [element1, element2], 推荐使用该方法,而不是数组默认的toString方法.
      *
      * @param a the array whose string representation to return
      * @return a string representation of <tt>a</tt>
@@ -4582,6 +4611,9 @@ public class Arrays {
      * <tt>String.valueOf(Object)</tt>, unless they are themselves
      * arrays.
      *
+     * deepToString, 对多维数组的每一个元素都读取. 如果多维数组包含自己(无限循环)
+     * 使用[[...]]替代自己. 使用递归的方式读取内部所有的元素.
+     *
      * <p>If an element <tt>e</tt> is an array of a primitive type, it is
      * converted to a string as by invoking the appropriate overloading of
      * <tt>Arrays.toString(e)</tt>.  If an element <tt>e</tt> is an array of a
@@ -4676,6 +4708,8 @@ public class Arrays {
      * Set all elements of the specified array, using the provided
      * generator function to compute each element.
      *
+     * 对数组进行初始化操作, 初始化操作的依据是小标值.
+     *
      * <p>If the generator function throws an exception, it is relayed to
      * the caller and the array is left in an indeterminate state.
      *
@@ -4699,6 +4733,8 @@ public class Arrays {
      * <p>If the generator function throws an exception, an unchecked exception
      * is thrown from {@code parallelSetAll} and the array is left in an
      * indeterminate state.
+     *
+     * 并行的方式进行初始化.
      *
      * @param <T> type of elements of the array
      * @param array array to be initialized
@@ -4985,6 +5021,7 @@ public class Arrays {
                                         Spliterator.ORDERED | Spliterator.IMMUTABLE);
     }
 
+    //通过数组构造Stream对象.
     /**
      * Returns a sequential {@link Stream} with the specified array as its
      * source.
