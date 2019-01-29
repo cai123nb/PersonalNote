@@ -6,8 +6,26 @@
 
 ## 章节详情
 
-* [Introduce](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/Introduce.md)
+* [Chapter1: Introduce](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/Introduce.md)
 
-* [Creating and Destroying Objects](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/Creating&Destroying.md)
+* [Chapter2: Creating and Destroying Objects](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/Creating&Destroying.md)
 
-* [Methods Common to All Objects](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/MethodsCommonToAllObjects.md)
+* [Chapter3: Methods Common to All Objects](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/MethodsCommonToAllObjects.md)
+
+* [Chapter4: Classes and Interfaces](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/Classes&Interfaces.md)
+
+* [Chapter5: Generics](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/Generics.md)
+
+* [Chapter6: Enums And Annotations](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/EnumsAndAnnotations.md)
+
+* [Chapter7: Lambdas and Streams](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/Lambdas&Streams.md)
+
+* [Chapter8: Methods](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/Methods.md)
+
+* [Chapter9: General Programming](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/GeneralProgramming.md)
+
+* [Chapter10: Exceptions](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/Exceptions.md)
+  
+* [Chapter11: Concurrency](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/Concurrency.md)
+
+* [Serialization](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/Serialization.md)

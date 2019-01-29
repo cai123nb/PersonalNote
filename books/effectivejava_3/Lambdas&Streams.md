@@ -1,7 +1,9 @@
 # Lambdas and Streams
+
 In Java8 引入了非常多的特性, 如功能接口, Lambdas, 方法引用等用来创建函数式对象. Streams相关的API则用来提供对数据的链式处理. 本章主要是介绍如何最大化地使用这些特性.
 
-## Item 42: Prefer lambdas to anonymous classes.
+## Item 42: Prefer lambdas to anonymous classes
+
 很久之前就已经存在, 如果一个接口(或者抽象类)只含有一个抽象方法, 通常被称作功能类型, 它的实例也别称为功能对象. 自从JDK1.1发布之后, 功能对象主要的使用方式就是匿名类, 如需要按照字符长度进行比较排序:
 
 ```java
@@ -22,8 +24,7 @@ Collections.sort(words, (s1, s2) -> Integer.compare(s1.length(), s2.length())
 
 关于Lambdas的用处还有很多, 其中很多都在`java.util.function`中预先定义好了. 如我们可以进一步的缩减上面的比较函数:
 
-```java 
-//concise
+```java
 Collections.sort(words, comparingInt(String::length));
 
 //More concise
@@ -34,9 +35,9 @@ words.sort(comparingInt(String::length));
 
 ```java
 public enum Operation {
-    PLUS("+") {public double apply(double x, double y) {return x + y;}}, 
-    MINUS("-") {public double apply(double x, double y) {return x - y;}}, 
-    TIMES("*") {public double apply(double x, double y) {return x * y;}}, 
+    PLUS("+") {public double apply(double x, double y) {return x + y;}},
+    MINUS("-") {public double apply(double x, double y) {return x - y;}},
+    TIMES("*") {public double apply(double x, double y) {return x * y;}},
     DIVIDE("/") {public double apply(double x, double y) {return x / y;}};
 
     private final String symbol;
@@ -54,9 +55,9 @@ public enum Operation {
 
 ```java
 public enum Operation {
-    PLUS("+", (x, y) -> x + y), 
-    MINUS("-", (x, y) -> x - y)), 
-    TIMES("*", (x, y) -> x * y)), 
+    PLUS("+", (x, y) -> x + y),
+    MINUS("-", (x, y) -> x - y)),
+    TIMES("*", (x, y) -> x * y)),
     DIVIDE("/" (x, y) -> x / y));
 
     private final String symbol;
@@ -79,7 +80,8 @@ public enum Operation {
 
 总而言之, 对于功能函数, 尽量使用Lambdas表达式来完成, 除非是抽象类或者不是功能函数(多个抽象方法)这时可以使用匿名类. Lambdas为我们开启函数式编程的大门.
 
-## Item 43: Prefer method references to lambdas.
+## Item 43: Prefer method references to lambdas
+
 Lambdas相对匿名类最大的优势就是简洁, 但是对于Lambdas来说, 方法引用的的优势不仅仅是简洁, 更是提高了代码的可读性. 如我们需要判断map中是否存在一个值, 如果不存在就插入一个1, 存在的话就进行加工处理. 这就是一般的Lambdas的表示方式:
 
 ```java
@@ -94,7 +96,7 @@ map.merge(key, 1, Integer::sum);
 
 这里不仅让代码开起来更加简洁了, 也提高了可读性. 当然方法引用不一定任何时候都会比Lambdas更加简洁和明了. 就比如函数在内部存在定义的时候:
 
-```java 
+```java
 service.execute(GoshThisClassNameIsHumongous::action);
 
 service.execute(() -> action();
@@ -102,8 +104,8 @@ service.execute(() -> action();
 
 这时候就需要你自己进行判断了, 如果使用了方法引用并不能减少代码或者提高可读性, 那么还是使用lambdas比较合适. 对于大多数的方法引用一般都是静态方法(static), 但是也存在一些例外, 大多分成四种. 有界的实例函数(`Bound Instance method`), 无界的实例函数(`Unbound Instance method`), 类构造函数和数组的构造函数.
 
-```java 
-//Static 
+```java
+//Static
 Integer::parseInt
 str -> Integer.parseInt(str);
 
@@ -129,7 +131,8 @@ len -> new int[len];
 
 总而言之, 相比Lambdas, 方法引用往往可以提供更好的简洁性和代码可读性, 推荐使用方法引用, 除非不满足这两个条件时.
 
-## Item 44: Favor the use of standard functional interfaces.
+## Item 44: Favor the use of standard functional interfaces
+
 自从Java引入Lambdas之后, 我们设计API时就需要合理的考虑Lambdas的作用了. 如之前的`模板方法模式(Template Method Pattern)`: 通过父类抽取和抽象化公共的属性和行为, 然后由子类通过继承的方式来进行重写来完成特定的功能. 这个模式就变得没有那么大的吸引力了: 因为可以接收函数对象来进行封装处理过程, 设置将函数对象设置为内部的成员变量, 通过构造函数或者静态实例函数进行传递. 而具体的实现过程就可以由调用者来制定. 这里需要考虑的是正确的函数式对象的参数和返回值类型.
 
 这里以`LinkedHashMap`为例, 假设我们使用该对象进行缓存操作, 但是缓存需要限制大小, 不能无限的增长. 这里通过调用一个方法进行判断, 如果超出了限制就需要进行移除最早放入的对象.
@@ -137,12 +140,12 @@ len -> new int[len];
 ```java
 protected boolean removeEldestEntry (Map.Entry<k,V> eldest) {
     return size() > 100;
-} 
+}
 ```
 
 这里的实现是可以完成任务的, 但是使用Lambdas可以更好. 可以存储一个对应的函数式对象进行处理特定的需求, 这里需要注意一点的是函数式对象是没办法访问到实例的. 而这个方法是实例方法, 通过调用实例的`size()`方法获取数量然后进行处理. 而函数式对象是不可以获取实例的, 因此需要传递实例对象:
 
-```java 
+```java
 //Unnecessary functional interface; use a standard one instead.
 @FunctionalInterface
 interface EldestEntryRemovalFunction<K,V> {
@@ -168,7 +171,7 @@ interface EldestEntryRemovalFunction<K,V> {
 
 6大基本类型为3个原始数据类型:int, long, double派生出不同参数的接口函数. 如: `DoubleFunction<R>`: 接收double类型的参数返回对象, `DoublePredicate`: 接收double类型参数返回boolean类型, `LongBinaryOperator`: 接收两个long类型的参数返回long类型的结果.
 
-另外对于`Function`接口还有其它变形, `Function<T,R>`中的定义是参数和返回类型始终不一样, 如果相同可以使用`UnaryOperator`进行替代. 如果参数和返回结果都是原始数据类型的话, 就是用`SrcToResult`命名模式(6种): LongToIntegerFunction, DoubleToIntFunction, IntToLongFunction等等. 
+另外对于`Function`接口还有其它变形, `Function<T,R>`中的定义是参数和返回类型始终不一样, 如果相同可以使用`UnaryOperator`进行替代. 如果参数和返回结果都是原始数据类型的话, 就是用`SrcToResult`命名模式(6种): LongToIntegerFunction, DoubleToIntFunction, IntToLongFunction等等.
 
 第三种情况就是对参数个数的变形, 如接收两个参数的接口: `BiPredicate<T,U>`, `BiFunction<T,U,R>`, `BiConsumer<T,U>`. 其中`BiFunction<T,U,R>`也针对`int`,`long`,`double`返回类型进行了优化派生: `ToIntBiFunction<T,U>`, `ToDoubleBiFunction<T,U>`, `ToLongBiFunction<T,U>`. 其中`BiConsumer<T,U>`对参数中存在`int`,`long`,`double`的接口进行了优化派生: `ObjDoubleConsumer<T>`, `ObjIntConsumer<T>`, `ObjLongConsumer<T>`.
 
@@ -180,7 +183,8 @@ interface EldestEntryRemovalFunction<K,V> {
 
 总而言之, 使用Lambdas和函数式对象作为输入输出的趋势是不可阻挡的. 如果需要定义函数式接口时, 并且发现可以通过默认的预定义接口完成的话, 那么你需要权衡好自己定义和使用预定义接口之间的优缺点.
 
-## Item 45: Use steams judiciously.
+## Item 45: Use steams judiciously
+
 `streams`的API在Java8中正式引入来消除连续的冗余操作.`stream`中的元素可以来自任何地方: 集合, 数组, 文件, 伪随机生成数等, 可以是有限的, 也可以是无限的. 其中的对象既可以是对象引用, 也可以是原始数据类型: int, long, double.
 
 `stream`的处理过程叫做`pipeline`, 主要分为两种: 中间处理过程`intermediate operation`, 主要是负责对其中的元素进行转换处理或者过滤操作. 终端处理过程`terminal operation`, 主要对其中的元素进行最终的处理过程, 如存储元素到集合, 返回特定的值, 打印所有的值等等. 其中`stream`是懒加载的: 只要`terminal operation`没有创建之前, 之前的中间处理过程是不会执行的. 所以千万不要忘了添加终端处理过程.
@@ -194,7 +198,7 @@ public class Anagrams {
     public static void main(String[] args) {
         File dictionary = new File(args[0]);
         int minGroupSize = Integer.parseInt(args[1]);
-    
+
         Map<String, Set<String>> groups = new HashMap<>();
         try (Scanner s = new Scanner(dictionary)) {
             while (s.hasNext()) {
@@ -218,7 +222,7 @@ public class Anagrams {
 
 接下来, 我们进行完全的`stream`化处理:
 
-```java 
+```java
 public class Anagrams {
     public static void main(String[] args)  throws IOException {
         Path dictionary = Paths.get(args[0]);
@@ -242,7 +246,7 @@ public class Anagrams {
 
 幸运的是还有一个中间版本:
 
-```java 
+```java
 //Testeful use of streams enhances clarity and conciseness
 public class Anagrams {
     public static void main(String[] args)  throws IOException {
@@ -261,9 +265,9 @@ public class Anagrams {
 }
 ```
 
-这段代码的可读性就非常高了, 就算不是很了解stream的人也可以大概理解这段代码. 有许许多多的代码是你不能确定是否使用`stream`可以带来更好的可读性和简洁性. 如: 
+这段代码的可读性就非常高了, 就算不是很了解stream的人也可以大概理解这段代码. 有许许多多的代码是你不能确定是否使用`stream`可以带来更好的可读性和简洁性. 如:
 
-```java 
+```java
 private static List<Card> newDeck() {
     List<Card> result = new ArrayList<>();
     for (Suit suit: Suit.values())
@@ -283,7 +287,8 @@ private static List<Card> newDeck() {
 
 总而言之, 有些任务可以很好的使用streams, 有些则不能, 也有许多任务非常合适使用两者的组合. 这里没有明确的规定一定要使用哪一种, 但是当你不知道该使用那一种时, 你可以一起实现它们, 然后选择最好的一种.
 
-## 46: Prefer side-effect-free functions in streams.
+## 46: Prefer side-effect-free functions in streams
+
 如果你是`streams`的新手, 那你需要对此花费一定的时间进行学习. 当你花费了一段时间学习之后, 并且使用之后, 也许你会发现好像没有什么变化. 是的, streams相比于技术, 更多的是一种规范, 一种基于函数式编程的规范, 通过这种规范可以获取良好的代码可读性和表现. 如果最大化`streams`的优点, 那就是最大化函数式编程的本质`函数式编程`: 尽可能使用`pure function`, 即输出的结果只依赖输入, 不依赖任何别的可变的对象. 保证任何时候只要输入相同, 输出也一定相同.
 
 假设需要完成一个需求, 统计一个文章内的单词格数：
@@ -308,7 +313,7 @@ try (Stream<String> words = new Scanner(file).tokens()) {
 }
  ```
 
-这段代码和前面的代码完成一样的事, 但是更加简洁, 可读性也更好. 这里放弃了`forEach`方法, 而是使用了新的`collect`方法. 为什么放弃`forEach`方法, 因为作为一个终端操作, `forEach`对`streams`并不友好, 且不支持并行化. 因此**forEach一般只用来输出数组中的元素**. 
+这段代码和前面的代码完成一样的事, 但是更加简洁, 可读性也更好. 这里放弃了`forEach`方法, 而是使用了新的`collect`方法. 为什么放弃`forEach`方法, 因为作为一个终端操作, `forEach`对`streams`并不友好, 且不支持并行化. 因此**forEach一般只用来输出数组中的元素**.
 
 这里使用了`collect`方法, 这是一个新的技术, 需要我们传递一个`Collector`对象。 而该对象主要定义在`java.util.stream.Collectors`中. 这里简单的介绍一下, 该类较为复杂, 总共包含39个方法, 其中甚至包含5个参数. 但是该类并没有这么复杂, 其中大部分都可以由基简单的方法进行派生.
 
@@ -325,7 +330,7 @@ List<String> topTen = freq.keySet().stream()
 
 ```java
 //First version
-private static final Map<String, Operation> stringToEnum = 
+private static final Map<String, Operation> stringToEnum =
     Stream.of(values()).collect(toMap(Object::toString, e -> e));
 
 //Second version
@@ -356,7 +361,8 @@ Map<City, Set<String>> namesByCity = people.stream()
 
 总而言之, 尽量使用纯函数来处理stream中的流对象, 合理地使用Collectors可以带来很好的便利性.
 
-## 47: Prefer Collection to Stream as return type.
+## 47: Prefer Collection to Stream as return type
+
 许多方法返回的对象是一系列的对象. 在Java8之前返回的对象有: 集合(Collection: Set, List, Map), Iterable, 数组. 一般默认的返回是集合. 如果返回的对象流只是单纯地需要遍历, 并不需要支持集合地一些操作, 那么使用Iterable也可以. 如果对性能有严格地要求并且是原始类型数据, 那么返回数组将是最好地选择. Java8之后, 添加了Stream对象, 那相比之前地对象, Stream有什么优缺点吗?
 
 如果一个方法返回的是stream类型对象, 这时候如果你需要对这系列对象进行遍历, 这时候你会发现非常的困惑. 为什么? Stream接口并没有继承Iterable接口. 但是却有着和Iterable接口相同的方法: iterator(). 但是如果想要直接使用进行遍历的话, 却要花费一点功夫.
@@ -421,7 +427,7 @@ public class PowerSet {
 }
 ```
 
-当然这也可以通过Stream实现, 求一个集合的所有子集, 可以从俩个个角度进行求解, 如{A, B, C}的前缀为: {A}, {A, B}, {A, B, C}. 后缀为: {A, B, C}, {B, C}, {C}. 那所有的子集为: 所有后缀的前缀. 
+当然这也可以通过Stream实现, 求一个集合的所有子集, 可以从俩个个角度进行求解, 如{A, B, C}的前缀为: {A}, {A, B}, {A, B, C}. 后缀为: {A, B, C}, {B, C}, {C}. 那所有的子集为: 所有后缀的前缀.
 
 ```java
 //Returns a stream of all the sublists of its input list
@@ -451,7 +457,7 @@ for (int start = 0; start < src.size(); start++)
 
 public static <E> Stream<List<E>> of(List<E> list) {
     return IntStream.range(0, list.size())
-        .mapToObj(start -> 
+        .mapToObj(start ->
             IntStream.rangeClosed(start + 1, list.size())
             .mapToObj(end -> list.subList(start, end)))
         .flatMap(x -> x);
@@ -460,7 +466,8 @@ public static <E> Stream<List<E>> of(List<E> list) {
 
 总而言之, 当你需要返回一系列的元素时, 需要考虑用户可能需要遍历, 也要考虑到Stream的需求. 因此最简单的方法就是直接返回集合类型. 如果元素的数量不是很多, 可以直接使用集合实例(如ArrayList)封装返回. 否则的话, 需要自定义集合进行返回. 如果返回集合不行的话, 那就可以使用Stream或者Iterable进行返回. 在未来的Java版本, 如果Stream实现了Iterable, 那就可以优先考虑返回Stream了.
 
-## Item 48: Use caution when making streams parallel.
+## Item 48: Use caution when making streams parallel
+
 在所有主流的编程语言中, 对于并发编程, Java一直是走在前面的. 在1996年发布时, 就提供并发支持: synchronization, wait/notify. 在JDK5中引入了`java.util.concurrent`包进行支持. Java7中引入了`fork-join`框架, 高性能的并发框架. Java8中引入了Stream也是支持并发的`parallel()`. 虽然并发编程越来越容易, 但是要写好并发程序却是一点也没有变容易. 这里看下之前的Item 45的代码:
 
 ```java
@@ -483,7 +490,7 @@ static Stream<BigInteger> primes() {
 
 同样的stream的终端操作同样会影响并行化的性能. 如一个数量很大的流, 对于内部的每一个元素, 计算时都需要和之前计算过的元素进行比较, 这就会非常影响性能. 最好的终端操作就是`reuction`, 每次都可以分布式的计算, 并且汇总到一个对象中. 如: `max`, `min`, `count`, `sum`, `anyMatch`, `allMatch`, `noneMatch`等, 就非常适合并行化处理.
 
-并行化是一个非常严格的性能优化, 内部使用`fork-join`, 一个不规范的流操作都可能导致严重的性能损耗. 因此在使用时, 一定要经过严格地测试, 最好是在实际环境中进行测试, 保证性能达到想要的要求. 
+并行化是一个非常严格的性能优化, 内部使用`fork-join`, 一个不规范的流操作都可能导致严重的性能损耗. 因此在使用时, 一定要经过严格地测试, 最好是在实际环境中进行测试, 保证性能达到想要的要求.
 
 虽然并行化用起来非常困难, 也不是说一定要严格避免使用它. 只要在合适的环境下使用, 甚至可以给程序带来线性级别的优化, 而你需要的只是添加一个`parallel()`语句.
 

@@ -1,7 +1,9 @@
 # Generics
+
 自从Java5开始, Java引入了泛型. 在此之前, 每次从Collection中的读取一个对象都需要进行手动转换(cast), 如果错误的插入一个对象, 就会在运行时出现转换Error. 通过泛型, 告诉编译器该集合支持哪些类型对象, 编译器也会自动帮你转换对象, 如果你不小心插入一个错误的对象时就会在编译时就显示报错. 这样会让代码更加安全和简单. 这些优点的实现是需要付出一些代价的, 本章的关注就是如何最大化这些优点, 最小化产生的代价.
 
 ## Item 26: Don't use raw types
+
 一般一个类或者接口在声明时都会使用一个或者多个类型参数. 如List接口中的定义为`List<E>`, 其中`E`就是类型参数, 使用尖括号包起来. `List<E>`就被叫做通用类型类, 可以用它来定义定义一些具体的类, 如: `List<String>`, 这就是一个参数化类型类. 暗示该集合中所有对象类型为String. 而原始类型(raw type)为擦除类型参数之后的对象, 如`List<E>`的原始类型就为`List`. 而原始类型的存在主要是为了兼容之前版本的代码.
 
 ```java
@@ -10,13 +12,13 @@
 private final Collection stamps = ...;
 
 //Erroneous insertion of coin into stamp collection
-stamps.add(new Coin(...));	//Emits "unchecked call" warning
+stamps.add(new Coin(...));    //Emits "unchecked call" warning
 
-//Don't get error, until now 
-//Raw iterator type - don't do this 
+//Don't get error, until now
+//Raw iterator type - don't do this
 for (Iterator i = stamps.iterator(); i.hasNext();) {
-	Stamp stamp = (Stamp) i.next();	//Throws ClassCast Exception 
-		stamp.cancel();
+    Stamp stamp = (Stamp) i.next();    //Throws ClassCast Exception
+        stamp.cancel();
 }
 ```
 
@@ -34,13 +36,13 @@ private final Collection<Stamp> stamps = ...; //Not use commet to indicate it.
 
 ```java
 public static void main(String[] args) {
-	List<String> strings = new ArrayList<>();
-	unsafeAdd(strings, Integer.valueOf(32));
-	String s = strings.get(0);	//Has compiler-generated cast 
+    List<String> strings = new ArrayList<>();
+    unsafeAdd(strings, Integer.valueOf(32));
+    String s = strings.get(0);    //Has compiler-generated cast
 }
 
 private static void unsafeAdd(List list, Object o) {
-	list.add(o);
+    list.add(o);
 }
 ```
 
@@ -50,11 +52,11 @@ private static void unsafeAdd(List list, Object o) {
 
 ```java
 static int numElementsInCommon(Set s1, Set s2) {
-	int result = 0;
-	for (Object o : s1) 
-		if (s2.contains(o))
-			result++;
-	return result;
+    int result = 0;
+    for (Object o : s1)
+        if (s2.contains(o))
+            result++;
+    return result;
 }
 ```
 
@@ -62,21 +64,22 @@ static int numElementsInCommon(Set s1, Set s2) {
 
 ```java
 static int numElementsInCommon(Set<?> s1, Set<?> s2) {
-	int result = 0;
-	for (Object o : s1) 
-		if (s2.contains(o))
-			result++;
-	return result;
+    int result = 0;
+    for (Object o : s1)
+        if (s2.contains(o))
+            result++;
+    return result;
 }
 ```
 
-那`List`和`List<?>`有什么区别呢? 正如前面的`unsafeAdd`, `List`可以添加任意对象, 而`List<?>`不能, 甚至`List<?>`只能添加null. 记住, 你不能往`Collection<?>`中添加任何对象, 除了`null`. 
+那`List`和`List<?>`有什么区别呢? 正如前面的`unsafeAdd`, `List`可以添加任意对象, 而`List<?>`不能, 甚至`List<?>`只能添加null. 记住, 你不能往`Collection<?>`中添加任何对象, 除了`null`.
 
 当然原始类型也有一些地方需要用到, 如类定义的时候. `List.class`是合法的, 而`List<String>.class`是不合法的. 同理可得`instanceof`调用, 传递参数的时候, 如: `if(xxx instanceof Set){}`.
 
-总而言之, 不要直接使用原始类型集合, 那只是用来兼容历史遗留代码使用. Set<Object>用以存储任何对象, Set<?>用于存储不清楚内部存储对象元素时. 推荐使用以替换原始类型. 原始类型只在获取类定义时有些作用.
+总而言之, 不要直接使用原始类型集合, 那只是用来兼容历史遗留代码使用. `Set<Object>`用以存储任何对象, Set<?>用于存储不清楚内部存储对象元素时. 推荐使用以替换原始类型. 原始类型只在获取类定义时有些作用.
 
 ## Item 27: Eliminate unchecked warnings
+
 当使用泛型的时候, 往往在编译的时候会提示各种类型的警告: `unchecked cast warning`, `unchecked method invocation warning`, `unchecked parameterized vararg type warning`和`unchecked conversion warnings`.  当我们对泛型用的越多, 往往警告越少, 但是不要期待一开始写出的代码就完全没有警告, 更多的需要后续的改进和优化.
 
 这些警告往往都是特别容易消除的. 如:
@@ -101,12 +104,12 @@ Set<Lark> exaltation = new HashSet<>();
 
 ```java
 public <T> T[] toArray(T[] a) {
-	if (a.length < size) 
-		return (T[]) Arrays.copyOf(elements, size, a.getClass());
-	System.arraycopy(elemtns, 0, a, 0, size);
-	if (a.length > size)
-		a[size] = null;
-	return a;
+    if (a.length < size)
+        return (T[]) Arrays.copyOf(elements, size, a.getClass());
+    System.arraycopy(elemtns, 0, a, 0, size);
+    if (a.length > size)
+        a[size] = null;
+    return a;
 }
 ```
 
@@ -114,14 +117,14 @@ public <T> T[] toArray(T[] a) {
 
 ```java
 public <T> T[] toArray(T[] a) {
-	if (a.length < size)  {
-		@SuppressWarnings("unchecked") T[] result = (T[]) Arrays.copyOf(elements, size, a.getClass());
-		return result;
-	}
-	System.arraycopy(elemtns, 0, a, 0, size);
-	if (a.length > size)
-		a[size] = null;
-	return a;
+    if (a.length < size)  {
+        @SuppressWarnings("unchecked") T[] result = (T[]) Arrays.copyOf(elements, size, a.getClass());
+        return result;
+    }
+    System.arraycopy(elemtns, 0, a, 0, size);
+    if (a.length > size)
+        a[size] = null;
+    return a;
 }
 ```
 
@@ -130,14 +133,15 @@ public <T> T[] toArray(T[] a) {
 总而言之, 尽量消除每一个`unchecked`警告. 每一个`unchecked`警告说明代码中存在`ClassCastException`的风险. 如果实在无法消除, 且可以保证该代码是安全的, 合理的使用`@SuppressWarnings("unchecked")`进行注解, 但是请保证使用实在最小的范围内, 并为每一个注解添加注释, 解释一下为什么这是安全的.
 
 ## Item 28: Prefer lists to arrays
-数组和泛型有很大的区别, 主要体现在两个方面. 第一, 数组是协变的(covariant), 简单来说就是: 如果`Sub`是`Super`的子类, 那么`Sub[]`数组也是`Super[]`数组的子类. 而对于泛型来说, 却是不变的(invariant). 对于两个不同的类,`Type1`和`Type2`, `List<Type1>`既不是`List<Type2>`的子类, 也不是父类. 从这里看, 你可能会觉得泛型的功能比不上数组, 但是结果往往相反. 如 
+
+数组和泛型有很大的区别, 主要体现在两个方面. 第一, 数组是协变的(covariant), 简单来说就是: 如果`Sub`是`Super`的子类, 那么`Sub[]`数组也是`Super[]`数组的子类. 而对于泛型来说, 却是不变的(invariant). 对于两个不同的类,`Type1`和`Type2`, `List<Type1>`既不是`List<Type2>`的子类, 也不是父类. 从这里看, 你可能会觉得泛型的功能比不上数组, 但是结果往往相反. 如
 
 ```java
 Object[] objectArray = new Long[1];
-objectArray[0] = "I don't fit in";	//Throws ArrayStoreException
+objectArray[0] = "I don't fit in";    //Throws ArrayStoreException
 
 //Won't compiler
-List<Object> ol = new ArrayList<Long>();	//Incompatible types
+List<Object> ol = new ArrayList<Long>();    //Incompatible types
 ol.add("I don't fit in");
 ```
 
@@ -151,9 +155,9 @@ ol.add("I don't fit in");
 //Pretend the line is legal.
 List<String> strings = new List<String>[1];
 List<Integer> initList = List.of(43);
-Object[] objects =  strings;		//Obtain objects from strings.
-objects[0] = initList;				//This is legal for array.
-String s = strings[0].get(0);		//ClassCastException.
+Object[] objects =  strings;        //Obtain objects from strings.
+objects[0] = initList;                //This is legal for array.
+String s = strings[0].get(0);        //ClassCastException.
 ```
 
 从上面可以知道, 非常容易就出现了异常. 其中`objects[0] = initList;`是合法的, 因为在编译器中通过擦除实现的, `List<Integer>`和`List<String>`都是一样的.
@@ -164,13 +168,13 @@ String s = strings[0].get(0);		//ClassCastException.
 
 ```java
 public class Chooser<T> {
-	private final T[] choiceArray;
-	
-	public Chooser(Collection<T> choices) {
-		choiceArray = choices.toArray();	//Won't compile
-	}
-	
-	...// The other is omitted.
+    private final T[] choiceArray;
+
+    public Chooser(Collection<T> choices) {
+        choiceArray = choices.toArray();    //Won't compile
+    }
+
+    ...// The other is omitted.
 }
 ```
 
@@ -182,15 +186,15 @@ choiceArray = (T[]) choices.toArray();
 
 这时候代码是不会编译出错的, 但是却会抛出一个警告: unchecked cast. 编译器不能保证在运行时,这行代码可以正确转换, 你必须自己进行证明, 并添加在注释中, 然后压制这个警告`@SuppressWarnings("unchecked")`. 但是更好的方法是使用`List<E>`.
 
-```java 
+```java
 public class Chooser<T> {
-	private final List<T> choiceAList;
-	
-	public Chooser(Collection<T> choices) {
-		choiceAList = new ArrayList<>(choices);	//Won't compile
-	}
-	
-	...// The other is omitted.
+    private final List<T> choiceAList;
+
+    public Chooser(Collection<T> choices) {
+        choiceAList = new ArrayList<>(choices);    //Won't compile
+    }
+
+    ...// The other is omitted.
 }
 ```
 
@@ -198,88 +202,90 @@ public class Chooser<T> {
 
 总而言之, 数组和泛型有很大的区别. 数组是协变的和具体化的. 泛型是不变的和擦除的. 作为结果, 数组提供运行时的类型安全检查而不是编译时的类型安全检查, 对于泛型却恰恰相反. 所以, 数组和泛型不能很好在一起工作. 当你发现数组和泛型使用时, 存在很大问题时, 第一个可选的方法可以考虑使用`list`替换数组.
 
-## Item 29: Favor generic types.
+## Item 29: Favor generic types
+
 我们经常使用JDK提供的各种泛型, 我们自己写的话, 就有点复杂了, 但是这种努力和时间是值得的. 如:
 
 ```java
-//Obejct-based collection - a rpime candidate for generics 
+//Obejct-based collection - a rpime candidate for generics
 public class Stack {
-	private Object[] elements;
-	private int size = 0;
-	private static final int DEAFAULT_INITIAL_CAPACITY = 16;
-	
-	public Stack() {
-		elements = new Object[DEAFAULT_INITIAL_CAPACITY];
-	}
-	
-	public void push(Object e) {
-		ensureCapacity();
-		elements[size++] = e;
-	}
-	
-	public Object pop() {
-		if (size == 0) 
-			throw new EmptyStackException();
-		Object result = elements[--size];
-		elements[size] = null;
-		return result;
-	}
-	
-	public boolean isEmpty() {
-		reutrn this.size == 0;
-	}
-	
-	private void ensureCapacity() {
-		if (elements.length == size) 
-			elements = Arrays.copyOf(elements, 2 * size + 1);
-	}
+    private Object[] elements;
+    private int size = 0;
+    private static final int DEAFAULT_INITIAL_CAPACITY = 16;
+
+    public Stack() {
+        elements = new Object[DEAFAULT_INITIAL_CAPACITY];
+    }
+
+    public void push(Object e) {
+        ensureCapacity();
+        elements[size++] = e;
+    }
+
+    public Object pop() {
+        if (size == 0)
+            throw new EmptyStackException();
+        Object result = elements[--size];
+        elements[size] = null;
+        return result;
+    }
+
+    public boolean isEmpty() {
+        reutrn this.size == 0;
+    }
+
+    private void ensureCapacity() {
+        if (elements.length == size)
+            elements = Arrays.copyOf(elements, 2 * size + 1);
+    }
 }
 ```
 
 这个类一开始设计的时候就应该考虑泛型化, 但是没有. 现在可以对这个类进行泛型化处理, 并且不影响之前的使用. 首先在类的声明中添加一个或者多个参数类型, 这里只需要添加一个参数化类型, 这里声明为`E`. 然后将所有的Object替换为合适的参数化类型.
-```java 
+
+```java
 public class Stack<E> {
-	private E[] elements;
-	private int size = 0;
-	private static final int DEAFAULT_INITIAL_CAPACITY = 16;
-	
-	public Stack() {
-		elements = new E[DEAFAULT_INITIAL_CAPACITY];
-	}
-	
-	public void push(E e) {
-		ensureCapacity();
-		elements[size++] = e;
-	}
-	
-	public E pop() {
-		if (size == 0) 
-			throw new EmptyStackException();
-		E result = elements[--size];
-		elements[size] = null;
-		return result;
-	}
-	
-	public boolean isEmpty() {
-		reutrn this.size == 0;
-	}
-	
-	private void ensureCapacity() {
-		if (elements.length == size) 
-			elements = Arrays.copyOf(elements, 2 * size + 1);
-	}
+    private E[] elements;
+    private int size = 0;
+    private static final int DEAFAULT_INITIAL_CAPACITY = 16;
+
+    public Stack() {
+        elements = new E[DEAFAULT_INITIAL_CAPACITY];
+    }
+
+    public void push(E e) {
+        ensureCapacity();
+        elements[size++] = e;
+    }
+
+    public E pop() {
+        if (size == 0)
+            throw new EmptyStackException();
+        E result = elements[--size];
+        elements[size] = null;
+        return result;
+    }
+
+    public boolean isEmpty() {
+        reutrn this.size == 0;
+    }
+
+    private void ensureCapacity() {
+        if (elements.length == size)
+            elements = Arrays.copyOf(elements, 2 * size + 1);
+    }
 }
 ```
 
 编译代码, 对错误的地方进行修复. 首先出现的问题是: `elements = new E[DEAFAULT_INITIAL_CAPACITY];`, 然后程序编译出错. 这是一个最常见的问题, 泛型数组的问题. 这里首先声明为Object, 采用类型转换`(T[])`, 这时候提示警告: Unchecked cast. 编译器无法保证在运行时这段代码可以正确进行转换. 这时候, 我们把理由写上, 并压制警告:
 
-```java 
+```java
 // The elemets array will contain only E instances from push(E).
 // This is sufficient to ensure type safety, but the runtime
 // type of the array won't be E[]; it will always be Object[]!
 @SuppressWarnings("uncheckned")
 public Stack() {
-	elements = (E) new Object[DEAFAULT_INITIAL_CAPACITY];
+    elements = (E) new Object[DEAFAULT_INITIAL_CAPACITY];
 }
 ```
 
@@ -297,30 +303,31 @@ class DelayQueue<E extends Delayed> implements BlockingQUeue<E>
 
 总而言之, 泛型可以更加安全和方便使用, 如果你的类没有泛型化, 那么可以好好考虑发现化.
 
-## Item 30: Favor generic methods.
+## Item 30: Favor generic methods
+
 正如类可以被泛型化, 方法同样可以泛型化. 如: `Colletions`内所有的工具方法都是泛型化的. 写泛型方法, 也非常类似泛型类, 比如:
 
 ```java
 //Use raw types - unaccpetable
 public static Set union(Set s1, Set s2) {
-	Set result = new HashSet(s1);
-	result.addAll(s2);
-	return result;
+    Set result = new HashSet(s1);
+    result.addAll(s2);
+    return result;
 }
 ```
 
 这个方法编译的时候, 提示两个警告. `Set result = new HashSet(s1);` : `unchecked call HashSet as raw type`. `result.addAll(s2)` : `unchecked call to addAll as raw type Set`. 这暗示调用的过程是使用raw type的. 要消除则警告就要对这个方法使用的三个集合进行泛型化. 添加也简单, 在方法描述符和返回值之间添加泛型参数, 使用`<>`包起来, 修改方法添加对应的泛型参数.
 
 ```java
-//Generics method 
+//Generics method
 public static <T> Set<T> union(Set<T> s1, Set<T> s2) {
-	Set<T> result = new HashSet<>(s1);
-	result.addAll(s2);
-	return result;
+    Set<T> result = new HashSet<>(s1);
+    result.addAll(s2);
+    return result;
 }
 ```
 
-对于简单的方法, 这样做就可以了. 消除了所有的警告, 也方便类调用. 
+对于简单的方法, 这样做就可以了. 消除了所有的警告, 也方便类调用.
 
 ```java
 Set<String> guys = Set.of("Amy", "Jake", "Tom");
@@ -335,7 +342,7 @@ Set<String> all = union(guys, stooges);
 ```java
 @SuppressWarnings("unchecked")
 public static <T> Comparator<T> reverseOrder() {
-	return (Comparator<T>) ReverseComparator.REVERSE_ORDER;
+    return (Comparator<T>) ReverseComparator.REVERSE_ORDER;
 }
 ```
 
@@ -345,31 +352,31 @@ public static <T> Comparator<T> reverseOrder() {
 private static UnaryOperator<Object> IDENTITY_FN = (t) -> t;
 
 public static <T> UnaryOperator<T> identityFunction() {
-	return (UnaryOperator<T>) IDENTITY_FN;
-} 
+    return (UnaryOperator<T>) IDENTITY_FN;
+}
 ```
 
 注意这里会抛出一个警告`unchecked cast`, 编译器认为`UnaryOperator<Object>`不一定是`UnaryOperator<T>`, 有可能出现转换失败情况. 但是这个函数是特殊的, 这个函数没有修改参数, 只是单纯的返回自身. 可以知道对于任意参数, 这是安全的. 可以压制这个警告, 保证所有的调用都是干净的.
 
 这里有一个特殊的情况, 那就是`递归类型绑定`. 就是类型参数中夹杂着别的类型参数. 最经典的就是`Comparable`接口.
 
-```java 
+```java
 public interface Comparable<T> {
-	int compareTo(T o);
+    int compareTo(T o);
 }
 ```
 
 这个类型参数T一般是自身, 因为对象比较时一般只允许和自身进行比较. 如`String`就实现`Comparable<String>`, `Integer`就实现`Comparable<Integer>`. 对于实现这个接口的对象, 说明这些对象是有顺序的, 可以进行比较的. 那么放在集合中就可以求最大值, 最小值, 排序等操作. 如:
 
-```java 
+```java
 public static <E extends Comparable<E>> E max(Collection<E> c) {
-	if (c.isEmpty()) 
-		throw new IllegalArgumentException("Empty collection");
-	E result = null;
-	for (E e : c) 
-		if (result == null || e.compareTo(result) > 0)
-			result = Objects.requireNonNull(e);
-	return result;
+    if (c.isEmpty())
+        throw new IllegalArgumentException("Empty collection");
+    E result = null;
+    for (E e : c)
+        if (result == null || e.compareTo(result) > 0)
+            result = Objects.requireNonNull(e);
+    return result;
 }
 ```
 
@@ -377,15 +384,16 @@ public static <E extends Comparable<E>> E max(Collection<E> c) {
 
 总而言之, 泛型方法类似泛型类, 更加安全和便于使用, 使用时就不需要显式对参数和返回值进行转换. 当你写的方法, 发现经常需要进行转换时, 考虑将它泛型化.
 
-## Item 31: Use bounded wildcards to increase API flexibility.
-正如前面`Item28`说的, 泛型是不变的和擦除的, List<String>即不是List<Object>的子类, 也不是其的父类. 虽然这有点奇怪, 但是不难理解: 一个容器装了父亲, 一个容器装了儿子, 我们不能光凭这个就说明前面是后者的父类, 因为这个不仅仅只有父亲, 还有很多别的东西, 如容器, 数量等等. 但是这个特性有时候还是会带来一些不便. 如我们设计的一个简单的Stack类:
+## Item 31: Use bounded wildcards to increase API flexibility
+
+正如前面`Item28`说的, 泛型是不变的和擦除的, `List<String>`即不是`List<Object>`的子类, 也不是其的父类. 虽然这有点奇怪, 但是不难理解: 一个容器装了父亲, 一个容器装了儿子, 我们不能光凭这个就说明前面是后者的父类, 因为这个不仅仅只有父亲, 还有很多别的东西, 如容器, 数量等等. 但是这个特性有时候还是会带来一些不便. 如我们设计的一个简单的Stack类:
 
 ```java
 public class Stack<E> {
-	public Stack();
-	public void push(E e);
-	public E pop();
-	public boolean isEmpty();
+    public Stack();
+    public void push(E e);
+    public E pop();
+    public boolean isEmpty();
 }
 ```
 
@@ -393,8 +401,8 @@ public class Stack<E> {
 
 ```java
 public void pushAll(Iterable<E> src) {
-	for (E e : src) 
-		push(e);
+    for (E e : src)
+        push(e);
 }
 ```
 
@@ -404,8 +412,8 @@ public void pushAll(Iterable<E> src) {
 
 ```java
 public void pushAll(Iterable<? extends E> src) {
-	for (E e : src) 
-		push(e);
+    for (E e : src)
+        push(e);
 }
 ```
 
@@ -413,8 +421,8 @@ public void pushAll(Iterable<? extends E> src) {
 
 ```java
 public void popAll(Collection<E> dst) {
-	while(!isEmpty()) 
-		dst.add(pop());
+    while(!isEmpty())
+        dst.add(pop());
 }
 ```
 
@@ -422,10 +430,11 @@ public void popAll(Collection<E> dst) {
 
 ```java
 public void popAll(Collection<? super E> dst) {
-	while(!isEmpty()) 
-		dst.add(pop());
+    while(!isEmpty())
+        dst.add(pop());
 }
 ```
+
 这样也就解决了兼容性的问题. 到这里我们可以得出一个结论: 为了最大化灵活性, 为消费者函数和生产者函数使用有界通配符, 是一个很好的选择. 如果函数的输入参数, 既是消费者, 也是生产者, 那么就不要使用通配符, 还是使用确定的参数类型. 这里有一个简单的口诀来记录: `消费者函数使用super, 生产者函数使用extends`. 如这里的`pushAll`是典型的生产者, 生成E实例给Stack, 那就使用`extends`, `popAll`是典型的消费者, 消耗Stack内的对象, 就使用`super`.
 
 带着这样的窍门, 我们重温一下之前的方法和函数. `Item28`中的:
@@ -436,19 +445,19 @@ public Chooser(Collection<T> choices);
 
 所有的构造函数都是生产者, 这里使用`extends`.
 
-```java 
+```java
 public Chooser(Collection<? extends T> choices);
 ```
 
 `Item30`中的:
 
-```java 
+```java
 public static <T> Set<T> union(Set<T> s1, Set<T> s2);
 ```
 
 可以很清楚的知道, 传递过来的两个参数都是生产者, 最后生产一个集合.
 
-```java 
+```java
 public static <T> Set<T> union(Set<? extends T> s1, Set<? extends T> s2);
 
 Set<Integer> integers  = Set.of(1,2,3);
@@ -456,7 +465,7 @@ Set<Double> doubles = Set.of(1.2, 3.2, 1.3);
 Set<Number> numbers = union(integers, doubles);
 ```
 
-注意这里不要在返回值里使用通配符`?`, 因为这样会强制用户在使用时添加通配符, 增加了用户的复杂度. 真正良好的通配符应该是无感的, 用户是没有感觉的, 但是却良好地完成工作: 接受该接受的对象, 拒绝该拒绝的对象. 如果你的通配符需要用户在使用时需要顾虑的话, 那你的API可能就不太对. 
+注意这里不要在返回值里使用通配符`?`, 因为这样会强制用户在使用时添加通配符, 增加了用户的复杂度. 真正良好的通配符应该是无感的, 用户是没有感觉的, 但是却良好地完成工作: 接受该接受的对象, 拒绝该拒绝的对象. 如果你的通配符需要用户在使用时需要顾虑的话, 那你的API可能就不太对.
 
 这里有一点需要注意, 那就是在Java8之前, 编译器的推理功能还没这么强大, 如果需要使用上述的语句时, 需要手动告诉编译器. 不然编译器会不识别.
 
@@ -466,11 +475,11 @@ Set<Number> numbers = Uunion.<Number>union(integers, doubles);
 
 `Item30`中的:
 
-```java 
+```java
 public static <E extends Comparable<E>> E max(Collection<E> c);
 
 
-//revised 
+//revised
 public static <E extends Comparable<? super E>> E max(Collection<? extends E> c) {
 ```
 
@@ -478,36 +487,36 @@ public static <E extends Comparable<? super E>> E max(Collection<? extends E> c)
 
 这里花了很大代价来实现这个功能, 这样做有效果吗? 是的, 是有的.
 
-```java 
-List<SchduledFuture<?>> schuduledFutures = ...// invoke max 
+```java
+List<SchduledFuture<?>> schuduledFutures = ...// invoke max
 ```
 
 这个在之前的版本是不可以的, 但是在修订的版本是可以的. 因为`SchduledFuture`没有实现`Comparable`接口, 所以第一个版本拒绝编译. 而修订版本, 发现该接口的父接口`Delayed`, 实现了`Comparable`接口, 允许调用.
 
 通配符还有一点需要讨论的是. 如果我们需要实现一个静态工具方法, 将一个集合中的两个对象交换位置. 有两种实现方式:
 
-```java 
+```java
 public static <E> void swap(List<E> list, int i, int j);
 public static void swap(List<?> list, int i, int j);
 ```
 
 你会选哪种, 那肯定是第二种呀. 第二种简单明了. 你可以传递任何类型的通配符进行匹配. 这里有一个规则, 如果一个泛型参数, 只在方法中出现了一次. 那么推荐使用通配符`?`进行替代. 这里你可能实现的版本为:
 
-```java 
+```java
 public static void swap(List<?> list, int i, int j) {
-	list.set(i, list.set(j, list.get(i));
+    list.set(i, list.set(j, list.get(i));
 }
 ```
 
 但是可惜的是, 程序并不能编译通过. `error: incompatible type, object can't be convert to CAP#1`. 为什么会这样呢? 因为`List<?>`为无界通配符, 你不能放入任何对象, 除了null. 因为编译器不能理解?, 会自动去猜对应的值, 然后赋予一个自认为的类型`CAP#1`, 这明显不能匹配任何对象. 怎么解决这个问题呢? 通过辅助方法.
 
-```java 
+```java
 public static void swap(List<?> list, int i, int j) {
-	swapHelper(list, i, j);
+    swapHelper(list, i, j);
 }
 
 private static <E> void swapHelper(List<E> list, int i, int j) {
-	list.set(i, list.set(j, list.get(i));
+    list.set(i, list.set(j, list.get(i));
 }
 ```
 
@@ -515,17 +524,18 @@ private static <E> void swapHelper(List<E> list, int i, int j) {
 
 总而言之, 为你的方法添加泛型, 这会使得方法更加灵活. 如果你想让你的API被广泛使用, 合理的使用通配符. 记住PECS原则(Produce extends, Consumer super). 所有的`Comparable`和`Comparator`都是消费者.
 
-## Item 32: Combine generics and varags judiciously.
+## Item 32: Combine generics and varags judiciously
+
 可变参数和泛型都是在Java5加入JDK的. 但是可变参数和泛型却不能很好的配合: 可变的参数的实现, 内部通过编译器传递一个数组来存储这些对象. 而数组是具体化的, 泛型却是相反的, 在运行期是擦除了信息的. 所以当我们声明泛型的可变参数时, 编译器会提示一个警告. 而当我们在方法内部调用该泛型参数时,也会提示警告. 警告类似: `unchecked possible heap pollution ...`. `Heap pollution`就是当参数化类型引用指向的对象不是该类型时, 就会产生. 这个会导致编译器自动产生的`cast`有可能失败, 违背了泛型的原则.
 
 ```java
 //Mixing generics and varags can violate type safety!
 static void dangerous(List<String>... stringLists) {
-	List<Integer> intList = List.of(42);
-	Object[] objects = stringLists;
-	object[0] = intList;					//Heap pollution 
-	String s = stringLists[0].get(0);		//ClassCastException
-} 
+    List<Integer> intList = List.of(42);
+    Object[] objects = stringLists;
+    object[0] = intList;                    //Heap pollution
+    String s = stringLists[0].get(0);        //ClassCastException
+}
 ```
 
 这么这个例子就可以简单说明泛型的可变参数时不安全的. 其中最后一行代码爆出的异常, 就是由编译器自动生成的`cast`方法调用出错. 这说明了一个很重要的问题: `往泛型参数的可变数组内存储对象(或者修改)是非常不安全的`.
@@ -537,41 +547,41 @@ static void dangerous(List<String>... stringLists) {
 对于`@SafeVarargs`, 这是和编译器的一个约定. 但是这个约定需要你自己来完成: 在完全确定泛型可变参数方法是类型安全之后再添加该注解. 那怎么确保该方法(包含泛型可变参数)时类型安全的呢? 这里有两条准则: `对于泛型的可变参数数组不要进行任何的修改`, `不要让泛型的可变参数数组的引用逃逸出方法外部, 即保证只能在方法内部使用`. 如果保证满足这两个条件的话, 就可以说这个方法是类型安全的. 如这里举一个例子说明:
 
 ```java
-//UNSAFE - generic parameter array reference escaped out the method 
+//UNSAFE - generic parameter array reference escaped out the method
 static <T> T[] toArray(T... args) {
-	return args;
-} 
+    return args;
+}
 ```
 
 这个方法看起来就是一个简单的工具方法, 没什么问题, 但是却是非常危险的, 它会将`Heap pollution`传播到方法调用者. 假设基于这个方法实现一个工具方法:
 
 ```java
 static <T> T[] pickTwo(T a, T b, T c) {
-	switch (ThreadLocalRandom.current().nextInt(3)) {
-		case 0: return toArray(a, b);
-		case 1: return toArray(b, c);
-		case 2: return toArray(a, c);
-	}
-	throw new AssertionError();	//Can't get here
+    switch (ThreadLocalRandom.current().nextInt(3)) {
+        case 0: return toArray(a, b);
+        case 1: return toArray(b, c);
+        case 2: return toArray(a, c);
+    }
+    throw new AssertionError();    //Can't get here
 }
 
 public static void main(String[] args) {
-	String[] attributes = pickTwo("Good", "Fast", "Cheap");
+    String[] attributes = pickTwo("Good", "Fast", "Cheap");
 }
 ```
 
-这一切代码都可以正常编译, 没有任何问题. 但是我们运行时, 却会在`pickTwo`调用时爆出`ClassCastException`. 为什么会这样呢? 因为我们运行时调用`pickTwo`时, 编译器并不能理解T是什么, 于是调用`toArray`方法时就创建了`Object[]`数组来进行存储和返回. 而我们实际使用的却是`String[]`, `Object[]`并不是`String[]`的父类或子类, 无法成功进行转换(`cast`), 所以爆出这个异常. 这也就是`toArray`的`Heap pollute`传播到这里导致的. 
+这一切代码都可以正常编译, 没有任何问题. 但是我们运行时, 却会在`pickTwo`调用时爆出`ClassCastException`. 为什么会这样呢? 因为我们运行时调用`pickTwo`时, 编译器并不能理解T是什么, 于是调用`toArray`方法时就创建了`Object[]`数组来进行存储和返回. 而我们实际使用的却是`String[]`, `Object[]`并不是`String[]`的父类或子类, 无法成功进行转换(`cast`), 所以爆出这个异常. 这也就是`toArray`的`Heap pollute`传播到这里导致的.
 
 这个例子说明了第二点: `让别的方法可以访问的泛型可变参数数组是非常危险的`. 这里有两个例外: `除非别的方法是@SafeVarargs类型的方法`, 或者`别的方法是固定参数个数, 并且只是单纯对数组内的元素进行值的计算`. 上面的`pickTwo`方法虽然是固定参数的, 但是却不是对数组进行简单计算, 而是直接传播出去了. 这里举一个简单的安全使用的例子:
 
 ```java
 @SafeVarargs
 static <T> List<T> flatten(List<? extends T>... lists) {
-	List<T> result = new ArrayList<>();
-	for (List<? extends T> list : lists) 
-		result.addAll(list);
-	return result;
-} 
+    List<T> result = new ArrayList<>();
+    for (List<? extends T> list : lists)
+        result.addAll(list);
+    return result;
+}
 ```
 
 这里再次重申一下两个准则:
@@ -583,18 +593,19 @@ static <T> List<T> flatten(List<? extends T>... lists) {
 
 ```java
 static <T> List<T> flatten(List<List<? extends T>> lists) {
-	List<T> result = new ArrayList<>();
-	for (List<? extends T> list : lists) 
-		result.addAll(list);
-	return result;
-} 
+    List<T> result = new ArrayList<>();
+    for (List<? extends T> list : lists)
+        result.addAll(list);
+    return result;
+}
 ```
 
 这样就不用担心类型安全的问题了, 唯一的缺点就是相比前面的代码, 性能会差一点.
 
 总而言之, 可变参数和泛型不能很好的搭配使用, 因为可变参数的本质是数组, 而数组和泛型有很多冲突. 但是这依然是合理的, 如果你确定你的泛型可变参数方法是类型安全的, 添加`@SafeVarargs`注释, 来让这个方法更加方便使用.
 
-## Item 33: Consider typesafe heterogeneous containers. 
+## Item 33: Consider typesafe heterogeneous containers
+
 在我们使用泛型时, 一般就是通过一些集合, 如`Set<E>`, `Map<K,V>`, 或者一些单元素的容器, 如`ThreadLocal<T>`,`AtomicReference<T>`等等. 一般来说泛型参数的数量都是固定的, 如`Set<E>`只有一个`E`代表`Set`中的元素类型, `Map<K,V>`只有两个`K`,`V`代表Map中的键和值两个对象. 一般正常使用是可以满足的. 但是如果你想获得更大的灵活性: 自定义多少个泛型参数.
 
 在Java中如果想要实现`自定义多少个泛型参数`这种做法是可以实现的. 原理是: 前面的例子都是对容器进行泛型化(如对Set进行泛型化为`Set<E>`), 而我们可以对`key`进行泛型化, `key`就如同`Map`中的key, 用来放置和取出对象. 然后将这个`泛型化的key`放入容器中来进行存储, 最后利用泛型来保证key对应的对象是正确的类型.
@@ -603,43 +614,43 @@ static <T> List<T> flatten(List<List<? extends T>> lists) {
 
 类`Favorites`就如同一个简单的Map, 不过其中的`key`是泛型的, 这是API方法:
 
-```java 
+```java
 //Typesafe heterogeneous container pattern - API
 public class Favorites {
-	public <T> void putFavorite(Class<T> type, T instance);
-	public <T> T getFavorite(Class<T> type);
+    public <T> void putFavorite(Class<T> type, T instance);
+    public <T> T getFavorite(Class<T> type);
 }
 ```
 
 这里是简单的测试函数:
 
-```java 
+```java
 public static void main(String[] args) {
-	Favorites f = new Favorites();
-	f.putFavorite(String.class, "Java");
-	f.putFavorite(Integer.class, 0xcafebabe);
-	f.putFavorite(Class.class, Favorites.class);
-	String favoriteString = f.getFavorite(String.class);
-	int favoriteInteger = f.getFavorite(Integer.class);
-	Class<?> favoriteClass = f.getFavorite(Class.class);
-	System.out.printf("%s %s %s%n", favoriteString, favoriteInteger, favoriteClass);
+    Favorites f = new Favorites();
+    f.putFavorite(String.class, "Java");
+    f.putFavorite(Integer.class, 0xcafebabe);
+    f.putFavorite(Class.class, Favorites.class);
+    String favoriteString = f.getFavorite(String.class);
+    int favoriteInteger = f.getFavorite(Integer.class);
+    Class<?> favoriteClass = f.getFavorite(Class.class);
+    System.out.printf("%s %s %s%n", favoriteString, favoriteInteger, favoriteClass);
 }
 ```
 
 注意这里使用`%n`来保证平台兼容性的换行. 这里的Favorites类是类型安全的, 当你想要获取什么类型时, 自动获取什么类型. 并且是`异构的`, 不像传统的`Map`, Favorites内的`key`是不同类型的, 泛型化的.
 
-```java 
+```java
 //Typesafe heterogeneous container pattern - implementation
 public class Favorites {
-	private Map<Class<?>, Object> favorites = new HashMap<>();
+    private Map<Class<?>, Object> favorites = new HashMap<>();
 
-	public <T> void putFavorite(Class<T> type, T instance) {
-		favorites.put(Object.requireNonNull(type.class), instance);
-	}
-	
-	public <T> T getFavorite(Class<T> type) {
-		return type.cast(favorites.get(type));
-	}
+    public <T> void putFavorite(Class<T> type, T instance) {
+        favorites.put(Object.requireNonNull(type.class), instance);
+    }
+
+    public <T> T getFavorite(Class<T> type) {
+        return type.cast(favorites.get(type));
+    }
 }
 ```
 
@@ -651,9 +662,9 @@ public class Favorites {
 
 这里有两点是需要注意, 第一, 就是如果客户端使用原始类型`Map`, 不使用`Map<Class<?>, Object>`的话, 很有可能编译通过, 但是运行时出现`ClassCastException`. 这时候为了防止运行时出现这种情况, 可以在`putFavorite`方法中添加校验:
 
-```java 
+```java
 public <T> void putFavorite(Class<T> type, T instance) {
-	favorites.put(Object.requireNonNull(type.class), type.cast(instance));
+    favorites.put(Object.requireNonNull(type.class), type.cast(instance));
 }
 ```
 
@@ -663,21 +674,21 @@ public <T> void putFavorite(Class<T> type, T instance) {
 
 另外这里使用的是无界通配符, 如果想要添加限制也是可以的, 可以使用有界通配符. 如:
 
-```java 
+```java
 public <T extends Annotation> T getAnnotation(Class<T> annotationType);
 ```
 
 这里有一个特殊情况, 如果你在一个无界通配符中想要调用一个有界通配符的方法. 就比如上面的`getAnnotation`方法, 直接使用`<? exnteds Annotation>`进行修改也是可以, 但是这个转换是`unchecked`的. 这里推荐使用`Class.asSubclass`方法.
 
-```java 
+```java
 static Annotation getAnnotation(AnnotationElement element, String annotationTypeName) {
-	Class<?> annotationType = null;
-	try  = 
-		annotationType = class.forName(annotationTypeName);
-	} catch(Exception ex) {
-		throw new IllegalArgumentException(ex);
-	}
-	return element.getAnnotation(annotationType.asSubclass(Annotation.class));
+    Class<?> annotationType = null;
+    try  =
+        annotationType = class.forName(annotationTypeName);
+    } catch(Exception ex) {
+        throw new IllegalArgumentException(ex);
+    }
+    return element.getAnnotation(annotationType.asSubclass(Annotation.class));
 }
 ```
 

@@ -2,7 +2,8 @@
 
 Java中支持两种特殊的引用类型: 一种特殊的类, 枚举; 一种特殊的接口, 注释. 本章主要是讲如何高效地使用这两种类型.
 
-## Item 34: Use enums instead of int constants.
+## Item 34: Use enums instead of int constants
+
 枚举类型是一种值, 由许多固定的常量组成. 如一年的四个季节, 太阳系的八大行星等等. 在枚举类型添加到Java之前, Java中有很多方式来代表泛型, 如:
 
 ```java
@@ -210,7 +211,8 @@ public enum PayrollDay {
 
 总而言之, 相比`整形枚举模式`, 枚举根据容易阅读, 安全, 也更加实用. 大部分的情况下, 枚举并不需要自定义属性和方法. 但是枚举是允许的, 你可以只有添加各类属性和方法. 在定义一些实例区分的方法时, 可以考虑使用`实例特定`方法, 而不是`switch`语句. 并且在一些实例共享方法体时, 可以考虑抽离出方法的策略.
 
-## Item 35: Use instance fields instead of ordinals.
+## Item 35: Use instance fields instead of ordinals
+
 每个枚举内部都默认实现了一个实例方法`ordinal`方法, 这个方法返回枚举元素在枚举集合中的次序. 但是依赖这个属性来绑定特定的属性是非常不理智的:
 
 ```java
@@ -243,7 +245,8 @@ public enum Ensemble {
 
 这样既保证了灵活性, 也保证了健壮性. 所以尽可能少的依赖`ordianl`函数, 正如该方法所注释的: `Most programmers will have no use for this methods. It is designed for use by general-purpose enum-based data structures such as EnumSet and EnumMap.`;
 
-## Item 36: Use EnumSet instead of bit fields.
+## Item 36: Use EnumSet instead of bit fields
+
 如果一个枚举类型中的元素只是单纯的用于`Set`中, 以前一般的使用方法是使用`bit fields`.
 
 ```java 
@@ -276,7 +279,8 @@ text.applyStyles(EnumSet.of(Style.BOLD, Style.ITALIC));
 
 总而言之, 仅仅因为使用元素在`Set`中, 就使用`bit field`是非常不理智的. 可以使用`Enum, EnumSet`进行很好的替换. 这个消除了大部分的问题, 唯一的缺点可能就是`java9`中可能会设置`EnumSet`为可变类, 这时可以使用`Collections.unmodifiableSet`进行替换, 虽然性能可能会受到一定的影响.
 
-## Item 37: Use EnumMap instead of ordinal indexing.
+## Item 37: Use EnumMap instead of ordinal indexing
+
 有时候还是可以看到我们使用`ordinal`函数来定位一个元素在数组或者list中的位置. 如
 
 ```java 
@@ -395,7 +399,8 @@ public enum Phase {
 
 总而言之, 尽量少的使用`ordinal`来标记在数组中的顺序, 使用`EnumMap`来替代, 提高了代码的健壮性和稳定性.
 
-## item 38: Emulate extensible enums with interfaces.
+## item 38: Emulate extensible enums with interfaces
+
 枚举类型存在一个缺点就是不支持继承, 但是对于枚举类型的特质来说, 不支持往往是好事. 因为枚举就属于一种类别性质, 如果可以实现继承的话, 内部的元素是属于那种类型呢? 这就会非常困惑. 这会破坏枚举设计本身的抽象和实现.但是对于一类枚举类型(`操作码`), 继承却有着不小的吸引力. 但是本身枚举类型是不支持的, 这时候可以使用实现接口来模拟继承.
 
 ```java 
@@ -494,7 +499,8 @@ private static void test(Collection<? extends Operation> opSet, double x, double
 
 总而言之, 当你需要实现枚举继承时, 可以通过实现接口的方式模拟继承.
 
-## Item 39: Prefer annotations for naming patterns.
+## Item 39: Prefer annotations for naming patterns
+
 在Java很多的框架中, 使用`命名模式`是非常常见的. 通过特殊的名称来暗示这个对象或者方法需要特殊的对待. 如在`JUnit`的第四个版本之前, `Junit`需要所有需要进行测试的方法名都要以`test`开头. 这种模式存在着非常多的问题, 首先就是打字错误会导致静默的错误, 如果你将`test`错误的拼写成了`tset`, 那么`Junit`并不会报任何错误, 只是单纯地将该方法略过. 第二就是没有办法保证所有的方法只会在要求的对象中执行, 如果我们将一个类设计成`TestSafetyMechanisms`这时候希望`Junnit`就会默认测试该类中的所有方法. 但是非常不幸的是, 并不会理解这个类, 更不会执行相关的测试. 第三就是命名模式处理相关参数的值. 
 
 自从注解的出现之后, 这些问题都解决了. 这里以开发自己的简单测试框架为例讲述相关的注解的使用. 假设我们想单纯地声明一个注解, 来指定某些方法需要进行测试, 如果抛出异常则失败. 
@@ -714,7 +720,8 @@ if (m.isAnnotationPresent(ExceptionTest.class) || m.isAnnotationPresent(Exceptio
 
 总而言之， 尽量不要使用命名模式而是使用注释来替代.
 
-## Item40: Consistently use the Override annotation.
+## Item40: Consistently use the Override annotation
+
 合理的使用`@Override`注释可以防止出现很多潜在的问题: 如你不会错误的添加一些新的方法, 保证重写的方法可以被正确识别.如:
 
 ```java
@@ -767,6 +774,7 @@ public boolean equals(Object o) {
 总而言之, 为每一个重写的方法添加`Override`注释, 可以为我们带来极大的安全性和便利性.
 
 ## Item 41: Use marker interfaces to define types
+
 `marker interface`即标识接口, 内部没有实现方法, 只是单纯的标识这个类具有某些特殊功能. 如`Serializable`接口可以标识一个可以被正确的被序列化(`ObjectOutputStream`).
 
 这时候你也许会想到`Item 39`所说的, 为什么不使用注释来完成这项功能呢. 其实两者都有各自的优缺点. 其中标识接口最大的好处就是, 标识接口可以被实现, 而注释不可以. 这样可以允许你接受特定接口类型的参数进行编程, 并且在编译期进行类型校验. 第二就是, 标识接口可以更加精确的命中目标. 如: `Set`接口就是一个典型的`restricted marker interface`, 继承自`Collection`接口, 但是并没有添加任何新的方法, 只是对其中某些方法进行了一些特殊的限定. 这就是一个很好的使用案例.

@@ -50,7 +50,7 @@ public class StopThread {
     private static synchronized void requestStop() {
         stopRequest = true;
     }
-     
+
     private static synchronized boolean stopRequested() {
         return stopRequested;
     }
@@ -321,7 +321,7 @@ public static String intern(String s) {
 
 另外还有很多集合实现了`blocking operations`, 如`BlockingQueue`. 这在生产消费模型中是非常有用的, 可以使用多个线程进行生产或者消费, 任务则可以通过队列进行中转.
 
-第二个对象是`Synchronizers`, 主要用于让线程等待另一些线程完成工作后继续操作, 以此来保证顺序性. 常见的有: `CountDownLatch, Semaphore, CyclicBarrier, Exchanger, Phaser`. 这里以`CountDownLatch`为例: `CountDownLatch`允许先让一个或者多个线程等待另外一些线程(一个或者多个)进行操作. 具体实现: 接收一个整型参数(需要先完成的线程数量)进行计数, 每个需要先完成的线程执行完任务, 调用`countDown()`方法, 计数减少1, 计数为0之前, 阻塞主线程执行(也就是说外面的线程必须要等待内部线程完成之后, 才能继续进行). 
+第二个对象是`Synchronizers`, 主要用于让线程等待另一些线程完成工作后继续操作, 以此来保证顺序性. 常见的有: `CountDownLatch, Semaphore, CyclicBarrier, Exchanger, Phaser`. 这里以`CountDownLatch`为例: `CountDownLatch`允许先让一个或者多个线程等待另外一些线程(一个或者多个)进行操作. 具体实现: 接收一个整型参数(需要先完成的线程数量)进行计数, 每个需要先完成的线程执行完任务, 调用`countDown()`方法, 计数减少1, 计数为0之前, 阻塞主线程执行(也就是说外面的线程必须要等待内部线程完成之后, 才能继续进行).
 
 常见的用途有: 系统启动时, 某些服务启动需要依赖一部分服务, 可以使用`CountDownLatch`等待那部分服务启动之后再进行启动. 对多线程进行计时操作, 等所有的多线程都准备好了之后, 发布启动命令, 然后进行计时. 这里以第二个作用为例:
 
