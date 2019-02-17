@@ -63,14 +63,15 @@ keytool -importkeystore -srckeystore fullchain_and_key.p12 -srcstoretype PKCS12 
 
 自带: `jconsole`, `jvisualvm`, `jstack`.
 
-实例: `统计Java程序线程数量(按照状态划分)`:
+### 示例
+
+示例1: `统计Java程序线程数量(按照状态划分)`:
 
 ```java
 jstack 26173 > dump173
 
 grep java.lang.Thread.State dump173 | awk '{print $2$3$4$5}' | sort | uniq -c
 ```
-
 
 ## 磁盘内文件大小的管理
 
