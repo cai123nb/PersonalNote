@@ -1,16 +1,24 @@
 # Linux相关笔记备份
 
-## Nginx设置HTTPS
+## Nginx相关操作
 
-### 安装证书
+### 设置HTTPS
 
-使用免费的certbot进行注册和安装：[官方网址](https://certbot.eff.org/)
+#### 安装证书
 
-### 更新证书
+使用免费的certbot进行安装：[官方网址](https://certbot.eff.org/)
+
+#### 更新证书
 
 一次安装持续90天,到期时需要手动进行更新: `certbot renew --dry-run`. 这里需要注意的是: **Certbot renew 的时候要检查一下nginx的配置文件中的server_name, 注意要保证前后一致（即创建SSL时和更新时要一致），因为创建SSL时会新建一个server block，更新时会检查，如果不一致就会更新失败。**
 
-### 转换证书
+添加自动更新, 每月第一天凌晨进行更新检测:
+
+```java
+0 1 1 * * /usr/bin/certbot renew --dry-run --quiet
+```
+
+#### 转换证书
 
 默认生成的证书为`pem`类型的证书, 如果需要转换为`jks`证书用于相关Java后端程序:
 
@@ -21,6 +29,16 @@
 openssl pkcs12 -export -in fullchain.pem -inkey privkey.pem -out fullchain_and_key.p12 -name cjyong -passout pass:cai123nb
 //使用keystool生成jks类型证书
 keytool -importkeystore -srckeystore fullchain_and_key.p12 -srcstoretype PKCS12 -srcstorepass cai123nb -deststoretype JKS -destkeystore cjyong.jks -deststorepass cai123nb -alias cjyong
+```
+
+### 配置X-Frame-Options头
+
+配置X-Frame-Options头可以防止网站被嵌入到别的网站中的Frame中进行劫持攻击. 配置文件: /etc/nginx/conf.d/default.conf
+在Server下配置:
+
+```java
+//设置只有在相同源地址时才可以进行嵌入
+add_header X-Frame-Options SAMEORIGIN;
 ```
 
 ## Redis相关操作
@@ -84,16 +102,6 @@ grep java.lang.Thread.State dump173 | awk '{print $2$3$4$5}' | sort | uniq -c
 `du -ah filename`: 查看filename的文件夹及其子文件夹和文件使用情况
 `df -h`: 查看磁盘的使用情况
 `echo "" > filename`: 清空filename文件内容
-
-## Nginx配置X-Frame-Options头
-
-配置X-Frame-Options头可以防止网站被嵌入到别的网站中的Frame中进行劫持攻击. 配置文件: /etc/nginx/conf.d/default.conf
-在Server下配置:
-
-```java
-//设置只有在相同源地址时才可以进行嵌入
-add_header X-Frame-Options SAMEORIGIN;
-```
 
 ## travis CI使用
 
