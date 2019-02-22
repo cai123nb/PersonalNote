@@ -12,7 +12,7 @@
 
 一次安装持续90天,到期时需要手动进行更新: `certbot renew --dry-run`. 这里需要注意的是: **Certbot renew 的时候要检查一下nginx的配置文件中的server_name, 注意要保证前后一致（即创建SSL时和更新时要一致），因为创建SSL时会新建一个server block，更新时会检查，如果不一致就会更新失败。**
 
-添加自动更新, 每月第一天凌晨进行更新检测:
+添加自动更新, 每月第一天凌晨进行更新检测`crontab -e`:
 
 ```java
 0 1 1 * * /usr/bin/certbot renew --dry-run --quiet
