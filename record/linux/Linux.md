@@ -91,6 +91,37 @@ jstack 26173 > dump173
 grep java.lang.Thread.State dump173 | awk '{print $2$3$4$5}' | sort | uniq -c
 ```
 
+## Spring Boot项目配置为Service
+
+```c
+//笔者的Linux系统为Centos7,系统之间存在差异,请酌情修改
+1. 创建自己的service文件
+
+cd /usr/lib/systemd/system/
+vim myServe.service
+
+2. 写入配置信息
+
+[Unit]
+Description=My personal Service
+After=syslog.target
+
+[Service]
+ExecStart=/usr/local/java/jdk1.8/bin/java -jar /root/.m2/repository/com/cjyong/cp/personalweb/0.0.1-SNAPSHOT/personalweb-0.0.1-SNAPSHOT.jar
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target
+
+3. 启动服务
+
+service myServe start
+
+4. 注册开机启动
+
+systemctl enable myservice.service
+```
+
 ## 磁盘内文件大小的管理
 
 主要的命令`du`, `du`(Disk Usage): 查看文件或者目录的占用空间.
