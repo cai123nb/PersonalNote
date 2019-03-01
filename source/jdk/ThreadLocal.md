@@ -245,7 +245,7 @@ static class ThreadLocalMap {
         * designed to maximize performance for direct hits, in part
         * by making this method readily inlinable.
         *
-        * 默认使用快速定位法进行查找, 如果没有找到就是用开放地址法进行查找.
+        * 默认使用快速定位法进行查找, 如果没有找到就使用开放地址法进行查找.
         *
         * @param  key the thread local object
         * @return the entry associated with key, or null if no such
