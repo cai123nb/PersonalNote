@@ -43,3 +43,171 @@ MYSQL中大多数的事务型引擎都不是简单的行级锁, 基于性能的�
 + `UPDATE`: 插入一条新的行记录, 保存当前的事务版本号作为行版本号, 并且作为原来行的行删除版本号.
 
 通过这种多版本控制, 大多数的读操作都不需要加锁, 使的读取更快, 操作简单, 性能更好. 但是需要额外的存储空间, 进行更多的检查操作. 这个只在`REPEATABLE READ`和`READ COMMITTED`两个隔离级别工作.
+
+### 存储引擎
+
+MYSQL将每个数据库(对应一个schema)保存为数据目录下一个子目录, 并为每一个表创建一个`frm`文件保存表的定义. 因为使用目录和文件来保存数据库和表的定义, 所以大小写和平台相关.(Windows下不敏感,UNIX敏感).
+
+常见的存储引擎有: `InnoDB`, `MyISAM`, `Archive`, `Blackhole`, `CSV`, `Federated`, `Memory`,`Merge`, `NDB`等. 查看`user`表单的存储引擎: `SHOW TABLE STATUS LIKE 'user' \G`. 这里主要介绍主流的存储引擎: `InnoDB`, `MYISAM`.
+
+#### InnoDB存储引擎
+
+InnoDB是MYSQL默认的事务型存储引擎, 也是最重要, 使用最广泛的存储引擎, 被设计用于处理大量短期(`short-lived`)的事务(耗时短,一般不会回滚). 除了支持事务之外, `InnoDB`的高性能和自动崩溃恢复特性, 也使它在非事务存储的需求中应用非常广泛. 使用MYSQL时应该默认优先使用`InnoDB`存储引擎.
+
+InnoDB将数据存储在表空间中(tableSpace), 由InnoDB管理的一个黑盒子, 由一系列文件组成. MySQL4.1版本之后可以将表数据和索引分别存在不同的文件里面. 使用`MVVC`来支持高并发, 支持四种隔离级别, 默认为`REPEATABLE READ`, 并通过`间隙锁(next-key locking)`来防止幻读的情况. 其中InnoDB表是基于聚族索引建立的, 对主键的查询具有很高的效率, 其余索引依赖主键索引, 一般主键索引推荐设置尽可能小. 内部做了很多优化, 如磁盘读写时使用可预测性预读, 在内存中创建自适应哈希索引来加速索引读取速度, 使用插入缓存区来加速插入操作.
+
+#### MYISAM存储引擎
+
+`MYSQL5.1`版本之前的默认存储引擎, 具有大量特性: 全文索引, 压缩, 空间函数(GIS)等, 但是不支持事务和行级锁, 还有就是崩溃之后无法安全恢复.
+
+MYISAM将表存储到两个文件中: 数据文件(.MYD结尾)和索引文件(.MYI结尾). MYISAM支持特性: 加锁和并发(表锁), 修复(手工和自动检查, 但是存在数据丢失风险), 索引特性(支持全文索引和前500字符创建索引等), 延迟更新索引键(DELAY_KEY_WRITE, 每次修改完成之后, 不会立刻将索引文件写入文件, 而是写到内存的键缓冲区中, 清理缓冲区或者关闭表时统一写入, 可以极大提高性能但是存在索引损坏的风险). MYISAM还支持表压缩(压缩之后的表, 不允许修改)可以极大地提升查询性能.
+
+#### 转换表的引擎
+
++ `ALTER TABLE mytable ENGINE = INNODB`: 会加表锁, 新建一个表进行复制操作, 耗时较长, 不推荐在频繁访问表中使用.
++ `mysqldump`工具导出数据, 然后修改数据文件中的引擎选项和表名, 导入即可.
++ `CREATE TABLE innodb_table LIKE myisam_table; ALTER TABLE innodb_table ENGINE = INNODB; INSERT INTO innodb_table SELECT * FROM myisam_table`: 适用于数据量较小的表. 如果数据量非常大, 可以考虑使用分批次处理: `START TRANSACTION; INSERT INTO innodb_table SELECT * FROM myisam_table WHERE id BETWEEN x AND y; COMMIT;`.
+
+## 索引
+
+索引是存储引擎用于快速找到记录的一种数据结构.
+
+### 常见的索引类型
+
+索引是在存储层实现的, 没有统一的标准, 不同的存储引擎中索引的实现方式并不一样, 也不是所有的存储引擎都支持所有类型的索引. 常见的索引有:
+
+#### B-Tree索引
+
+一般我们常说的索引就是B树索引, 大多数的存储引擎也是支持该索引的. 不同的存储引擎使用方式也不太一样, MYISAM使用前缀压缩技术来压缩索引;INNODB使用B-Tree索引来连接主键索引.
+
+![SimpleB+Tee](https://image.cjyong.com/Bplustree.png)
+
+通过B+树的特性, 降低了树的高度, 减少在磁盘文件下IO的次数. 适合的查询: `全值查询`, `最左前缀查询`,`匹配列前缀`,`匹配范围值`,`精确匹配左前一列,并范围匹配左二列`, `覆盖查询`. 不支持的查询: `不适合非最左列开始查找`, `跳过索引查询`, `最左列范围查询, 会导致右列无法使用索引`.
+
+#### 哈希索引
+
+哈希索引, 实现方法类似JDK1.7的`HashMap`, 每次计算哈希值, 然后放到对应的桶里面, 如果存在冲突, 以链表的形式挂在后面. 只有`Memory`存储引擎显式支持该索引(也是默认索引). 优点: 结构紧凑, 查找速度非常快. 限制:
+
++ 只包含哈希值和行指针, 不存储字段值, 无法支持覆盖查询.
++ 不是按照索引顺序存储, 无法用于排序.
++ 不支持部分匹配查询.
++ 只支持等值比较查询. 也不支持范围查询.
++ 如果数据冲突大的话, 对性能损耗较大: 查询效率低, 维护代价也很高.
+
+INNODB存储引擎内部有一个特殊的功能`自适应哈希索引(adaptive hash index)`, 如果INNODB发现某些索引值用的非常频繁的话, 会在内存中基于B-Tree索引之上, 再建立一个哈希索引, 来提升速度.
+
+如果存储引擎不支持哈希索引, 我们可以`创建自定义的哈希索引`. 这里以一个伪哈希索引为例, 使用B-Tree来查找对应的哈希值, 而不是字段值. 这对于字段特别长的查询, 性能提升非常大.
+
+```sql
+/* 默认查询,比较字段较长,效率低下  */
+SELECT id FROM urls WHERE url = "http://www.mysql.com";
+
+/* 添加一行新的字段url_cc, 存储哈希值, 来作为索引 */
+SELECT id FROM urls WHERE url = "http://www.mysql.com" AND url_cc=CRC32("http://www.mysql.com");
+
+/* 创建触发器动态维护url_cc */
+DELIMITER //
+
+CREATE TRIGGER pseudohash_crc_ins BEFORE INSERT ON tableName FOR EACH ROW BEGIN SET NEW.url_crc=crc32(NEW.url);
+
+
+CREATE TRIGGER pseudohash_crc_upd BEFORE UPDATE ON tableName FOR EACH ROW BEGIN SET NEW.url_crc=crc32(NEW.url);
+//
+
+DELIMITER ;
+```
+
+这里使用32位整数作为哈希值, 默认当索引达到93000条记录时, 出现冲突的概率为1%. 如果数据量非常大的话, 可以自定义64位的整数哈希索引(如`FNV64()`), 这里提供一个简单的实现:
+
+```sql
+SELECT CONV(RIGHT(MD5('http://www.mysql.com'), 16), 16, 10) AS HASH64;
+```
+
+#### 空间数据索引(R-Tree)
+
+MYISAM支持空间索引, 可以用作地理数据存储, 和B-Tree索引不同, 无需前缀查询. 空间索引会从所有的维度来索引数据, 可以有效使用任意维度数据来组合查询.
+
+#### 全文索引
+
+全文索引, 特殊的索引, 查找文本中的关键字. 适用于`MATCH AGAINST`操作.
+
+### 索引的优点
+
++ 减少服务器需要扫描的数据量.
++ 帮助服务器避免排序和临时表.
++ 将随机IO转换为顺序IO.
+
+索引的评价(三星系统): 一星, 将相关记录存放在一起. 二星, 索引中的顺序和查找的顺序一致. 三星, 索引列中包含了所有的全部列.
+
+### 高性能的索引策略
+
+如何正确的创建和使用索引是实现高性能查询的基础. 这里介绍一些构建高性能索引的技巧:
+
+#### 独立的列
+
+使用索引时, 推荐把索引列单独放在一侧. 否则`MYSQL`就不会使用索引:
+
+```sql
+/* Bad implementation */
+SELECT actor_id FROM sakila.actor WHERE actor_id + 1 = 5;
+
+/* Good implementation */
+SELECT actor_id FROM sakila.actor where actor_id = 4;
+```
+
+#### 前缀索引
+
+对于某些特别长的字段, 如大的`varchar`,`blob`,`text`类型的字段, 需要进行索引, 该怎么办. 一种方法就是使用前面的哈希索引. 还有一种方式就是使用前缀索引, 即取字段的一部分进行索引. 但是这也会引来一个新的问题, 取多长的值是合适的呢? 取长的字符串索引固然可以提升前缀索引的选择性(减少冲突性), 但是也会带来一定的性能损耗. 短的字符串虽然快速, 但是会降低前缀选择性.
+
+这里我们以table `city_demo`为例, 我们需要对表中的`city`建立前缀索引, 但是取多长的值合适呢? 默认的重复数量为50-70之间. 这里我们可以进行粗略地统计:
+
+```java
+/* 如果取3个字符串, 计算重复率 */
+SELECT COUNT(*) AS cnt, LEFT(city, 3) AS pref FROM city_demo GROUP BY pref ORDER BY cnt DESC LIMIT 10;
+
++------+------+
+| cnt  | pref |
++------+------+
+| 483  | San  |
+| 195  | Cha  |
+| 177  | Tan  |
+| 167  | Sou  |
+| ...  | ...  |
++------+------+
+```
+
+我们可以粗略地看出, 取3个字符串并不能有效地区分`city`. 我们逐渐测试4,5,6,7,8,9等. 最后可以得到取7的时候, 就基本上可以有效地区分`city`.
+
+另一个方法就是计算完整列的选择性, 然后使的前缀的选择性接近于完整列的选择性.
+
+```sql
+/* 计算完整列的选择性 */
+SELECT COUNT(DISTINCT city) / COUNT(*) FROM city_demo;
+
++---------------------------------+
+| COUNT(DISTINCT city) / COUNT(*) |
++---------------------------------+
+|                           0.0312|
++---------------------------------+
+
+
+/* 计算前缀的选择性 */
+SELECT COUNT(DISTINCT LEFT(city, 3)) / COUNT(*) AS sel3,
+    COUNT(DISTINCT LEFT(city, 4)) / COUNT(*) AS sel4,
+    COUNT(DISTINCT LEFT(city, 5)) / COUNT(*) AS sel5,
+    COUNT(DISTINCT LEFT(city, 6)) / COUNT(*) AS sel6,
+    COUNT(DISTINCT LEFT(city, 7)) / COUNT(*) AS sel7
+FROM city_demo
+
++----------------------------------+
+| sel3 | sel4 | sel5 | sel6 | sel7 |
++----------------------------------+
+|0.0239|0.0293|0.0305|0.0309|0.0310|
++----------------------------------+
+```
+
+我们可以看出, 自从`sel7`之后, 提升就非常小了. 这时候取长度7就是合适的长度了.
+
+```sql
+ALTER TABLE city_demo ADD KEY (city(7));
+```
