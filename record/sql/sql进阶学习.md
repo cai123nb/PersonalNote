@@ -1,5 +1,7 @@
 # SQL进阶学习之MYSQL
 
+本章内容主要摘自 *<<高性能MYSQL(V3)>>*.
+
 ## 基础知识
 
 ### MYSQL的逻辑架构
@@ -210,4 +212,167 @@ FROM city_demo
 
 ```sql
 ALTER TABLE city_demo ADD KEY (city(7));
+```
+
+#### 多列索引
+
+很多人对多列索引的理解都不太够, 行为往往表现为为每一个列单独创建一个索引, 或者按照错误的顺序创建多列索引. 这往往会带来极大地性能损耗.
+
+如如下查询:
+
+```sql
+SELECT fild_id, actor_id FROM film_actor WHERE actor_id = 1 OR film_id = 1;
+```
+
+对于这个查询, 为每一个列进行单独的索引往往是不合适的. 在以前的旧版本中, 往往会将这种查询转换为UNION的方式:
+
+```sql
+SELECT fild_id, actor_id FROM film_actor WHERE actor_id = 1
+UNION ALL
+SELECT fild_id, actor_id FROM film_actor WHERE film_id = 1 AND actor_id <> 1;
+```
+
+而在`Mysql5.0`及之后的版本, 往往使用`索引合并`的策略, 合并索引的结果. 这是一种优化措施, 这也说明建立地索引是非常差的.
+
++ 当服务器发现多个索引做相交操作(通常为AND), 通常意味着需要一个包含所有列的多列索引, 而不是单独的索引.
++ 当服务器需要对多个索引做联合操作时, 通常需要花费大量的CPU和内存资源在算法的缓存, 排序和合并操作上. 尤其是索引的选择性不高, 数据量特别大的情况下.
++ 更重要的是, 优化器并不会将这些操作算入到`查询成本`上, 优化器只关心随机页面的读取. 这会使得查询成本被低估, 导致代价高昂还不如走全表扫描.
+
+#### 选择合适的索引顺序
+
+当我们使用多列索引时, 索引的顺序是非常重要的. 因为在B-tree模型中, 索引的顺序是按照最左列进行排序的, 其次是第二列等. 如果选择顺序, 有一个经验法则: 将选择性高的列放在索引的最前列. 但是这并不是适用于任何场景的.
+
+这里以这个查询为例:
+
+```sql
+SELECT * FROM payment WHERE staff_id = 2 AND customer_id = 584;
+```
+
+对于这个查询, 如果需要构建一个关于`staff_id`和`customer_id`的索引, 那么应该怎么选择顺序? 按照我们通用的经验, 我们计算选择性:
+
+```sql
+SELECT COUNT(DISTINCT staff_id)/COUNT(*) AS staff_id_selectivity,
+COUNT(DISTINCT customer_id)/COUNT(*) AS customer_id_selectivity,
+COUNT(*)
+FROM payment;
+
+/*
++-----------------------+------+
+|staff_id_selectivity   |0.0001|
+|customer_id_selectivity|0.0373|
+|COUNT(*)               | 16049|
++-----------------------+------+
+*/
+```
+
+从这里我们可以看出`customer_id`具有良好的选择性, 应该放在前面:
+
+```java
+ALTER TABLE payment ADD KEY(customer_id, staff_id);
+```
+
+但是这不能适配任何情况, 在某些场景中某些条件下的数量会非常的大, 这种情况下就需要不同的处理方式. 如对于某些应用, 处理没有登录的用户时, 都是将其用户名记录为`guest`, 在记录用户行为的`session`表中和其他记录用户活动表`guest`就成为了一个特殊的用户ID. 一旦涉及到这个用户的查询, 就会变得非常不同. 因为数量非常大. 还有就是系统管理员账号, 所有的人都是系统管理员账号的好友, 系统也通过系统管理员账号给所有的用户发送信息. 这个账户的巨大的好友列表很容易导致网站服务器出现性能问题. 所以对于这种情况下, 都需要对特殊用户进行单独的处理, 执行特殊的查询语句.
+
+#### 聚簇索引
+
+聚簇索引并不是一个单纯的索引类型, 而是一种数据存储格式. 我们一般的B-tree索引中存储的是索引值和索引对应的数据行地址. 但是聚簇索引不是, 内部存储的不仅是索引值, 还有数据行信息, 即数据行是按照B-Tree的形式存储在文件中的, 相邻的行是放在一起的. 这里介绍INNODB的存储引擎的实现细节, 也适用于大多数聚簇索引的情况.
+
+INNODB一般默认使用主键作为聚簇索引. 如果不存在, 就选取一个独一无二的非空索引来作为聚簇索引. 这有时候会带来较大的性能优势, 有时候却会造成严重的性能问题. 优点:
+
++ 可以把相关地址存储在一起, 方便检索相关信息.
++ 数据访问更快. 省去了定位数据行和读取数据行的步骤.
++ 覆盖索引扫描的查询可以直接使用叶节点中的主键值.
+
+缺点:
+
++ 聚簇索引可以很大程度地提高I/O密集型应用的性能, 但是如果数据全部放到内存中, 访问的顺序没这么重要时, 就没有多大的优势.
++ 插入速度严重依赖插入顺序.按照主键的顺序插入是加载数据到INNODB中最快的方式. 如果不是, 推荐在加载完成之后, 使用`OPTIMIZE TABLE`重新组织一下表.
++ 更新聚簇索引的代价非常高, 因为会强制移动行的位置.
++ 基于聚簇索引的表在插入新行时, 或者主键被更新导致需要移动行时, 可能出现`页分裂`的问题. 插入到一个已经满了的页中, 有可能导致该页分裂成两页.
++ 聚簇索引可能导致全表扫描缓慢, 尤其是行比较稀疏的时候或者页分裂导致数据存储不连续的情况下.
++ 二级索引可能比想象的要大,效率较差, 二级索引中的叶子节点包含了引用行的主键值, 且需要二次索引查找.
+
+一般的索引内部存储的是行地址. 而在聚簇索引中, 二级索引存储的是主键值, 不是行地址, 需要在主键索引中进行二次索引查找定位行地址. 这样可以避免表数据更新时更新二次索引. 但是效率会相对差一点. 聚簇索引推荐使用`AUTO_INCREMENT`作为主键的属性, 保证顺序插入.
+
+#### 覆盖索引
+
+覆盖索引, 顾名思义就是, 如果索引的叶节点中已经包含了要查询的数据, 那么就没有必要读取数据行, 直接进行返回就可以了. 覆盖索引可以极大地优化性能, 优点非常显著:
+
++ 索引条目通常远小于数据行的大小, 所以如果只需要读取索引, 那么MYSQL就会极大地减少数据访问量.
++ 因为索引是按照列值顺序存储的(在单页是这样的), 对于I/O密集型的范围查询会比随机从磁盘读取速率会高很多.
++ 一些存储引擎如MyISAM在内存中只缓存索引, 数据则是依赖操作系统来缓存, 因此访问数据需要系统调用. 这可能导致严重的性能问题.
++ 对于INNODB的聚簇索引, 覆盖索引是非常有用的. 如果二次索引的叶节点包含了主键值, 如果二级主键可以覆盖查询, 那么就可以避免对主键的二次查询.
+
+不是所有的存储引擎都支持覆盖索引(Memory不支持), 也不算所有的索引都支持覆盖索引(哈希索引, 空间索引和全文索引不支持). INNODB一般采用B-Tree的形式来支持覆盖索引. 在使用到了覆盖索引的时候, 会在`EXPLAIN的Extra属性中显示Using Index`.
+
+如`inventory`表中有一个多列索引`(store_id, film_id)`, 而MYSQL只需要查询这两个属性时:
+
+```sql
+EXPLAIN SELECT store_id, film_id FROM inventory;
+
+/*
+             id: 1
+    select_type: SIMPLE
+          table: inventory
+           type: index
+  possible_keys: NULL
+            key: idx_store_id_film_id
+        key_len: 3
+            ref: NULL
+           rows: 4693
+          Extra: Using Index
+*/
+```
+
+这里以一个例子来显示如何使用覆盖索引来优化查询:
+
+```sql
+EXPLAIN SELECT * FROM products WHERE actor='SEAN CARREY' AND title like '%APOLLO%';
+
+/*
+             id: 1
+    select_type: SIMPLE
+          table: products
+           type: ref
+  possible_keys: ACTOR,IX_PROD_ACTOR
+            key: ACTOR
+        key_len: 52
+            ref: const
+           rows: 10
+          Extra: Using Where
+*/
+```
+
+对于这个查询是无法使用覆盖查询的.
+
++ 查询中选择了所有的列. 没有任何一个索引可以提供这么多信息.
++ MYSQL不允许在索引中执行`LIKE`操作.
+
+这里使用一个特殊的方式跳过这些限制, 首先拓展索引为(artist, title, prod_id), 然后执行以下查询:
+
+```sql
+EXPLAIN SELECT * FROM products
+    JOIN (SELECT prod_id FROM products
+    WHERE actor='SEAN CARREY' AND title LIKE '%APOLLO%'
+    ) AS t1 ON (t1.prod_id=products.prod_id);
+```
+
+这里通过临时表的方式, 通过覆盖索引查询到`prod_id`, 然后通过`prod_id`来获取对应的信息. 这也被称作延迟关联(`deferred join`). 注意, 对于INNODB的聚簇索引来说, 所有的二级索引默认包含主键值, 这个信息是稳定覆盖的:
+
+```sql
+EXPLAIN SELECT actor_id,last_name FROM actor
+WHERE last_name = 'HOPPER';
+
+/*
+             id: 1
+    select_type: SIMPLE
+          table: actor
+           type: ref
+  possible_keys: idx_actor_last_name
+            key: idx_actor_last_name
+        key_len: 137
+            ref: const
+           rows: 2
+          Extra: Using Where; Using index
+*/
 ```
