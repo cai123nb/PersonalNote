@@ -364,15 +364,74 @@ EXPLAIN SELECT actor_id,last_name FROM actor
 WHERE last_name = 'HOPPER';
 
 /*
-             id: 1
-    select_type: SIMPLE
-          table: actor
-           type: ref
-  possible_keys: idx_actor_last_name
-            key: idx_actor_last_name
-        key_len: 137
-            ref: const
-           rows: 2
-          Extra: Using Where; Using index
+            id: 1
+select_type: SIMPLE
+        table: actor
+        type: ref
+possible_keys: idx_actor_last_name
+        key: idx_actor_last_name
+    key_len: 137
+        ref: const
+        rows: 2
+        Extra: Using Where; Using index
 */
 ```
+
+#### 使用索引来做排序
+
+MYSQL有两种方式生成有序结果: 排序操作和按照索引顺序扫描. 如果`EXPLAIN`出来的结果中`type`的值为`index`, 说明使用了索引扫描来做排序. 使用索引扫描排序可以极大地提高效率. 因此, 在设计索引时, 尽可能地同时满足查找任务, 也尽可能地满足排序任务: 索引的顺序和`ORDEY BY`子句的顺序完全一致, 且列的排序方向相同, 如果关联多个表时, 满足第一个表的条件时符合.
+
+假设在表`rental`中存在索引`(rental_date, inventory_id, customer_id)`. 可以使用索引进行排序的查询:
+
+```sql
+/* First */
+... ORDER BY rental_date, inventory_id, customer_id;
+
+/* Second */
+... WHERE rental_date = '2005-05-25' ORDER BY inventory_id, customer_id;
+
+/* Third */
+... WHERE rental_date = '2005-05-25' ORDER BY inventory_id DESC;
+
+/* Four */
+... WHERE rental_date > '2005-05-25' ORDER BY rental_date inventory_id;
+```
+
+不能使用的:
+
+```sql
+/* First 排序方向不同*/
+... WHERE rental_date = '2005-05-25' ORDER BY inventory_id DESC, customer_id ASC;
+
+/* Second 存在非索引列*/
+... WHERE rental_date = '2005-05-25' ORDER BY inventory_id, staff_id;
+
+/* Third 无法组合成最左前缀*/
+... WHERE rental_date = '2005-05-25' ORDER BY customer_id;
+
+/* Four 范围查询*/
+... WHERE rental_date > '2005-05-25' ORDER BY inventory_id, customer_id;
+
+/* Five 范围查询*/
+... WHERE rental_date = '2005-05-25' AND inventory_id IN (1,2) ORDER BY customer_id;
+```
+
+#### 压缩(前缀压缩)索引
+
+MYISAM使用前缀压缩来减少索引大小, 从而将更多的索引放入内存中, 在某些情况下可以带来巨大的性能提升. 默认只压缩字符串, 也可以通过参数设置对整数进行压缩. 一般的压缩方式为: 完整保留第一个值, 后续的值存储差异值. 如第一个索引为`perform`, 第二个索引值为`performance`就存储为`7,ance`. 
+
+减少了空间使用, 也带来操作上的复杂性, 每个值都依赖前面的值. 无法二分查找, 只能从头开始扫描. 一般查询效率会变慢, 对于倒序扫描(DESC)效率会更慢.
+
+#### 冗余和重复索引
+
+MYSQL支持维护重复索引, 这会严重影响性能. 避免使用重复索引. 而对于冗余索引, 则是有些不同, 如创建了(A,B)索引, 那么(A)索引就是冗余索引. 对于INNODB中的(A,ID)索引也是冗余索引.对于冗余索引, 基于不同的情况进行考虑. 如(A,B)和(A)来说, 如果B是一个非常长的字符串, 那么使用(A,B)时会比(A)要慢上很多, 如果既要保证(A,B)的查询效率, 也要保证(A)的查询效率, 那么保存两者也是可选的. 否则对于一般情况, 都不推荐使用冗余索引.
+
+怎么发现重复索引和冗余索引呢? 推荐使用`Percona Tookit`中的`pt-duplicate-key-checker`来检查重复索引和使用`pt-upgrade`工具来追踪索引变更.
+
+#### 未使用索引
+
+有些索引创建了并未使用, 那就浪费了性能, 建议删除. 打开`userstates`服务器变量, 让服务器运行一段时间, 通过查询`INFOMATION_SCHEMA.INDEX_STATISTICS`就可以查到每个索引的使用频率. 另外还可以使用`Percona Toolkit`中的`pt-index-usage`工具读取日志进行分析.
+
+#### 索引和锁
+
+索引可以让查询锁定更少的行. 如果查询从不访问那些不需要的行, 那么就会锁定更少的行, 这对于性能是非常有好处的.
