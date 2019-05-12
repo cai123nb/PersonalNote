@@ -69,12 +69,6 @@ add_header X-Frame-Options SAMEORIGIN;
 
 + `docker exec -it e6 redis-cli`: 以交互的方式连接`e6`容器, 并执行`redis-cli`命令.
 
-## Git相关操作
-
-### 拉取失败时, 显示为`fatal: refusing to merge unrelated histories`
-
-这时候一般`git`认为, 两个仓库可能不是同一个仓库(没有相同的`commit`), 这时候可以使用`git pull origin master --allow-unrelated-histories`告诉`git`, 自己已经确认好了.
-
 ## JVM程序监控
 
 ### 常用的工具
