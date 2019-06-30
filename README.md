@@ -6,7 +6,6 @@
 
 * [SQL语句基础](https://github.com/cai123nb/PersonalNote/blob/master/record/sql/SqlBase.md)
 
-
 ### java
 
 * [String对象分析](https://github.com/cai123nb/PersonalNote/blob/master/record/java/StringDetail.md)

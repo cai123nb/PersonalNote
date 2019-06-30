@@ -1,21 +1,48 @@
 # Linux相关笔记备份
 
+## 腾讯云关闭监控
+
+如果使用的是腾讯云服务器, 默认会安装安全监控脚本, 并在`crontab`中设置自动运行, 关闭方法:
+
++ 卸载程序(执行下列脚本):
+
+    ```java
+    /usr/local/qcloud/stargate/admin/uninstall.sh
+    /usr/local/qcloud/YunJing/uninst.sh
+    /usr/local/qcloud/monitor/barad/admin/uninstall.sh
+    ```
+
++ 删除对应文件夹: `rm -rf /usr/local/qcloud`.
++ 清除定期执行计划: `crontab -r`(注,如果之前自己设置了定期计划, 就需要使用`crontab -e`手动选择删除).
++ 查看是否运行: `ps -A | grep agent`.
+
 ## Nginx相关操作
 
-### 设置HTTPS
+## 安装
+
+`yum install nginx`.
+
+### 使用`certbot`进行加密
 
 #### 安装证书
 
 使用免费的certbot进行安装：[官方网址](https://certbot.eff.org/)
 
+`Nginx/Centos7`示例:
+
++ 安装依赖: `yum -y install yum-utils`
++ 添加yum配置: `yum-config-manager --enable rhui-REGION-rhel-server-extras rhui-REGION-rhel-server-optional`
++ 安装软件: `sudo yum install certbot python2-certbot-nginx`.
++ 运行软件: `sudo certbot --nginx`(注该命令会自动更新nginx配置文件, 如果需要自定义的话使用`sudo certbot --nginx certonly`).
+
 #### 更新证书
 
 一次安装持续90天,到期时需要手动进行更新: `certbot renew --dry-run`. 这里需要注意的是: **Certbot renew 的时候要检查一下nginx的配置文件中的server_name, 注意要保证前后一致（即创建SSL时和更新时要一致），因为创建SSL时会新建一个server block，更新时会检查，如果不一致就会更新失败。**
 
-添加自动更新, 每月第一天凌晨进行更新检测`crontab -e`:
+添加自动更新, 一天执行两次凌晨进行更新检测`crontab -e`:
 
 ```java
-0 1 1 * * /usr/bin/certbot renew --dry-run --quiet
+0 0,12 * * * python -c 'import random; import time; time.sleep(random.random() * 3600)' && certbot renew
 ```
 
 #### 转换证书
@@ -33,7 +60,7 @@ keytool -importkeystore -srckeystore fullchain_and_key.p12 -srcstoretype PKCS12 
 
 ### 配置X-Frame-Options头
 
-配置X-Frame-Options头可以防止网站被嵌入到别的网站中的Frame中进行劫持攻击. 配置文件: /etc/nginx/conf.d/default.conf
+配置X-Frame-Options头可以防止网站被嵌入到别的网站中的Frame中进行劫持攻击. 配置文件: `/etc/nginx/conf.d/default.conf`.
 在Server下配置:
 
 ```java
@@ -141,8 +168,8 @@ systemctl enable myservice.service
 
 + `yum install gem` : 安装gem
 + `gem sources -l` : 列出源路径
-+ `gem sources --remoeve xxxx`: 移除国外路径
-+ `gem sources --add https://gems.ruby-china.org/` : 添加国内路径
++ `gem sources --remove xxxx`: 移除国外路径
++ `gem sources --add https://gems.ruby-china.com/` : 添加国内路径
 + `gem install travis` : 安装travis, 如果出现问题, 尝试使用`yum install ruby ruby-devel ruby-docs ruby-ri ruby-rdoc rubygems`补全依赖的东西, 更新gcc: `yum install gcc`, 如果还不行, 查看错误日志: `find / -name xxx.log`查找日志位置(如果没有给出的话), 'cat/more/vim xx/xxx.log'查看日志,寻找原因进行解决.
 
 ### 生成密钥(服务器端)
@@ -152,11 +179,14 @@ systemctl enable myservice.service
 + `cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys`: 将公钥放入服务器的可信任列表中
 + `travis encrypt-file ~/.ssh/id_rsa --add`: 这时候会在.travis.yml中自动生成: 
 
-```java
-before_install:
-	- openssl aes-256-cbc -K $encrypted_a65ab4f4a956_key -iv $encrypted_a65ab4f4a956_iv
-		-in id_rsa.enc -out ~/.ssh/id_rsa -d
-```
+  ```java
+  before_install:
+    - openssl aes-256-cbc -K $encrypted_a65ab4f4a956_key -iv $encrypted_a65ab4f4a956_iv
+      -in id_rsa.enc -out ~/.ssh/id_rsa -d
+    - chmod 600 ~/.ssh/id_rsa
+  ```
+
+  **注意,默认生成为`~\/.ssh/id_rsa -d`需要把那个斜杠去掉, 最后为`~/.ssh/id_rsa -d`,并在底部添加对应的权限`- chmod 600 ~/.ssh/id_rsa`, 否则会报错.**
 
 + ‘添加权限·： 在上面配置的下面添加： `- chmod 600 ~/.ssh/id_rsa`.
 + `添加信任站点`: 项目.travis.yml中添加(ip地址为你的项目地址)

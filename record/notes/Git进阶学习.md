@@ -71,7 +71,7 @@ Git本地存储分成三大部分:
 + 配置用户邮箱: `git config user.email cjyong@cmbchina.cn --global`.
 + 查看所有的配置的信息: `git config --list`.
 + 查看具体的配置信息: `git config CONFIG_NAME(如user.email)`.
-+ 配置别名: `git config --global alias.ALIAS ACTUAL_NAME`, 如: `git config --global alias.st status`使用`git st`来指代`git status`, 自定义显示: `git config --global alias.lg "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"`.
++ 配置别名: `git config --global alias.ALIAS ACTUAL_NAME`, 如: `git config --global alias.st status`使用`git st`来指代`git status`, 自定义显示: `git config --global alias.lg "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"`.  
 
 ### 更新fork仓库
 
@@ -93,12 +93,65 @@ Git本地存储分成三大部分:
 + 对子模块进行远程更新: `git submodule update --remote`. 默认使用master分支.
 + 更多操作细节,[请查询官方文档](https://git-scm.com/book/zh/v2/Git-%E5%B7%A5%E5%85%B7-%E5%AD%90%E6%A8%A1%E5%9D%97)
 
+### 更改中间的某次提交
+
+当我们不小心提交了一个错误的提交, 我们需要撤销这次提交怎么办呢? 使用`git revert COMMIT_ID`即可, 这样会在当前的头部生成一个新的提交, 这个提交的内容就是撤销了这次提交的内容, 当然你还可以进行自定义的修改, 然后使用`git commit --amend`附加到这次提交即可. 最后推送到远程就完成了.
+
 ### 更新上次提交
+
+[官方解决方案](https://help.github.com/en/articles/changing-a-commit-message)
 
 如果提交尚未推送到远程, 可以通过`git commit --amend`修改提交的注释信息或者追加修改.
 
 + 修改注释信息: `git commit --amend`, 打开编辑页面, 修改注释信息, 选择`:wq`即可.
 + 追加修改信息: 首先将需要追加的修改信息, 添加到暂存区, 提交时使用`git commit -amend`, 直接保存退出即可.
+
+如果提交到了远程,就需要使用`rebase`命令, 具体操作参照官方解决方案:
+
++ On the command line, navigate to the repository that contains the commit you want to amend.
++ Use the git rebase -i HEAD~n command to display a list of the last n commits in your default text editor.
+
+  ```
+  $ git rebase -i HEAD~3 # Displays a list of the last 3 commits on the current branch
+  ```
+
+  The list will look similar to the following:
+
+  ```
+  pick e499d89 Delete CNAME
+  pick 0c39034 Better README
+  pick f7fde4a Change the commit message but push the same commit.
+
+  # Rebase 9fdb3bd..f7fde4a onto 9fdb3bd
+  #
+  # Commands:
+  # p, pick = use commit
+  # r, reword = use commit, but edit the commit message
+  # e, edit = use commit, but stop for amending
+  # s, squash = use commit, but meld into previous commit
+  # f, fixup = like "squash", but discard this commit's log message
+  # x, exec = run command (the rest of the line) using shell
+  #
+  # These lines can be re-ordered; they are executed from top to bottom.
+  #
+  # If you remove a line here THAT COMMIT WILL BE LOST.
+  #
+  # However, if you remove everything, the rebase will be aborted.
+  #
+  # Note that empty commits are commented out
+  ```
+
++ Replace pick with reword before each commit message you want to change.
+
+  ```
+  pick e499d89 Delete CNAME
+  reword 0c39034 Better README
+  reword f7fde4a Change the commit message but push the same commit.
+  ```
+
++ Save and close the commit list file.
++ In each resulting commit file, type the new commit message, save the file, and close it.
++ Force-push the amended commits. `git push --force`(maybe you need pull first).
 
 ### cherry-pick
 
@@ -113,3 +166,9 @@ Git本地存储分成三大部分:
 ### 拉取失败时, 显示为`fatal: refusing to merge unrelated histories`
 
 这时候一般`git`认为, 两个仓库可能不是同一个仓库(没有相同的`commit`), 这时候可以使用`git pull origin master --allow-unrelated-histories`告诉`git`, 自己已经确认好了.
+
+### 提交时报错,显示为`HEAD detached from xxxx`
+
+[参考博文](https://blog.csdn.net/u011240877/article/details/76273335)
+
+`detached`产生的原因: 当你`checkout`到某一个`commit_id`, 并不是分支时, 你在这时候进行提交代码, 就会产生一个匿名的分支. `git`无法识别你这个提交归属那里. 解决方法为: 在当前匿名分支上建立一个临时分支, 然后切换回主分支, 合并临时分支即可.
