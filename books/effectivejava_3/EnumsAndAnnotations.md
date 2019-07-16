@@ -36,7 +36,7 @@ Java中的枚举本质非常简单, 就是一类不变类, 然后导出内部的
 
 另外枚举作为一个类, 内部封装重写了`Object`所有的方法, 并且实现了`Comparable`和`Serializable`接口, 提供的高质量的内部实现. 另外, 如果你想拓展一个枚举类型, 如向内部添加属性, 方法等, 都是允许的, 并且是非常方便的. 如设计一个`Planet`包含太阳系的八大行星, 每个行星有自己的质量, 半径, 重力等等.
 
-```java 
+```java
 public enum Planet {
     MERCURY(),
     VENUS(),
@@ -103,9 +103,10 @@ public enum Operation {
     public abstract double apply(double x, double y);
 }
 ```
+
 这种就减少了冗余代码, 并且规定了每个元素分别实现自己的方法. 这样即使我们添加新的代码, 也不太可能忘记(一般都是仿照现有元素添加). 就算忘记了, 编译器也会报错, 因为这是抽象的, 实例必须实现. 完备的`Operation`枚举:
 
-```java 
+```java
 public enum Operation {
     PLUS("+") {public double apply(double x, double y) {return x + y;}}, 
     MINUS("-") {public double apply(double x, double y) {return x - y;}}, 
@@ -136,7 +137,7 @@ public static void main(String[] args) {
 
 注意枚举中内部实现了`valueOf(String)`函数, 来转换String为枚举实例. 如果你重写了`toString`方法, 推荐重写`valueOf(String)`方法, 来保证完整性. 这里提供一个通用的实现方法:
 
-```java 
+```java
 private static final Map<String, Operation> = stringToEnum = Stream.of(values()).collect(toMap(Object::toString, e -> e));
 
 public static Option<Operation> fromString(String symbol) {
@@ -148,7 +149,7 @@ public static Option<Operation> fromString(String symbol) {
 
 `实例特定方法(Constant-specific)`也有一个明显的缺点, 那就是重用代码的话就会变得非常困难. 但是对于大部分的枚举, 内部的元素并不需要全部重写指定的方法, 很多都可以公用一份代码. 比如一个计算工资的枚举`PayrollDay`, 根据每天的类型来计算工资.
 
-```java 
+```java
 public enum PayrollDay {
     MONDAY, TUESDAY, WEDENSDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY;
 
@@ -173,7 +174,7 @@ public enum PayrollDay {
 
 为了重用代码, 这里就回到了`switch`的情况, 这样是非常危险的. 如果添加了一个新的类型`Vocation`, 并且忘了在`switch`中添加方法, 这就会导致系统按照`weekday`的计算公式进行付费. 但是如果改成`实例特定`的模式, 又会产生大量冗余代码(周一到周五都是相同的函数). 这时候可以将`pay`抽象出来, 声明为一种特殊的枚举类型.
 
-```java 
+```java
 public enum PayrollDay {
     MONDAY, TUESDAY, WEDENSDAY, THURSDAY, FRIDAY, SATURDAY(PayType.WEEKEND), SUNDAY(PayType.WEEKEND);
 
@@ -228,7 +229,7 @@ public enum Ensemble {
 
 其实解决方法非常简单, 单纯地添加一个属性即可.
 
-```java 
+```java
 //Abuse of ordinal to derive an associated value
 public enum Ensemble {
     SOLO(1), DUET(2), TRIO(3), QUATET(4), QUINTET(5), SEXTET(6), SEPTET(7), OCTET(8), DOUBLE_QUATET(8);
@@ -249,7 +250,7 @@ public enum Ensemble {
 
 如果一个枚举类型中的元素只是单纯的用于`Set`中, 以前一般的使用方法是使用`bit fields`.
 
-```java 
+```java
 public class Text {
     public static final int STYLE_BOLD	        = 1 << 0;   //1
     public static final int STYLE_ITALIC        = 1 << 1;   //2
@@ -283,7 +284,7 @@ text.applyStyles(EnumSet.of(Style.BOLD, Style.ITALIC));
 
 有时候还是可以看到我们使用`ordinal`函数来定位一个元素在数组或者list中的位置. 如
 
-```java 
+```java
 class Plant {
     enum LifeCycle { ANNUAL, PERENIAL, BIENNIAL }
     final String name;
@@ -315,7 +316,7 @@ for (int i = 0; i < plantsByLifeCycle.length; i++)
 
 上面这可能就是一个常见的使用`ordinal`来定位数组中的元素. 但是这是非常脆弱的. 首先使用了泛型数组, 编译肯定会抛出警告. 然后数组并不会知道泛型的详细类型, 不能提供类型校验. 如果传递一个错误的对象进去, 很有可能就出错了. 现在存在了更好的解决方法那就是使用`EnumMap`.
 
-```java 
+```java
 Map<Plant.LifeCycle, Set<Plant>> plantsByLifeCycle = new EnumMap<>(Plant.LifeCycle.class);
 for (Plant.LifeCycle lc : Plant.LifeCycle.values()) 
     plantsByLifeCycle.put(lc, new HashSet<>());
@@ -326,7 +327,7 @@ System.out.println(plantsByLifeCycle);
 
 看起来简单明了很多, 提供了对泛型的兼容性, 并且性能不一定会比数组的差. 因为`EnumMap`底层也是使用数组实现的. 这里的`EnumMap`需要传递一个`key`的`class`信息来保证运行时的泛型信息.`EnumMap`即结合了数组的速度, 又结合了`Map`的类型安全.这里还有使用`Lambda`表达式的简化版本:
 
-```java 
+```java
 //Case 1
 System.out.println(Arrays.stream(garden).collect(groupingBy(p -> p.lifeCycle)));
 
@@ -362,7 +363,7 @@ public enum Phase {
 
 这段代码看起来非常简短, 甚至有些优雅. 但是表象总是骗人的, 编译器是不保证数组的引用和index值之间的关联的. 即, 如果你简单移动了次序, 或者增加修改了元素都会变得特别容易出错. 同样你可以使用`EnumMap`进行修复:
 
-```java 
+```java
 public enum Phase {
     SOLID, LIQUID, GAS;
 
@@ -403,7 +404,7 @@ public enum Phase {
 
 枚举类型存在一个缺点就是不支持继承, 但是对于枚举类型的特质来说, 不支持往往是好事. 因为枚举就属于一种类别性质, 如果可以实现继承的话, 内部的元素是属于那种类型呢? 这就会非常困惑. 这会破坏枚举设计本身的抽象和实现.但是对于一类枚举类型(`操作码`), 继承却有着不小的吸引力. 但是本身枚举类型是不支持的, 这时候可以使用实现接口来模拟继承.
 
-```java 
+```java
 public enum Operation {
     PLUS, MINUS, TIMES, DIVIDE;
 
@@ -447,7 +448,7 @@ public enum BasicOperation implements Operation {
 
 在这个例子中, 虽然`BasicOperation`不可以继承, 但是`Operation`是可以被实现的. 你可以通过实现该接口, 来拓展新的对象. 如:
 
-```java 
+```java
 public enum ExtendedOperation implements Operation {
     PLUS("^") {public double apply(double x, double y) {return Math.pow(x,y);}}, 
     MINUS("%") {public double apply(double x, double y) {return x % y;}}, 
@@ -501,9 +502,9 @@ private static void test(Collection<? extends Operation> opSet, double x, double
 
 ## Item 39: Prefer annotations for naming patterns
 
-在Java很多的框架中, 使用`命名模式`是非常常见的. 通过特殊的名称来暗示这个对象或者方法需要特殊的对待. 如在`JUnit`的第四个版本之前, `Junit`需要所有需要进行测试的方法名都要以`test`开头. 这种模式存在着非常多的问题, 首先就是打字错误会导致静默的错误, 如果你将`test`错误的拼写成了`tset`, 那么`Junit`并不会报任何错误, 只是单纯地将该方法略过. 第二就是没有办法保证所有的方法只会在要求的对象中执行, 如果我们将一个类设计成`TestSafetyMechanisms`这时候希望`Junnit`就会默认测试该类中的所有方法. 但是非常不幸的是, 并不会理解这个类, 更不会执行相关的测试. 第三就是命名模式处理相关参数的值. 
+在Java很多的框架中, 使用`命名模式`是非常常见的. 通过特殊的名称来暗示这个对象或者方法需要特殊的对待. 如在`JUnit`的第四个版本之前, `Junit`需要所有需要进行测试的方法名都要以`test`开头. 这种模式存在着非常多的问题, 首先就是打字错误会导致静默的错误, 如果你将`test`错误的拼写成了`tset`, 那么`Junit`并不会报任何错误, 只是单纯地将该方法略过. 第二就是没有办法保证所有的方法只会在要求的对象中执行, 如果我们将一个类设计成`TestSafetyMechanisms`这时候希望`Junnit`就会默认测试该类中的所有方法. 但是非常不幸的是, 并不会理解这个类, 更不会执行相关的测试. 第三就是命名模式处理相关参数的值.
 
-自从注解的出现之后, 这些问题都解决了. 这里以开发自己的简单测试框架为例讲述相关的注解的使用. 假设我们想单纯地声明一个注解, 来指定某些方法需要进行测试, 如果抛出异常则失败. 
+自从注解的出现之后, 这些问题都解决了. 这里以开发自己的简单测试框架为例讲述相关的注解的使用. 假设我们想单纯地声明一个注解, 来指定某些方法需要进行测试, 如果抛出异常则失败.
 
 ```java
 import java.lang.annotation.*;

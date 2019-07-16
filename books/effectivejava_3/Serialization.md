@@ -280,7 +280,7 @@ private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundEx
 + 如果检测出错的需要抛出`InvalidObjectException`.
 
 + 如果整个对象必须序列化之后才能进行校验, 使用`ObjectInputValidation`接口.
-  
+
 + 不要在方法内部调用任何可重写的方法.
 
 ## Item 89: For instance control, prefer enum types to readResolve

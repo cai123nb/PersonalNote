@@ -1,5 +1,7 @@
 ### 高效使用并行化
+
 示例代码:
+
 ```java
 import java.util.function.Function;
 import java.util.stream.LongStream;
@@ -62,29 +64,32 @@ public class Main7 {
 
 }
 ```
+
 + 结果示意图:
-![结果比较](https://image.cjyong.com/blog/bj8_2.jpg)
+  ![结果比较](https://image.cjyong.com/blog/bj8_2.jpg)
 + 小结:
-	- 并行流不总是比顺序流块, 有时候和你的直觉差别很大,最好的方法就是寻找合适的基准进行校验.
-	- 留意装箱带来的额性能损耗, 自动装箱和拆箱会大大降低性能, 尽量使用原始类型流: IntSteam, LongSteam, DoubleStream来避免这些操作.
-	- 有些操作本身就不适合并行计算, 如: limit, findFirst.
-	- 考虑流操作的流水线计算总成本, 设N是要处理的元素的总数, Q是一个元素通过流水线所需要的大致成本, 则N*Q就是这个对成本的粗略定性估计. Q值较高意味着使用并行流性能好的可能性较大.
-	- 对于较小数据量, 不推荐并行流.
-	- 考虑流背后的数据结构是否易于分解. 如: ArrayList拆分效率比LinkedList高很多.
-	- 流本身的中间操作修改流的方式, 都可能会改变分解过程的性能.
-	- 还要考虑终端操作中合并步骤的代价是否大还是小.
-	- 并行流背后的使用的基础就是Java7中引入的分支/合并框架.
-	- 流的数据源可分解性:
-		+ ArrayList: 极佳
-		+ LinkedList: 差
-		+ IntSteam.range: 极佳
-		+ Steam.iterate: 差
-		+ HashSet: 好
-		+ TreeSet: 好
+  - 并行流不总是比顺序流块, 有时候和你的直觉差别很大,最好的方法就是寻找合适的基准进行校验.
+  - 留意装箱带来的额性能损耗, 自动装箱和拆箱会大大降低性能, 尽量使用原始类型流: IntSteam, LongSteam, DoubleStream来避免这些操作.
+  - 有些操作本身就不适合并行计算, 如: limit, findFirst.
+  - 考虑流操作的流水线计算总成本, 设N是要处理的元素的总数, Q是一个元素通过流水线所需要的大致成本, 则N*Q就是这个对成本的粗略定性估计. Q值较高意味着使用并行流性能好的可能性较大.
+  - 对于较小数据量, 不推荐并行流.
+  - 考虑流背后的数据结构是否易于分解. 如: ArrayList拆分效率比LinkedList高很多.
+  - 流本身的中间操作修改流的方式, 都可能会改变分解过程的性能.
+  - 还要考虑终端操作中合并步骤的代价是否大还是小.
+  - 并行流背后的使用的基础就是Java7中引入的分支/合并框架.
+  - 流的数据源可分解性:
+    + ArrayList: 极佳
+    + LinkedList: 差
+    + IntSteam.range: 极佳
+    + Steam.iterate: 差
+    + HashSet: 好
+    + TreeSet: 好
 
 ### 分支合并框架
+
 + 分支合并框架的目的是以递归的方式将并行的任务拆分成更小的任务, 然后将每个子任务的结果合并生成整体结果.
 + 简单示例:
+
 ```java
 import java.util.concurrent.RecursiveTask;
 /**
@@ -137,17 +142,20 @@ public class ForkJoinSumCalculator extends RecursiveTask<Long>{
         return new ForkJoinPool().invoke(task);
     }
 ```
+
 + 注意事项:
-	- 对一个任务调用join方法会堵塞调用方, 直到该任务做出结果. 有必要在两个子任务的计算都开始之前再调用它. 否则你得到的版本会比原始的顺序算法更加慢和复杂.
-	- 不应该在RecursiveTask内部使用ForkJoinPool的invoke方法, 相反始终调用compute或者fork方法, 只有顺序代码才应该使用invoke来启动并行.
-	- 同时对左边, 右边子任务调用fork方法, 看似合理, 但是效率会比只对一个任务调用更加的低, 这样可以为一个子任务重用同一线程.
-	- 调试使用分支合并框架的并行计算有点棘手, 无法再stack trace中进行动态调试.
-	- 和并行流一样, 我们不能理所当然的任务分支合并一定比顺序执行要快. 有时候合理的分解任务可以带来良好的性能, 此外分支合并框架需要"预热", 执行多遍之后才会被JIT编译器所优化.
+  - 对一个任务调用join方法会堵塞调用方, 直到该任务做出结果. 有必要在两个子任务的计算都开始之前再调用它. 否则你得到的版本会比原始的顺序算法更加慢和复杂.
+  - 不应该在RecursiveTask内部使用ForkJoinPool的invoke方法, 相反始终调用compute或者fork方法, 只有顺序代码才应该使用invoke来启动并行.
+  - 同时对左边, 右边子任务调用fork方法, 看似合理, 但是效率会比只对一个任务调用更加的低, 这样可以为一个子任务重用同一线程.
+  - 调试使用分支合并框架的并行计算有点棘手, 无法再stack trace中进行动态调试.
+  - 和并行流一样, 我们不能理所当然的任务分支合并一定比顺序执行要快. 有时候合理的分解任务可以带来良好的性能, 此外分支合并框架需要"预热", 执行多遍之后才会被JIT编译器所优化.
 + 分支合并法使用"工作窃取"的方法来保证所有子任务完成时间大体相同: 任务拆分之后放在对应线程的任务队列中, 在队列中这些任务使用双向链式进行连接, 每当一个任务完成, 该线程从队列头取出下一个任务开始执行. 由于某些原因(CPU划分效率, 磁盘读取速度等), 某些线程早早完成了所分配的所有任务, 队列已经清空, 而其他线程还在忙. 这时候, 这个线程随机选取一个别的线程, 从该线程的队列尾部"偷走"一个任务进行执行, 直到所有的子任务完成. 所以我们分解任务时, 不应该只是划分几个大任务, 而是划分成多个小任务, 更加有助于工作线程之间的负载平衡.
 
-### Spliterator 
+### Spliterator
+
 + Spliterator 是Java8中新添加的接口, 用于并行执行而设计的迭代器.
 + 简单示例:
+
 ```java
 package MyIterator;
 /**
@@ -180,6 +188,7 @@ public class WordCounter {
     }
 }
 ```
+
 ```java
 package MyIterator;
 import java.util.Spliterator;
@@ -229,6 +238,7 @@ public class WordCounterSpliterator implements Spliterator<Character> {
     }
 }
 ```
+
 ```java
 import MyIterator.WordCounter;
 import MyIterator.WordCounterSpliterator;
@@ -283,6 +293,7 @@ public class Main7_3 {
     }
 }
 ```
+
 ```java
 //Spliterator接口源码
 package java.util;
@@ -949,6 +960,7 @@ public interface Spliterator<T> {
     }
 }
 ```
+
 + 结果比较:
 
 ![结果比较](https://image.cjyong.com/blog/bj8_3.jpg)

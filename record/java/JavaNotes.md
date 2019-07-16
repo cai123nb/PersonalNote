@@ -79,17 +79,17 @@ Java技术书籍的读书笔记, 该类书籍不适合逐章书写笔记(如`Eff
 
 + Java中的多线程是一种抢占式的机制, 而不是分时机制(协同式).
 + 共同点:
-  + 他们都是在多线程的环境下，都可以在程序的调用处阻塞指定的毫秒数, 并返回.
-  + wait()和sleep()都可以通过interrupt()方法打断线程的暂停状态, 从而使线程立刻抛出InterruptedException. 
-  + 如果线程A希望立即结束线程B, 则可以对线程B对应的Thread实例调用interrupt方法. 如果此刻线程B正在wait/sleep/join, 则线程B会立刻抛出InterruptedException, 在catch() {} 中直接return即可安全地结束线程.
-  + 需要注意的是, InterruptedException是线程自己从内部抛出的, 并不是interrupt()方法抛出的. 对某一线程调用interrupt()时, 如果该线程正在执行普通的代码, 那么该线程根本就不会抛出InterruptedException. 但是, 一旦该线程进入到 wait()/sleep()/join()后, 就会立刻抛出InterruptedException.
-+ 不同点 ：  
-  + 每个对象都有一个锁来控制同步访问. Synchronized关键字可以和对象的锁交互, 来实现线程的同步. 
-  + sleep方法没有释放锁, 而wait方法释放了锁, 使得其他线程可以使用同步控制块或者方法.
-  + wait, notify和notifyAll只能在同步控制方法或者同步控制块里面使用(执行的前提是拥有对象锁), 而sleep可以在任何地方使用 .
-  + sleep必须捕获异常, 而wait, notify和notifyAll不需要捕获异常.
-  + sleep是线程类（Thread）的方法, 导致此线程暂停执行指定时间, 给执行机会给其他线程, 但是监控状态依然保持, 到时后会自动恢复. 调用sleep不会释放对象锁.
-  + wait是Object类的方法, 对此对象调用wait方法导致本线程放弃对象锁, 进入等待此对象的等待锁定池, 只有针对此对象发出notify方法(或notifyAll)后本线程才进入对象锁定池准备获得对象锁进入运行状态.
++ 他们都是在多线程的环境下，都可以在程序的调用处阻塞指定的毫秒数, 并返回.
++ wait()和sleep()都可以通过interrupt()方法打断线程的暂停状态, 从而使线程立刻抛出InterruptedException.
++ 如果线程A希望立即结束线程B, 则可以对线程B对应的Thread实例调用interrupt方法. 如果此刻线程B正在wait/sleep/join, 则线程B会立刻抛出InterruptedException, 在catch() {} 中直接return即可安全地结束线程.
++ 需要注意的是, InterruptedException是线程自己从内部抛出的, 并不是interrupt()方法抛出的. 对某一线程调用interrupt()时, 如果该线程正在执行普通的代码, 那么该线程根本就不会抛出InterruptedException. 但是, 一旦该线程进入到 wait()/sleep()/join()后, 就会立刻抛出InterruptedException.
++ 不同点 ：
++ 每个对象都有一个锁来控制同步访问. Synchronized关键字可以和对象的锁交互, 来实现线程的同步.
++ sleep方法没有释放锁, 而wait方法释放了锁, 使得其他线程可以使用同步控制块或者方法.
++ wait, notify和notifyAll只能在同步控制方法或者同步控制块里面使用(执行的前提是拥有对象锁), 而sleep可以在任何地方使用 .
++ sleep必须捕获异常, 而wait, notify和notifyAll不需要捕获异常.
++ sleep是线程类（Thread）的方法, 导致此线程暂停执行指定时间, 给执行机会给其他线程, 但是监控状态依然保持, 到时后会自动恢复. 调用sleep不会释放对象锁.
++ wait是Object类的方法, 对此对象调用wait方法导致本线程放弃对象锁, 进入等待此对象的等待锁定池, 只有针对此对象发出notify方法(或notifyAll)后本线程才进入对象锁定池准备获得对象锁进入运行状态.
 
 ## |/||
 
@@ -115,7 +115,7 @@ Java技术书籍的读书笔记, 该类书籍不适合逐章书写笔记(如`Eff
 
 ## JVM内存小解
 
-+ 大多数 JVM 将内存区域划分为 Method Area(Non-Heap)(方法区), Heap(堆), Program Counter Register(程序计数器), VM Stack(虚拟机栈), Native Method Stack(本地方法栈), 其中Method Area 和Heap 是线程共享的, VM Stack, Native Method Stack和Program Counter Register是非线程共享的. 
++ 大多数 JVM 将内存区域划分为 Method Area(Non-Heap)(方法区), Heap(堆), Program Counter Register(程序计数器), VM Stack(虚拟机栈), Native Method Stack(本地方法栈), 其中Method Area 和Heap 是线程共享的, VM Stack, Native Method Stack和Program Counter Register是非线程共享的.
 + 一个 Java 源程序文件, 会被编译(如javac)为字节码文件(以class 为扩展名, 平台无关字节码文件), 每个java程序都需要运行在自己的JVM上, 然后告知JVM 程序的运行入口, 再被JVM 通过字节码解释器加载(这里暂时不考虑即时编译的问题)运行.
 + 概括地说来, JVM初始运行的时候都会分配好Method Area(方法区)和Heap(堆), 而JVM每遇到一个线程, 就为其分配一个Program Counter Register(程序计数器), VM Stack(虚拟机栈)和Native Method Stack (本地方法栈),  当线程终止时, 三者(虚拟机栈, 本地方法栈和程序计数器)所占用的内存空间也会被释放掉. 这也是内存区域分为线程共享和非线程共享的原因, 非线程共享的那三个区域的生命周期与所属线程相同, 而线程共享的区域与JAVA程序运行的生命周期相同, 所以这也是系统垃圾回收的场所只发生在线程共享的区域(主要是堆)的原因.
 

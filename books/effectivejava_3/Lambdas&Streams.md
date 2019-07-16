@@ -293,25 +293,25 @@ private static List<Card> newDeck() {
 
 假设需要完成一个需求, 统计一个文章内的单词格数：
 
- ```java
- //Uses the streams API but not paradigm -- Don't do this
- Map<String, Long> freq = new HashMap<>();
+```java
+//Uses the streams API but not paradigm -- Don't do this
+Map<String, Long> freq = new HashMap<>();
 try (Stream<String> words = new Scanner(file).tokens()) {
-    words.forEach(word -> {
-        freq.merge(word.toLowerCase(), 1L, Long::sum)
-    });
+   words.forEach(word -> {
+       freq.merge(word.toLowerCase(), 1L, Long::sum)
+   });
 }
- ```
+```
 
- 这段代码虽然可以正确执行, 但却是感觉有股坏味道`bad smell`. 为什么, 因为这里的forEach函数使用了Lambdas进行处理, 但是处理的过程却不是纯函数的, 依赖于外部的freq. 只是一个伪装的streams编程. 那么正确的编程为:
+这段代码虽然可以正确执行, 但却是感觉有股坏味道`bad smell`. 为什么, 因为这里的forEach函数使用了Lambdas进行处理, 但是处理的过程却不是纯函数的, 依赖于外部的freq. 只是一个伪装的streams编程. 那么正确的编程为:
 
- ```java
- Map<String, Long> freq;
- try (Stream<String> words = new Scanner(file).tokens()) {
-     freq = words
-        .collect(groupingBy(String::toLowerCase, counting()));
+```java
+Map<String, Long> freq;
+try (Stream<String> words = new Scanner(file).tokens()) {
+    freq = words
+       .collect(groupingBy(String::toLowerCase, counting()));
 }
- ```
+```
 
 这段代码和前面的代码完成一样的事, 但是更加简洁, 可读性也更好. 这里放弃了`forEach`方法, 而是使用了新的`collect`方法. 为什么放弃`forEach`方法, 因为作为一个终端操作, `forEach`对`streams`并不友好, 且不支持并行化. 因此**forEach一般只用来输出数组中的元素**.
 

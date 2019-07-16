@@ -1,10 +1,13 @@
 # 类加载及执行子系统的案例与实战
 
 ## 概述
+
 在Class文件格式与执行引擎这部分中, 用户的程序可以直接影响的内容并不太多,  Class文件以何种格式存储, 类型何时加载,  如何连接等等都是由虚拟机直接控制的行为, 用户程序无法对其进行改变. 可以通过程序进行操作的, 主要是字节码生成与类加载器这两部分的功能.
 
 ## 案例分析
+
 ### Tomcat: 正统的类加载器架构
+
 主流的Java Web服务器, 如Tomcat, Jetty, WebLogic, WebSphere等主流的服务器, 都实现了自己定义的类加载器(一般不止一个). 因为一个功能健全的Web服务器, 要解决如下问题:
 + 部署在同一个服务器上的两个Web应用服务器所使用的Java类库可以实现相互隔离. 两个不同的应用程序可能会依赖同一个第三方类库的不同版本, 不能要求一个类库在一个服务器上只有一份, 服务器应当保证两个应用程序的类库可以互相独立使用.
 + 部署在同一个服务器上的两个Web应用所使用的Java类库可以互相共享. 如10个使用Spring组织的应用程序部署在同一台服务器上, 如果把10分Spring分别存放在各个应用程序的隔离目录上, 就会是很大的资源浪费: 如果类库不能共享, 虚拟机的方法区就会很容易出现过度膨胀的风险.
@@ -26,6 +29,7 @@
 CommonClassLoader, CatalinaClassLoader, SharedClassLoader和WebAppClassLoader是Tomcat自定义的类加载器, 它们分别加载/common/*, /server/*, /share/*和/WebApp/WEB-INF/*中的Java类库. 其中WebAppClassLoader对应每一个Web应用程序, 每个引用程序代表具有一个实例. JsperLoader则是对应每一个JSP文件, 每个JSP文件具有一个JsperLoader的实例(便于实现HotSwap功能, 每当JSP文件修改了, 替换当前的JsperLoader的实例, 并新建一个新的Jsp类加载器来实现HotSwap).
 
 ### OSGi: 灵活的类加载器架构
+
 OSGi(Open Service Gateway Initiative)是OSGI联盟(OSGi Alliance)制定的一个基于Java语言的动态模块化标准规范, 现在已经成为Java世界中"事实上"的模块化标准.
 
 OSGi中每个模块(称为Bundle)与普通的Java类库区别不是很大, 两种一般都以JAR格式进行封装, 并且内部存储的是Java Package的Class. 但是一个Bundle可以声明它所依赖的Java Package(通过Import-Package描述), 也可以声明它允许导出发布的Java Package(通过Export-Package描述). 这样提供了更加精确的模块划分和可见性控制: 一个模块里只有被Export过的Package才可能被外界访问, 其他的Package和Class将会隐藏起来. 另外OSGi的程序很可能实现模块级的热拔插功能, 当程序升级更新或调试除错时, 可以只停用, 重新安装然后启用程序中的一部分.
@@ -279,7 +283,7 @@ final class $Proxy0 extends Proxy implements IHello {
 
 为了解决代码在JDK版本之间的跨越, 一种名为`Java逆向移植(Java BackPointing Tools)`的工具应运而生, 而Retrotranslator就是这类工具中较为出色的一个.
 
-Retrotranslator的主要作用就是将JDK1.5编译出来的Class文件转变为JDK1.4或JDK1.3上部署的版本, 它可以很好的支持自动装箱, 泛型, 动态注解, 枚举, 变长参数, 遍历循环, 静态导入这些语法特性, 甚至支持JDK1.5中新增的集合改进, 并发包以及对泛型, 注解等的反射操作. 
+Retrotranslator的主要作用就是将JDK1.5编译出来的Class文件转变为JDK1.4或JDK1.3上部署的版本, 它可以很好的支持自动装箱, 泛型, 动态注解, 枚举, 变长参数, 遍历循环, 静态导入这些语法特性, 甚至支持JDK1.5中新增的集合改进, 并发包以及对泛型, 注解等的反射操作.
 
 每次JDK升级, 新增的功能主要分为以下4类:
 + 在编译器层面做的改进. 如自动装箱拆箱, 实际上就是编译器在程序中使用到了包装对象的地方自动插入了许多Integer.valueOf()子类的代码等等.
@@ -288,8 +292,4 @@ Retrotranslator的主要作用就是将JDK1.5编译出来的Class文件转变为
 + 虚拟机内部的改进. 如JDK1.5中实现的Java内存模型, CMS收集器子类的改动.
 
 对于上述4种功能, Retrotranslator只能模拟前2类, 对于后面两类直接在虚拟机内部进行的改进, 是没办法实现的. 对于上面的第2类比较简单, 一般引入独立的jar包来实现新的功能即可. 但是对于第一类, 则是使用ASM框架直接对字节码进行处理.
-
-
-
-
 

@@ -1,4 +1,5 @@
 # 观察者模式(Observer Pattern)
+
 类似报纸和订阅的关系, 如果你订阅了报纸, 只要出了新的报纸, 就会发送给你. 如果你取消了订阅, 那么出了新的报纸就不会发送给你了. 一份报纸可以有很多人订阅. 这是处理一对多的关系很好用的一种模式.
 简单的气象站的例子:
 
@@ -110,6 +111,7 @@ public class WeatherStation {
 ```
 
 ## Java内置观察者模式
+
 Java内置在util包中, 主题者通过Observable类进行实现, 订阅者通过接口Observer进行实现.
 源代码:
 
@@ -356,6 +358,7 @@ public class CurrentConditionsDisplay implements Observer, DisplayElement {
 ```
 
 ## 总结
+
 观察者模式: 在对象之间定义了一对多的依赖, 这样一来, 当一个对象改变状态, 依赖它的对象都会受到通知, 并自动更新.
 
 要点

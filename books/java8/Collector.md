@@ -1,4 +1,5 @@
 ### 收集器简介
+
 Collect,终端操作,一种归约操作,将流里面的所有元素进行转换操作,累积成一个汇总结果. 通过定义一个Collector接口传递给Collect来实现的.如:
 
 ```java
@@ -13,6 +14,7 @@ public static <T> Collector<T, ?, List<T>> toList() {
 ```
 
 ### 预定义的归约和汇总
+
 ##### couting
 
 ```java
@@ -45,6 +47,7 @@ String shortMenu = menu.stream().map(Dish:getName).collect(joining(", "));
 ```
 
 ### 广义的归约汇总
+
 之前讨论的预定义收集器,都是可以使用reducing工厂方法来实现,可以看做是reducing工厂方法定义的归约过程的特殊情况.如:
 
 ```java
@@ -89,6 +92,7 @@ Sream.reduce: 目标是将两个值结合在一起生成一个新值,是一个�
 Collect.reducing: 修改容器来实现累加过程,在多线程过程中更加擅长.
 
 ### 分组
+
 使用Collectors.groupingBy工厂方法
 
 ```java
@@ -124,6 +128,7 @@ Map<Dish.Type,Map<CaloricLevel,List<Dish>>> dishesByTypeCaloricLevel =
 ```
 
 ##### 利用子组进行数据收集
+
 由于groupingBy第二种构造函数的第二个参数允许不同的收集器,我们可以通过传入不同的收集器实现不同的功能,如:
 
 ```java
@@ -141,7 +146,7 @@ Map<Dish.Type,Dish> mostCaloricByType = menu.stream()
                 Comparator.comparingInt(Dish::getCalories)),Optional::get)));
 ```
 
-源代码解释: Adapts a {@code Collector} to perform an additional finishing transformation. 
+源代码解释: Adapts a {@code Collector} to perform an additional finishing transformation.
 
 ```java
 public static<T,A,R,RR> Collector<T,A,RR> collectingAndThen(Collector<T,A,R>   downstream, Function<R,RR> finisher){}
@@ -182,6 +187,7 @@ Map<Dish.Type,Set<CaloricLevel>> caloricLevelByType2 = menu.stream()
 ```
 
 ### 分区
+
 + 分区时分组的特殊情况, 由一个谓词(返回一个布尔值得函数) 作为分类函数. 如:
 
 ```java
@@ -210,6 +216,7 @@ public Map<Boolean, List<Integer>> partitionPrimes(int n){
 ```
 
 ### Collectors类静态工厂方法列表:
+
 + toList,返回List<T>,将流中的项目收集到一个List上
 
 ```java
@@ -270,16 +277,19 @@ Optional<Dish> fattest = menuStream.collect(maxBy(comparingInt(Dish::getCalories
 ```java
 int totalCalories = menuStream.collect(reducing(0,Dish::getCalories,Integer::sum));
 ```
+
 + collectingAndThen,转换函数返回的类型,包裹另一个收集器,对其结果应用转换函数
 
 ```java
 int howManyDishes = menuStream.collect(reducing(0,Dish::getCalories, Integer::sum));
 ```
+
 + groupingBy,返回Map<K,List<T>>,根据一个项目的属性额值对流中的项目作分组,并将属性值作为结果Map的键
 
 ```java
 Map<Dish.Type,List<Dish>> dishesByType = menuStream.collect(groupingBy(Dish::getType));
 ```
+
 + partitioningBy, 返回Map<Boolean,List<T>>,根据流中每个项目应用对应谓词的结果来对项目进行分区
 
 ```java
@@ -287,6 +297,7 @@ Map<Booean,List<Dish>> vegetarianDishes = menuStream.collect(partitioningBy(Dish
 ```
 
 ### 收集器接口
+
 Java中源代码:
 
 ```java
@@ -428,6 +439,7 @@ public class MyCollectors<T> implements Collector<T, List<T>, List<T>> {
 ```
 
 ### 开发自己的收集器
+
 #### 之前利用分区区分质数获得Map:
 
 ```java
@@ -442,6 +454,7 @@ public static boolean isPrime(int candidate) {
             .noneMatch(i -> candidate % i == 0);
 }
 ```
+
 #### 同样我们可以利用收集器实现我们的想法
 
 ```java
@@ -514,6 +527,7 @@ public class PrimeNumbersCollector implements Collector<Integer, Map<Boolean,Lis
 }
 
 ```
+
 #### 性能比较:
 
 ```java
@@ -541,6 +555,7 @@ System.out.println("Fastest execution done in " + fastest2 + "msecs");
 ![结果比较](https://image.cjyong.com/blog/bj8_1.jpg)
 
 + 可以看出我们自己的收集器具有更加良好的性能
+
 #### 匿名收集器写法:
 
 ```java
@@ -561,3 +576,4 @@ public Map<Boolean, List<Integer>> partitionPrimesWithInlineCollector(int n) {
                         });
     }
 ```
+

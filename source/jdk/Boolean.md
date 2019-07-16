@@ -1,4 +1,5 @@
 # Boolean
+
 JDK1.8:
 
 ```java
@@ -261,3 +262,4 @@ package java.lang;
 	}
 }
 ```
+

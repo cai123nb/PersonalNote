@@ -1,7 +1,11 @@
 ### 背景
+
 这些年有两种趋势不断推动我们反思我们设计软件的方式. 第一种趋势和应用运行的平台向相关, 第二种趋势与应用程序的架构相关. 随着多核处理器的出现, 提升应用程序处理速度最有效的方式是编写可以充分发挥多核能力的软件, 这一点我们可以通过合理地切分大型任务, [并行处理](https://github.com/cai123nb/PersonalNote/blob/master/Java8InAction/Parallel.md)来实现. 第二种趋势反映在公共API日益增长的互联网服务应用. 著名的互联网大鳄们纷纷提供了自己的公共API服务, 如谷歌的地理信息服务, Facebook的社交信息服务等. 很少有网站或者网络应用是以完全隔离的方式进行工作的. 但是如果某些网络服务发生响应慢的情况, 你希望依旧为用户提供部分信息. 如听带有问号标记的通用地图, 以文本的方式显示信息, 而不是呆呆地显示一片空白屏幕, 直到服务器返回结果或者超时. 这就需要引入`并发`, 在同一个CPU上执行几个松耦合的任务, 充分利用CPU的核, 使其足够忙碌.
+
 ### 传统的Future接口
+
 `Future`接口在Java5中被引入,  它使用一种异步计算的方式, 当遇到复杂且耗时的计算时, 通过新建一个fork一个线程进行计算, 主体线程依旧进行其他有价值的计算. 如:
+
 ```java
 ExecutorService executoer = Executors.newCachedThreadPool();
 Future<Double> future = executoer.submit(new Callable<Double>() {
@@ -22,10 +26,13 @@ try {
     //在Future对象完成之前超出已过期
 }
 ```
+
 局限性: Future接口提供了方法(isDone)来检测异步计算是否已经结束,等待异步操作结束, 获取计算的结果.但是这些特性依然不够你编写简洁的并发代码. 如: 我们很难表述Future结果之间的依赖性; 如果我们需要进行两个异步计算, 且第二个异步计算依赖于第一个的结果; 等待Future结合中所有的任务都完成; 仅仅等待Future结合中最快结束的任务完成等. 因此我们引入了CompletableFuture.
 
 ### CompletableFuture
+
 CompletableFuture接口实现了Future接口, 但是CompletableFuture接口比Future具有更多的特性, 来帮助我们完成并发的代码实现. 先用一个小小的例子来展示一下CompletableFuture的用法:
+
 ```java
 package main11;
 
@@ -90,8 +97,10 @@ try {
 long retrievalTime = ((System.nanoTime() - start) / 1_000_000);
 System.out.println("Price returned after " + retrievalTime + " msecs");
 ```
+
 ![结果展示](https://image.cjyong.com/blog/bj8_4.PNG)
 优化getPriceAsync方法
+
 ```java
 public Future<Double> getPriceAsync(String product){
 /*CompletableFuture<Double> futurePrice = new CompletableFuture<>();
@@ -111,8 +120,11 @@ public Future<Double> getPriceAsync(String product){
     return CompletableFuture.supplyAsync(() -> calculatePrice(product));
 }
 ```
+
 #### 并行流操作
+
 如果你面临需要获取很多商店的信息时, 这时候你可能需要并行操作:
+
 ```java
 static List<Shop> shops = Arrays.asList(new Shop("BestPrice"),
         new Shop("LetsSaveBig"),
@@ -176,7 +188,9 @@ private static final Executor executor = Executors.newFixedThreadPool(Math.min(s
 ![结果比较](https://image.cjyong.com/blog/bj8_5.jpg)
 
 #### 级联多个异步操作
+
 + 相互依赖的异步操作. 假设我们可以获取所有的商品价格, 但是我们还需要添加一个折扣服务, 为不同的价格计算折扣之后的价钱.
+
 ```java
 //折扣类
 package main11;
@@ -270,8 +284,10 @@ public static List<String> findPrices1(String product) {
             .collect(toList());
 }// 耗时约为2000 msecs
 ```
+
 我们可以通过thenApply方法对对象进行转换, thenCompose方法对两个异步操作进行级联.
 + 不关联的两个异步操作进行关联:
+
 ```java
 Future<Double> futurePJriceInUSD = 
 	CompletableFuture.supplyAsync(() -> shop.getPrice(product))
@@ -280,10 +296,13 @@ Future<Double> futurePJriceInUSD =
         	() -> exchangeService.getRate(Money.EUR, Money.USE)),
             (price, rate) -> price * rate);
 ```
+
 这里, 通过thenCombine方法, 两个异步操作会同步进行, 等待最后都获得结果返回计算值, thenCombine的第二个参数为BiFunction, 进行合并处理.
 
 ### 阶段性获取结果
+
 假设你获取的商品的时间是不确定的, 如果某一个商品的时间过长, 就会导致获取界面, 一直没有信息. 这时候你可以进行分阶段进行处理, 每获得一个信息, 通知用户一条信息, 最后直到所有信息都齐了. 这就需要响应CompletableFutrede的completion事件.
+
 ```java
 //修改延时为随机延时
 public static void delay() {
@@ -317,12 +336,15 @@ CompletableFuture.allOf(futures).join(); //利用allOf方法, 进行全部完成
 System.out.println("All shops hava now responded in " +
         ((System.nanoTime() - start) / 1_000_000) + " msecs");
 ```
+
 结果截图:
 ![结果展示](https://image.cjyong.com/blog/bj8_6.jpg)
 
 ### 总结
+
 1. 执行比较耗时的操作, 尤其是依赖一个或多个远程服务的操作时, 使用异步操作可以改善程序性能, 加快程序的响应时间.
 2. 利用CompletableFuture类的特性, 我们可以很好的实现这一目标.
 3. 如果有多个异步操作, 我们可以合理的级联成一个.
 4. 可以利用thenAccept注册一个回调函数, 当程序完成时, 我们合理的进行一些处理.
 5. 你可以决定什么时候结束程序, 是全部完成还是单个完成.
+

@@ -70,7 +70,7 @@ CaseInsensitiveString cis = new CaseInsensitiveString("Abolish");
 pubic boolean equals(Object o) {
     return o.instanceof CaseInsensitiveString && ((CaseInsensitiveString) o).s.equalsIgnoreCase(s);
 }
- ```
+```
 
 ### Transitivity(传递性)
 
@@ -284,7 +284,6 @@ public int hashCode() {
 + 其中一个域f是原始类型, 通过`Type.hashCode(f)`进行计算, `Type`是对应的封装型.如: `Integer.hashCode(f)`.
 + 如果这个域f是一个对象引用, 并且在equals中进行调用比较了, 调用对象的hashCode方法.如果为null, 就使用0.
 + 如果域f是一个数组, 并且数组中每个元素都非常重要, 就分离出来(分别调用对应hashCode方法)使用`Arrays.hashCode`进行生成hashCode值, 如果数组中没有成员变量, 使用0来代替.
-
 + 返回result.
 
 ## Item 12: Always override toString

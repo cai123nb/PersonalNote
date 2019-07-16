@@ -1,5 +1,7 @@
 # HashMap
+
 ## 简介
+
 ```java
 /**
  * Hash table based implementation of the <tt>Map</tt> interface.  This
@@ -126,7 +128,9 @@
  * 
  * /
 ```
+
 ## 接口的实现
+
 ```java
 public class HashMap<K,V> extends AbstractMap<K,V>
     implements Map<K,V>, Cloneable, Serializable {
@@ -134,8 +138,11 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     private static final long serialVersionUID = 362498820763181265L;
     ...
 ```
+
 ### 实现的接口有: Map, Cloneable, Serializable.
+
 #### Cloneable: HashMap实现了深复制, 但是需要注意的是, 内部的值没有进行clone:
+
 ```java
 /**
  * Returns a shallow copy of this <tt>HashMap</tt> instance: the keys and
@@ -158,7 +165,9 @@ public Object clone() {
     return result;
 }
 ```
+
 #### Serizalizable: HashMap实现了序列化操作.
+
 ```java
 /**
  * Save the state of the <tt>HashMap</tt> instance to a stream (i.e.,
@@ -255,7 +264,9 @@ void reinitialize() {
     size = 0;
 }
 ```
-#### Map接口: 
+
+#### Map接口:
+
 ```java
 public interface Map<K,V> {
 int size();
@@ -321,8 +332,11 @@ interface Entry<K,V> { //内部接口, 键值对
 	}
 }
 ```
+
 ## 底层的实现
+
 ### 静态常量和方法
+
 ```java
 static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16, 默认容量
 static final int MAXIMUM_CAPACITY = 1 << 30; //最大容量2^30
@@ -386,7 +400,9 @@ static final int tableSizeFor(int cap) {
     return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
 }
 ```
+
 ### 成员变量与构造器
+
 ```java
 transient Node<K,V>[] table; //存储数据的数组
 transient Set<Map.Entry<K,V>> entrySet; //存储键值对的
@@ -419,7 +435,9 @@ public HashMap(Map<? extends K, ? extends V> m) {
     putMapEntries(m, false);
 }
 ```
+
 ### 核心代码解读
+
 ```java
 //Get函数
 public V get(Object key) {
@@ -595,8 +613,11 @@ final void treeifyBin(Node<K,V>[] tab, int hash) {
     }
 }
 ```
+
 ## 附录
+
 ### TreeNode类源码:
+
 ```java
 static final class TreeNode<K,V> extends LinkedHashMap.Entry<K,V> {
     TreeNode<K,V> parent;  // red-black tree links 红黑树
@@ -1068,5 +1089,4 @@ static final class TreeNode<K,V> extends LinkedHashMap.Entry<K,V> {
         }
     }
 ```
-
 

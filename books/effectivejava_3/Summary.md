@@ -25,7 +25,8 @@
 * [Chapter9: General Programming](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/GeneralProgramming.md)
 
 * [Chapter10: Exceptions](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/Exceptions.md)
-  
+
 * [Chapter11: Concurrency](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/Concurrency.md)
 
 * [Serialization](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/Serialization.md)
+

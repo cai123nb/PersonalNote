@@ -1,10 +1,13 @@
 # 晚期优化
+
 ## 概述
+
 在部分商用虚拟机(Sun HotSpot, IBM J9)中, Java程序最初是通过解释器(Interpreter)进行解释执行的, 当虚拟机发现某个方法或代码块的运行特别频繁时, 就会把这些代码认定为`热点代码(Hot Spot Code)`. 为了提高热点代码的执行效率, 在运行时, 虚拟机就会把这些代码编译成与本地平台相关的机器码, 并进行各种层次的优化, 完成这个任务的编译器称为即时编译器(Just In Time Compiler).
 
 即时编译器不是虚拟机必需的部分, Java虚拟机规范中也没有明确规定Java虚拟机必须要有即时编译器的存在, 更没有限定或指导即时编译器该如何实现. 但是即时编译器编译性能的好坏, 代码优化程度高低却是衡量一款商业虚拟机优秀与否的最关键的指标之一, 也是虚拟机最核心且最能体现虚拟机技术水平的部分. 由于没有确定的标准, 这里以HotSPot虚拟机的即时编译的实现进行深入了解.
 
 ## HotSpot虚拟机内的即时编译器
+
 学习HotSpot虚拟机内的即时编译器的运作过程, 同时, 解决以下问题:
 + 为何HotSpot虚拟机要使用解释器与编译器并存的架构?
 + 为何HotSpot虚拟机要实现两个不同的即时编译器?
@@ -13,12 +16,13 @@
 + 如何从外部观察即时编译器的编译过程和编译结果?
 
 ### 解释器与编译器
+
 尽管并不是所有的Java虚拟机都采用解释器和编译器并存的架构, 但许多商用虚拟机, 如HotSpot, J9(JRockit例外, 没有解释器), 都同时包含解释器和编译器. 解释器和编译器两者各有优势: 当程序需要迅速启动和执行的时候, 解释器可以首先发挥作用, 省去编译的时间, 立即执行. 在程序运行后, 随着时间的推移, 编译器逐渐发挥作用, 把越来越多的代码编译成本地代码之后, 可以获得更高的执行效率. 当程序运行环境资源限制较大(如嵌入式系统中), 可以使用解释器执行, 以解决执行节约内存, 反之可以使用编译执行来提升效率. 同时, 解释器还可以作为编译器激进优化时的一个`逃生门`, 让编译器根据概率选择一些大多数时候都能提升速度的优化手段, 当激进优化的假设不成立, 如加载了新类后类型继承结构发生变化, 出现`罕见陷阱(Uncommon Trap)`时可以通过`逆优化(Deoptimization)`退回到解释器继续执行(部分没有解释器的虚拟机中也会采用不进行激进优化的C1编译器担任`逃生门`的角色), 因此, 整个虚拟机执行架构中, 解释器与编译器经常配合工作.
 
 HotSpot虚拟机中内置了两个即时编译器, 也称为Client Compiler和Server Compiler(简称C1编译器和C2编译器). 目前主流的HotSpot虚拟机中, 默认采用解释器与其中一个编译器直接配合的方式工作, 程序使用哪个编译器, 取决于虚拟机运行的模式, HotSpot虚拟机会根据自身版本与宿主机器的硬件性能自动选择运行模式, 用户可以使用`-client`或`-server`参数去强制指定虚拟机运行在Client模式或Server模式.
 无论采用编译器Client Compiler还是Server Compiler, 解释器与编译器搭配使用的方式在虚拟机中称为`混合模式(Mixed Mode)`, 用户可以使用参数`-Xint`强制虚拟机运行于`解释模式(Interpreted Mode)`, 这时编译器完全不介入工作, 全部代码都使用解释方式执行. 另外, 也可以可使用`-Xcomp`强制虚拟机运行于`编译模式(Compiled Mode)`, 这时将优先采用编译方式执行程序, 但是解释器仍然在编译无法进行的情况下介入执行过程. 添加`-version`进行查看详细状态.
 
-由于即时编译器编译本地代码需要占用程序运行时间, 要编译优化程度更高程度的代码, 所花费的时间可能更长. 而且想要编译出优化程度更高的代码, 解释器可能还要替编译器收集性能监控(Profiling)的信息, 这对解释的执行速度也有影响. 为了在程序启动响应速度与运行效率之间达到了最佳平衡, HotSpot虚拟机还会逐渐启用分层编译(Tiered Compilation)的策略, 分层编译的概念在JDK 1.6时期出现, 后台一直处于改进阶段, 最终在JDK1.7 的Server模式虚拟机中作为默认策略被开启. 分层编译根据编译器编译, 优化的规模和耗时, 划分不同的层次: 
+由于即时编译器编译本地代码需要占用程序运行时间, 要编译优化程度更高程度的代码, 所花费的时间可能更长. 而且想要编译出优化程度更高的代码, 解释器可能还要替编译器收集性能监控(Profiling)的信息, 这对解释的执行速度也有影响. 为了在程序启动响应速度与运行效率之间达到了最佳平衡, HotSpot虚拟机还会逐渐启用分层编译(Tiered Compilation)的策略, 分层编译的概念在JDK 1.6时期出现, 后台一直处于改进阶段, 最终在JDK1.7 的Server模式虚拟机中作为默认策略被开启. 分层编译根据编译器编译, 优化的规模和耗时, 划分不同的层次:
 + 第0层: 程序解释执行, 解释器不开启性能监控功能, 可触发第一层编译.
 + 第1层: 也称为C1编译, 将字节码编译编译为本地代码, 进行简单, 可靠的优化, 如有必要将要加入性能监控的逻辑.
 + 第2层: 也称为C2编译, 也就是字节码编译为本地代码, 但是会启用一些编译耗时较长的优化, 甚至根据性能监控信息进行一些不可靠的激进优化.
@@ -26,6 +30,7 @@ HotSpot虚拟机中内置了两个即时编译器, 也称为Client Compiler和Se
 采用分层编译后, Client Compiler和Server Compiler将会同时工作,  许多代码都可能会被多次编译, 用Client Compier获取较高的编译速度, Server Compiler来获得更好的编译质量.
 
 ### 编译的对象和触发条件
+
 在运行过程中, 会被即时编译器编译的`热点代码`有两类:
 + 被多次调用的方法
 + 被多次执行的循环体
@@ -98,6 +103,7 @@ HotSpot虚拟机中内置了两个即时编译器, 也称为Client Compiler和Se
 这里我们可以用清楚的看到: invocation_counter,  backedge_counter, from_compiled_entry, from_interpreted_entry .
 
 ### 编译过程
+
 无论是方法调用产生的即时编译请求, 还是OSR编译请求, 虚拟机在代码编译器还未完成之前, 都仍然将按照解释的方式进行, 而编译动作则是在后台的编译线程中进行. 用户可以通过参数: -XX: -BackgroundCompilation来禁止后台编译, 即执行线程向虚拟机提交编译请求后, 将会一直等待, 直到编译完成在开始执行编译器输出的本地代码.
 
 在编译过程中, 编译器做了哪些事呢? Server Compiler和Client Compiler两个编译器的编译过程是不一样的. 对于Client Compiler来说, 它是一个简单快速的三段式编译器, 主要的关注点是在于局部性的优化, 而放弃了许多耗时较长的全局优化手段.
@@ -142,40 +148,40 @@ public class Test {
 我们在虚拟机选项中添加: -XX:+PrintCompilation. 就可以查看触发了即时编译的代码(部分):
 
 ```java
-    180   32       3       java.lang.AbstractStringBuilder::append (29 bytes)
-    180   30  s    3       java.lang.StringBuffer::append (13 bytes)
-    183   33 %     3       com.cjyong.jvm.compiler.Test::doubleValue @ 2 (18 bytes)
-    183   34       3       com.cjyong.jvm.compiler.Test::doubleValue (18 bytes)
-    183   35 %     4       com.cjyong.jvm.compiler.Test::doubleValue @ 2 (18 bytes)
-    184   33 %     3       com.cjyong.jvm.compiler.Test::doubleValue @ -2 (18 bytes)   made not entrant
-    184   36       4       com.cjyong.jvm.compiler.Test::doubleValue (18 bytes)
-    185   34       3       com.cjyong.jvm.compiler.Test::doubleValue (18 bytes)   made not entrant
-    185   37       3       com.cjyong.jvm.compiler.Test::calcSum (26 bytes)
-    186   38 %     4       com.cjyong.jvm.compiler.Test::calcSum @ 4 (26 bytes)
-    187   39       4       com.cjyong.jvm.compiler.Test::calcSum (26 bytes)
-    189   37       3       com.cjyong.jvm.compiler.Test::calcSum (26 bytes)   made not entrant
+180   32       3       java.lang.AbstractStringBuilder::append (29 bytes)
+180   30  s    3       java.lang.StringBuffer::append (13 bytes)
+183   33 %     3       com.cjyong.jvm.compiler.Test::doubleValue @ 2 (18 bytes)
+183   34       3       com.cjyong.jvm.compiler.Test::doubleValue (18 bytes)
+183   35 %     4       com.cjyong.jvm.compiler.Test::doubleValue @ 2 (18 bytes)
+184   33 %     3       com.cjyong.jvm.compiler.Test::doubleValue @ -2 (18 bytes)   made not entrant
+184   36       4       com.cjyong.jvm.compiler.Test::doubleValue (18 bytes)
+185   34       3       com.cjyong.jvm.compiler.Test::doubleValue (18 bytes)   made not entrant
+185   37       3       com.cjyong.jvm.compiler.Test::calcSum (26 bytes)
+186   38 %     4       com.cjyong.jvm.compiler.Test::calcSum @ 4 (26 bytes)
+187   39       4       com.cjyong.jvm.compiler.Test::calcSum (26 bytes)
+189   37       3       com.cjyong.jvm.compiler.Test::calcSum (26 bytes)   made not entrant
 ```
 
-我们添加: -XX:+UnlockDiagnosticVMOptions -XX:+PrintInlining, 查看内联信息. 
+我们添加: -XX:+UnlockDiagnosticVMOptions -XX:+PrintInlining, 查看内联信息.
 
 ```java
-    226   29  s    3       java.lang.StringBuffer::append (13 bytes)
-                              @ 7   java.lang.AbstractStringBuilder::append (29 bytes)
-                                @ 7   java.lang.AbstractStringBuilder::ensureCapacityInternal (16 bytes)
-                                  @ 12   java.lang.AbstractStringBuilder::expandCapacity (50 bytes)   callee is too large
-    228   32 %     3       com.cjyong.jvm.compiler.Test::doubleValue @ 2 (18 bytes)
-    228   33       3       com.cjyong.jvm.compiler.Test::doubleValue (18 bytes)
-    228   34 %     4       com.cjyong.jvm.compiler.Test::doubleValue @ 2 (18 bytes)
-    229   32 %     3       com.cjyong.jvm.compiler.Test::doubleValue @ -2 (18 bytes)   made not entrant
-    229   35       4       com.cjyong.jvm.compiler.Test::doubleValue (18 bytes)
-    230   33       3       com.cjyong.jvm.compiler.Test::doubleValue (18 bytes)   made not entrant
-    230   36       3       com.cjyong.jvm.compiler.Test::calcSum (26 bytes)
-                              @ 12   com.cjyong.jvm.compiler.Test::doubleValue (18 bytes)   inlining prohibited by policy
-    231   37 %     4       com.cjyong.jvm.compiler.Test::calcSum @ 4 (26 bytes)
-                              @ 12   com.cjyong.jvm.compiler.Test::doubleValue (18 bytes)   inline (hot)
-    233   38       4       com.cjyong.jvm.compiler.Test::calcSum (26 bytes)
-                              @ 12   com.cjyong.jvm.compiler.Test::doubleValue (18 bytes)   inline (hot)
-    234   36       3       com.cjyong.jvm.compiler.Test::calcSum (26 bytes)   made not entrant
+226   29  s    3       java.lang.StringBuffer::append (13 bytes)
+                          @ 7   java.lang.AbstractStringBuilder::append (29 bytes)
+                            @ 7   java.lang.AbstractStringBuilder::ensureCapacityInternal (16 bytes)
+                              @ 12   java.lang.AbstractStringBuilder::expandCapacity (50 bytes)   callee is too large
+228   32 %     3       com.cjyong.jvm.compiler.Test::doubleValue @ 2 (18 bytes)
+228   33       3       com.cjyong.jvm.compiler.Test::doubleValue (18 bytes)
+228   34 %     4       com.cjyong.jvm.compiler.Test::doubleValue @ 2 (18 bytes)
+229   32 %     3       com.cjyong.jvm.compiler.Test::doubleValue @ -2 (18 bytes)   made not entrant
+229   35       4       com.cjyong.jvm.compiler.Test::doubleValue (18 bytes)
+230   33       3       com.cjyong.jvm.compiler.Test::doubleValue (18 bytes)   made not entrant
+230   36       3       com.cjyong.jvm.compiler.Test::calcSum (26 bytes)
+                          @ 12   com.cjyong.jvm.compiler.Test::doubleValue (18 bytes)   inlining prohibited by policy
+231   37 %     4       com.cjyong.jvm.compiler.Test::calcSum @ 4 (26 bytes)
+                          @ 12   com.cjyong.jvm.compiler.Test::doubleValue (18 bytes)   inline (hot)
+233   38       4       com.cjyong.jvm.compiler.Test::calcSum (26 bytes)
+                          @ 12   com.cjyong.jvm.compiler.Test::doubleValue (18 bytes)   inline (hot)
+234   36       3       com.cjyong.jvm.compiler.Test::calcSum (26 bytes)   made not entrant
 ```
 
 我们将hsdis-amd64.dll放入到我们jre/bin/server目录下, 使用+PrintAssembly参数打印方法的汇编代码(部分):
@@ -279,6 +285,7 @@ public void foo() {
 + 最前沿的优化技术之一: 逃逸分析
 
 #### 公共子表达式消除
+
 如果一个表达式E已经计算过了, 并且从先前的计算到现在的E中所有变量的值都没有发生变化, 那么E的这次出现就成为了公共子表达式. 对于这种表达式, 没有必要重新计算, 直接使用之前的计算的结果替代即可. 如果这种优化局限于程序内的基本块, 便称为局部公共子表达式消除(Local Common Subexpression Elimination), 如果这种优化的范围涵盖了多个基本块, 那就称为全局公共子表达式消除(Global Common Subexpression Elimination). 这里用一个简单的例子:
 
 ```java
@@ -316,6 +323,7 @@ int d = E * 13 + a * 2;
 ```
 
 #### 数组边界检查消除
+
 数组边界检查消除(Array Bounds Checking Elimination)是即时编译器中的一项语言相关的经典优化技术. 我们知道Java语言是一门动态安全的语言, 对数组的读写访问不像C/C++那样在本质上是裸指针操作. 如果有一个数组foo[], 在Java语言中访问数组元素foo[i]是系统将自动进行上下界的范围检查, 即:i必须满足i>=0 && i<foo.length这个条件, 否则就抛出运行时异常: java.lang.ArrayIndexOutOfBoundsException.  这对于软件开发者来说是好事, 即使没有专门编写防御代码, 也可以避免大部分的溢出攻击. 对于拥有大量数组访问的程序代码来说, 这无疑是一个性能上的负担.
 
 无论如何, 为了安全, 肯定是要进行检查的. 但是是不是必须要在运行期间一次不漏的进行检查则是可以`商量`的. 如数组的下标为常量foo[3], 编译期根据数据流来确定foo.length的值, 发现下标不会超过该值, 则执行时就无须进行判断. 或者在循环中进行数组访问, 只要编译器通过数据流分析, 判断循环变量的值永远在数组范围之内, 那么也不用进行检查了. 这种思路为: 把数组边界优化尽可能的提到编译期进行完成.
@@ -372,6 +380,7 @@ public static void testInline(String[] args) {
 所以对于多数的虚拟机来说, 进行内联是一种激进优化, 激进优化的手段在高性能的商用虚拟机中很常见, 除了内联之外, 对于出现概率很小(性能监控信息来确定)的隐式异常, 使用概率很小的分支等都可以被激进优化`移除`, 如果真的出现了小概率事件, 才会从`逃生门`回到解释状态重新执行.
 
 #### 逃逸分析
+
 逃逸分析(Escape Analysis)是目前Java虚拟机中比较前沿的技术, 它与类型关系分析一样, 并不是直接优化代码的手段, 而是为其他优化手段提供依据的分析技术. 逃逸分析的基本行为就是分析对象的动态作用域: 当一个对象在方法中被定义后, 它可能被外部方法引用, 例如作为调用参数传递给其他方法中, 称为方法逃逸. 甚至还可能被外部线程访问到, 如将值赋值给类变量或可以在其他线程中访问的实例变量, 称为线程逃逸.
 
 如果证明了一个对象不会逃逸到方法或线程之外, 也就是别的方法或线程无法通过任何方法访问到这个对象, 就可以对该对象进行一些高效的优化:
@@ -386,6 +395,7 @@ public static void testInline(String[] args) {
 逃逸分析虽然现在还不成熟, 但是未来肯定是编译器优化技术的一个重要发展方向.
 
 ## Java与C/C++的编译器对比
+
 Java与C/C++(下面简称C)的编译器对比实际上代表了最经典的即时编译器与静态编译器的对比, 很大程度上也决定了Java和C的性能对比结果, 因为C还是Java代码最终编译之后, 被机器执行的都是本地机器码, 那个语言性能更高, 除了自身API库实现的好坏之外, 其余的比较就变成了一场`拼编译器`和`拼输出代码质量`的游戏.
 
 Java虚拟机的即时编译器与C/C++的静态优化编译器相比, 可能由于以下原因导致输出的本地代码存在一些劣势:
@@ -409,6 +419,4 @@ void foo(ClassA objA, ClassB objB) {
 确定了objA和objB并非对方的别名之后, 很多优化才能进行(重排序, 变量代换等等). 如上面这个例子, 就不用担心, objA.x和objB.y是同一个内存区域.
 
 另外, Java虚拟机的即时编译还可以根据动态性进行运行时的优化, 而C编译器所有的优化都在编译期完成, 以运行期性能监控为基础的优化措施都无法进行, 如调用频率预测(Call Frequency Prediction), 分支频率预测(Branch Frequency Prediction), 裁剪未被选择的分支(Untaken Branch Pruning)等等, 这都是Java语言的独特性能优势.
-
-
 

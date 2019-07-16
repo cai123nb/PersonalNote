@@ -1,4 +1,5 @@
 # Class
+
 JDK1.8:
 
 ```java
@@ -1967,3 +1968,4 @@ public final class Class<T> implements java.io.Serializable,
 	}
 }
 ```
+

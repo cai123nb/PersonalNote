@@ -1,4 +1,5 @@
 ## 图书简介
+
 简单易懂的语言, 引你走入设计模式的殿堂.
 
 ## 章节详情
@@ -28,3 +29,4 @@
 * [复合模式](https://github.com/cai123nb/PersonalNote/blob/master/books/headfirstdp/CombinationPattern.md)
 
 * [结尾](https://github.com/cai123nb/PersonalNote/blob/master/books/headfirstdp/EndOfPattern.md)
+

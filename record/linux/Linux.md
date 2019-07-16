@@ -6,13 +6,14 @@
 
 + 卸载程序(执行下列脚本):
 
-    ```java
-    /usr/local/qcloud/stargate/admin/uninstall.sh
-    /usr/local/qcloud/YunJing/uninst.sh
-    /usr/local/qcloud/monitor/barad/admin/uninstall.sh
-    ```
+  ```java
+  /usr/local/qcloud/stargate/admin/uninstall.sh
+  /usr/local/qcloud/YunJing/uninst.sh
+  /usr/local/qcloud/monitor/barad/admin/uninstall.sh
+  ```
 
 + 删除对应文件夹: `rm -rf /usr/local/qcloud`.
+
 + 清除定期执行计划: `crontab -r`(注,如果之前自己设置了定期计划, 就需要使用`crontab -e`手动选择删除).
 + 查看是否运行: `ps -A | grep agent`.
 
@@ -177,16 +178,16 @@ systemctl enable myservice.service
 + `travis login --auto`: 登录你的git账号,同步信息
 + `ssh-keygen -t rsa`: 生成密钥(不用输入一直enter,默认存储在/root/.ssh/id_rsa(私钥), 公钥id_rsa.pub)
 + `cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys`: 将公钥放入服务器的可信任列表中
-+ `travis encrypt-file ~/.ssh/id_rsa --add`: 这时候会在.travis.yml中自动生成: 
++ `travis encrypt-file ~/.ssh/id_rsa --add`: 这时候会在.travis.yml中自动生成:
 
-  ```java
-  before_install:
-    - openssl aes-256-cbc -K $encrypted_a65ab4f4a956_key -iv $encrypted_a65ab4f4a956_iv
-      -in id_rsa.enc -out ~/.ssh/id_rsa -d
-    - chmod 600 ~/.ssh/id_rsa
-  ```
+```java
+before_install:
+  - openssl aes-256-cbc -K $encrypted_a65ab4f4a956_key -iv $encrypted_a65ab4f4a956_iv
+    -in id_rsa.enc -out ~/.ssh/id_rsa -d
+  - chmod 600 ~/.ssh/id_rsa
+```
 
-  **注意,默认生成为`~\/.ssh/id_rsa -d`需要把那个斜杠去掉, 最后为`~/.ssh/id_rsa -d`,并在底部添加对应的权限`- chmod 600 ~/.ssh/id_rsa`, 否则会报错.**
+**注意,默认生成为`~\/.ssh/id_rsa -d`需要把那个斜杠去掉, 最后为`~/.ssh/id_rsa -d`,并在底部添加对应的权限`- chmod 600 ~/.ssh/id_rsa`, 否则会报错.**
 
 + ‘添加权限·： 在上面配置的下面添加： `- chmod 600 ~/.ssh/id_rsa`.
 + `添加信任站点`: 项目.travis.yml中添加(ip地址为你的项目地址)
@@ -231,3 +232,4 @@ pc.sh:
 ```java
 cd /cjyong/project/personalcoupleweb/ && git pull origin master && service pcService stop && rm -rf /root/.m2/repository/com/cjyong/cp/personalweb/0.0.1-SNAPSHOT/personalweb-0.0.1-SNAPSHOT.jar && mvn clean install && service pcService start
 ```
+

@@ -360,9 +360,9 @@ Java提供了`JNI(Java Native Interface)`允许Java程序调用`本地方法(Nat
 有三句优化的格言:
 
 + **More computing sins are committed in the name of efficiency(without necessarily achieving it) than for any other single reason - including blind stupidity. ----William A. Wulf**
-  
+
 + **We should forget about small efficiencies, say about 97% of the time: premature optimization is the root of all evil.  ---- Donald E. Knuth**
-  
+
 + **We follow two rules in the matter of optimization: Rule1. Don't do it.  Rule2(for experts only). Don't do it yet--that is, not until you have a perfectly clear unoptimized solution.  ----M.A.Jackson**
 
 这些格言在Java出现20年前就出现了, 这些格言都揭示了一个真理: 优化是非常难实现的, 这是非常容易在这个过程做更多的坏处而不是好处. 尽量遵守这个原则: `努力去写好的代码而不是快(自认为性能好)的代码`. 一个好的程序, 如果不够快(性能不够好), 那它本身一定可以运行它自己进行优化. 大多数的程序都是通过`信息隐藏`实现的, 这样你修改某一个模块的时候并不影响其他模块.
@@ -395,14 +395,14 @@ Java平台拥有成熟的命名规范, 其中大部分都定义在[Java Language
 
 这里进行简单的小结:
 
-|Identifier Type | Examples |
-| :--- | :-- |
-| Package or module | org.junit.jupiter.api, com.google.common.collect |
-| Class or Interface | Stream, FutureTask, LinkedHashMap, HttpClient |
-| Method or Field | remove, groupingBy, getCrc |
-| Constant Field | MIN_VALUE, NEGATIVE_INFINITY |
-| Local Variable | i,denom,houseNum |
-| Type Parameter | T,E,K,V,X,R,U,V,T1,T2|
+| Identifier Type    | Examples                                         |
+|:-------------------|:-------------------------------------------------|
+| Package or module  | org.junit.jupiter.api, com.google.common.collect |
+| Class or Interface | Stream, FutureTask, LinkedHashMap, HttpClient    |
+| Method or Field    | remove, groupingBy, getCrc                       |
+| Constant Field     | MIN_VALUE, NEGATIVE_INFINITY                     |
+| Local Variable     | i,denom,houseNum                                 |
+| Type Parameter     | T,E,K,V,X,R,U,V,T1,T2                            |
 
 语法的命名规则比通用的命名规则更加灵活, 限制也更加少, 另外更多的时候这里没有固定的约定, 往往只是一个建议. 对于普通的可实例化的类, 一般一个简单的单词, 标明用途就可以了, 如`Thread, PriorityQueue, ChessPiece`. 而对于不可实例化的类, 一般使用复数的形式, 如`Collectors, Arrays`. 而对于接口来说往往以`able, ible`结尾: `Iterable, Accessible`. 而对于注释, 则没有这么多的限制, 现在使用的也各式各样: `BindingAnnotation, Inject, ImplementedBy, Singleton`.
 

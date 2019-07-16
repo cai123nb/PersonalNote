@@ -385,22 +385,22 @@ streamOfOptionals
 一般方法中的注释应该简洁地描述方法的前置条件和后置因果. 注解中应该详细描述或者枚举方法的前置条件, 如方法的调用应该在那种条件下, 该输入那些参数, 对参数的要求, 这个可以通过`@param`进行辅助说明. 其中如果方法会抛出异常的话, 可以使用`@throw`来说明对于每一种前置条件的违背, 都会抛出对应的异常. 后置因果, 可以说明如果正确调用该方法时, 会返回一个怎样的结果, 可以借助`@return`进行说明. 这里需要关注的是方法会做什么, 而不是方法怎么做. 同时如果方法调用会产生任何的副作用, 都应该在文档中叙述清楚.
 
 ```java
-    /**
-     * Returns a list iterator over the elements in this list (in proper
-     * sequence), starting at the specified position in the list.
-     * The specified index indicates the first element that would be
-     * returned by an initial call to {@link ListIterator#next next}.
-     * An initial call to {@link ListIterator#previous previous} would
-     * return the element with the specified index minus one.
-     *
-     * @param index index of the first element to be returned from the
-     *        list iterator (by a call to {@link ListIterator#next next})
-     * @return a list iterator over the elements in this list (in proper
-     *         sequence), starting at the specified position in the list
-     * @throws IndexOutOfBoundsException if the index is out of range
-     *         ({@code index < 0 || index > size()})
-     */
-    ListIterator<E> listIterator(int index);
+/**
+ * Returns a list iterator over the elements in this list (in proper
+ * sequence), starting at the specified position in the list.
+ * The specified index indicates the first element that would be
+ * returned by an initial call to {@link ListIterator#next next}.
+ * An initial call to {@link ListIterator#previous previous} would
+ * return the element with the specified index minus one.
+ *
+ * @param index index of the first element to be returned from the
+ *        list iterator (by a call to {@link ListIterator#next next})
+ * @return a list iterator over the elements in this list (in proper
+ *         sequence), starting at the specified position in the list
+ * @throws IndexOutOfBoundsException if the index is out of range
+ *         ({@code index < 0 || index > size()})
+ */
+ListIterator<E> listIterator(int index);
 ```
 
 一个标准的注释应该包含每一个参数`@param`, 返回值`@return`, 每一个抛出的异常`@throws`. 注意在这个代码中使用了`{@code}`注解, 这个注解的作用就是将内部包含的元素使用代码的格式输出到页面, 这样会比较明显并且可以使用Html的一些装饰符号, 如大于号(>)和小于号(<). 如果需要书写多行代码, 可以使用`<pre>{@code xxx}</pre>`进行显示. 这里还用到了`@link`进行跳转, 可以点击跳转查看相关信息. 注意在注释中是可以使用HTML一些元素的如`<tt></tt><i></i>`, 都是允许的, 生成时会自动插入到HTML文件中.

@@ -29,6 +29,6 @@
 * [HashMap](https://github.com/cai123nb/PersonalNote/blob/master/source/jdk/HashMap.md)
 
 * [Arrays](https://github.com/cai123nb/PersonalNote/blob/master/source/jdk/Arrays.md)
-  
+
 * [Objects](https://github.com/cai123nb/PersonalNote/blob/master/source/jdk/Objects.md)
- 
+

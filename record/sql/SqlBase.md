@@ -1,10 +1,13 @@
 # MYSQL语句小结
+
 ## SQL概述
+
 SQL(Structured Query Language)是关系数据库中标准语言, 也是通用的功能极强的关系数据库语言.
 
 SQL是在1974年由Boyce和Chamberlin提出,最早叫做Sequel, 并在IBM公司研制的关系数据库管理系统原型System R上实现.1986年10月, 美国国家标准局(American National Standard Institute)的数据库委员会X3H2批准了SQL作为关系数据库语言的美国标准. 同年公布了SQL标准文本(简称SQL-86).1987年, 国际标准化组织(International Organization for Standardization, ISO)也通过了该标准.
 
 ## 新建语句(CREATE)
+
 ### 新建数据库:
 
 ```SQL
@@ -56,10 +59,11 @@ CREATE TABLE SC (
 		ON UPDATE CASCADE /*当更新Course表中的Cno时, 级联更新SC表中的相应元组*/
 );
 ```
-	
+
 表的常见数据类型见附录1.
 
 ### 新建模式
+
 本质上:一个命名空间,一个域,每个表都属于一个模式.
 
 ```SQL
@@ -77,8 +81,8 @@ CREATE UNIQUE INDEXS Stusno ON Student(Sno);
 CREATE UNIQUE INDEX SCno ON SC(Sno ASC, Cno DESC);
 ```
 
-	UNIQUE: 每一个索引值都对应唯一的数据记录.
-	CLUSTER: 建立的是聚簇索引.
+        UNIQUE: 每一个索引值都对应唯一的数据记录.
+        CLUSTER: 建立的是聚簇索引.
 
 ## 删除语句(DROP)
 
@@ -124,7 +128,6 @@ DELETE FROM SC; //清空SC表
 DELETE FROM Student WHERE Sno='201215128'; //删除学号为201215128的学生.
 DELET FROM SC WHERE Sno IN (SELECT Sno FROM Student WHERE Sdept='CS'); //删除计算机系的所有学生选课记录
 ```
-
 
 ## 修改语句(ALTER)
 
@@ -174,6 +177,7 @@ FROM <表名或者视图名> [,<表名或者视图名>...] |  (<SELECT语句>) [
 [ORDER BY <列名2> [ASC|DESC]];
 
 ### 单表查询
+
 单表查询: 只涉及到一个表的查询.
 
 ```SQL
@@ -231,6 +235,7 @@ SELECT Sno,AVG(Grade) FROM SC GROUP BY Sno HAVING AVG(Grade)>=90; /* 这是正�
 ```
 
 ### 多表查询
+
 多表查询: 亦称连接查询, 连接两个及以上的表进行查询, 连接方式: 等值连接, 非等值连接, 自身连接, 外连接查询, 复合条件连接查询.
 
 ```SQL
@@ -269,32 +274,31 @@ SELECT DISTINCT Sno FROM SC SCX WHERE NOT EXISTS (SELECT * FROM SC SCY WHERE SCY
 /*派生表查询: FROM中嵌套SELECT语句生成的子表.*/
 ```
 
-
-
-
 ## 附录
+
 ### 附录1: 常见的数据类型
 
-| 数据类型 | 含义 |
-| :-- | :-- |
-| CHAR(n),CHARACTER(n) | 长度为N的定长字符串  |
-| VARCHAR(n), CHARACTERVARYING(n)| 最大长度为N的变长字符串 |
-| CLOB | 字符串大对象 |
-| BLOB | 二进制大对象 |
-| INT,INTEGER | 长整数(4字节) |
-| SMALLINT | 短整数(2字节) |
-| BIGINT | 大整数(8字节) |
-| NUMERIC(p,d) | 定点数, 由p位小数组成,小数点后有d位小数 |
-| DECIMAL(p,d), DEC(P,d) | 同上 |
-| REAL | 取决于机器精度的单精度浮点数 |
-| DOUBLE PRECISION | 取决于机器精度的双精度浮点数 |
-| FLOAT(n) | 可选精度的浮点数, 精度至少为n位数字 |
-| BOOLEAN | 逻辑布尔量 |
-| DATE | 日期, 包含年月, 格式为YYYY-MM-DD |
-| TIME | 时间, 包含时,分,秒, 格式为HH:MM:SS |
-| TIMESTAMP | 时间戳类型 |
-| INTERVAL | 时间间隔类型 |
+| 数据类型                            | 含义                       |
+|:--------------------------------|:-------------------------|
+| CHAR(n),CHARACTER(n)            | 长度为N的定长字符串               |
+| VARCHAR(n), CHARACTERVARYING(n) | 最大长度为N的变长字符串             |
+| CLOB                            | 字符串大对象                   |
+| BLOB                            | 二进制大对象                   |
+| INT,INTEGER                     | 长整数(4字节)                 |
+| SMALLINT                        | 短整数(2字节)                 |
+| BIGINT                          | 大整数(8字节)                 |
+| NUMERIC(p,d)                    | 定点数, 由p位小数组成,小数点后有d位小数   |
+| DECIMAL(p,d), DEC(P,d)          | 同上                       |
+| REAL                            | 取决于机器精度的单精度浮点数           |
+| DOUBLE PRECISION                | 取决于机器精度的双精度浮点数           |
+| FLOAT(n)                        | 可选精度的浮点数, 精度至少为n位数字      |
+| BOOLEAN                         | 逻辑布尔量                    |
+| DATE                            | 日期, 包含年月, 格式为YYYY-MM-DD  |
+| TIME                            | 时间, 包含时,分,秒, 格式为HH:MM:SS |
+| TIMESTAMP                       | 时间戳类型                    |
+| INTERVAL                        | 时间间隔类型                   |
 
 ## 参考文献
+
 王, 珊, 萨, 师煊. 数据库系统概论[M]. 高等教育出版社, 2006.
 

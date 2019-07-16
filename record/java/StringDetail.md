@@ -89,15 +89,17 @@ public String replace(char oldChar, char newChar) {
 在这里要永远记住一点：“String对象一旦被创建就是固定不变的了，对String对象的任何改变都不影响到原对象，相关的任何change操作都会生成新的对象”。
 
 ## 字符串常量池
+
 我们知道字符串的分配和其他对象分配一样, 是需要消耗高昂的时间和空间的，而且字符串我们使用的非常多. JVM为了提高性能和减少内存的开销, 在实例化字符串的时候进行了一些优化: 使用字符串常量池. 每当我们创建字符串常量时, JVM会首先检查字符串常量池, 如果该字符串已经存在常量池中, 那么就直接返回常量池中的实例引用. 如果字符串不存在常量池中, 就会实例化该字符串并且将其放到常量池中. 由于String字符串的不可变性我们可以十分肯定常量池中一定不存在两个相同的字符串(这点对理解上面至关重要).
 
-Java中的常量池, 实际上分为两种形态: 静态常量池和运行时常量池. 
+Java中的常量池, 实际上分为两种形态: 静态常量池和运行时常量池.
 + 所谓静态常量池，即*.class文件中的常量池，class文件中的常量池不仅仅包含字符串(数字)字面量，还包含类、方法的信息，占用class文件绝大部分空间. 而运行时常量池，则是jvm虚拟机在完成类装载操作后，将class文件中的常量池载入到内存中，并保存在方法区中，我们常说的常量池，就是指方法区中的运行时常量池。
 
 ```java
 String a = “xhy”; 
 String b = “xhy”; 
 ```
+
 a, b和字面上的xhy都是指向JVM字符串常量池中的”xhy”对象, 他们指向同一个对象.
 
 ```java
@@ -105,7 +107,6 @@ String c = new String(“xhy”);
 ```
 
 new关键字一定会产生一个对象xhy(注意这个xhy和上面的xhy不同), 同时这个对象是存储在堆中.所以上面应该产生了两个对象：保存在栈中的c和保存堆中xhy, 但是在Java中根本就不存在两个完全一模一样的字符串对象. 故堆中的xhy应该是引用字符串常量池中xhy. 所以c、xhy、池xhy的关系应该是：c—>xhy—>池xhy. 整个关系如下：
-
 
 ![图片描述](https://image.cjyong.com/blog/r7.jpg)
 
@@ -129,9 +130,8 @@ public void test1(){
 }
 ```
 
-+ 执行上述代码，结果为：true。 
++ 执行上述代码，结果为：true。
 + 分析：当执行String str1=”aaa”时，JVM首先会去字符串池中查找是否存在”aaa”这个对象，如果不存在，则在字符串池中创建”aaa”这个对象，然后将池中”aaa”这个对象的引用地址返回给字符串常量str1，这样str1会指向池中”aaa”这个字符串对象；如果存在，则不创建任何对象，直接将池中”aaa”这个对象的地址返回，赋给字符串常量。当创建字符串对象str2时，字符串池中已经存在”aaa”这个对象，直接把对象”aaa”的引用地址返回给str2，这样str2指向了池中”aaa”这个对象，也就是说str1和str2指向了同一个对象，因此语句System.out.println(str1 == str2)输出：true。
-
 + 例子2：
 
 ```java
@@ -212,14 +212,14 @@ public void test5(){
 
 + 分析：因为str3指向堆中的”abcdef”对象，而”abcdef”是字符串池中的对象，所以结果为false。JVM对String str=”abc”对象放在常量池中是在编译时做的，而String str3=str1+str2是在运行时刻才能知道的。new对象也是在运行时才做的。而这段代码总共创建了5个对象，字符串池中两个、堆中三个。+运算符会在堆中建立来两个String对象，这两个对象的值分别是”abc”和”def”，也就是说从字符串池中复制这两个值，然后在堆中创建两个对象，然后再建立对象str3,然后将”abcdef”的堆地址赋给str3。
 
-+ 步骤： 
-	- 栈中开辟一块中间存放引用str1，str1指向池中String常量”abc”。 
-	- 栈中开辟一块中间存放引用str2，str2指向池中String常量”def”。 
-	- 栈中开辟一块中间存放引用str3。 
-	- str1 + str2通过StringBuilder的最后一步toString()方法还原一个新的String对象”abcdef”，因此堆中开辟一块空间存放此对象。 
-	- 引用str3指向堆中(str1 + str2)所还原的新String对象。 
-	- str3指向的对象在堆中，而常量”abcdef”在池中，输出为false。
++ 步骤：
 
+  - 栈中开辟一块中间存放引用str1，str1指向池中String常量”abc”。
+  - 栈中开辟一块中间存放引用str2，str2指向池中String常量”def”。
+  - 栈中开辟一块中间存放引用str3。
+  - str1 + str2通过StringBuilder的最后一步toString()方法还原一个新的String对象”abcdef”，因此堆中开辟一块空间存放此对象。
+  - 引用str3指向堆中(str1 + str2)所还原的新String对象。
+  - str3指向的对象在堆中，而常量”abcdef”在池中，输出为false。
 + 例子6：
 
 ```java
@@ -333,14 +333,14 @@ private static String getS1() {
 
 + String使用private final char value[]来实现字符串的存储，也就是说String对象创建之后，就不能再修改此对象中存储的字符串内容，就是因为如此，才说String类型是不可变的(immutable)。程序员不能对已有的不可变对象进行修改。我们自己也可以创建不可变对象，只要在接口中不提供修改数据的方法就可以。 然而，String类对象确实有编辑字符串的功能，比如replace()。这些编辑功能是通过创建一个新的对象来实现的，而不是对原有对象进行修改。比如:
 
-+ s = s.replace(“World”, “Universe”); 
-+ 上面对s.replace()的调用将创建一个新的字符串”Hello Universe!”，并返回该对象的引用。通过赋值，引用s将指向该新的字符串。如果没有其他引用指向原有字符串”Hello World!”，原字符串对象将被垃圾回收。
++ s = s.replace(“World”, “Universe”);
 
++ 上面对s.replace()的调用将创建一个新的字符串”Hello Universe!”，并返回该对象的引用。通过赋值，引用s将指向该新的字符串。如果没有其他引用指向原有字符串”Hello World!”，原字符串对象将被垃圾回收。
 + 2.引用变量与对象
 
-+ A aa; 
-+ 这个语句声明一个类A的引用变量aa[我们常常称之为句柄]，而对象一般通过new创建。所以aa仅仅是一个引用变量，它不是对象。
++ A aa;
 
++ 这个语句声明一个类A的引用变量aa[我们常常称之为句柄]，而对象一般通过new创建。所以aa仅仅是一个引用变量，它不是对象。
 + 3.创建字符串的方式
 
 + 创建字符串的方式归纳起来有两类：
@@ -399,7 +399,8 @@ public String(String original) {
 
 + 它遵循以下规则：对于任意两个字符串 s 和 t，当且仅当 s.equals(t) 为 true 时，s.intern() == t.intern() 才为 true。
 
-+ String.intern(); 
++ String.intern();
+
 + 再补充介绍一点：存在于.class文件中的常量池，在运行期间被jvm装载，并且可以扩充。String的intern()方法就是扩充常量池的一个方法；当一个String实例str调用intern()方法时，java查找常量池中是否有相同unicode的字符串常量，如果有，则返回其引用，如果没有，则在常量池中增加一个unicode等于str的字符串并返回它的引用。
 
 ```java
@@ -425,11 +426,11 @@ public void test11(){
 
 + 7.关于equals和==
 
-	- 对于==，如果作用于基本数据类型的变量（byte,short,char,int,long,float,double,boolean ），则直接比较其存储的”值”是否相等；如果作用于引用类型的变量（String），则比较的是所指向的对象的地址（即是否指向同一个对象）。
+  - 对于==，如果作用于基本数据类型的变量（byte,short,char,int,long,float,double,boolean ），则直接比较其存储的”值”是否相等；如果作用于引用类型的变量（String），则比较的是所指向的对象的地址（即是否指向同一个对象）。
 
-	- equals方法是基类Object中的方法，因此对于所有的继承于Object的类都会有该方法。在Object类中，equals方法是用来比较两个对象的引用是否相等，即是否指向同一个对象。
+  - equals方法是基类Object中的方法，因此对于所有的继承于Object的类都会有该方法。在Object类中，equals方法是用来比较两个对象的引用是否相等，即是否指向同一个对象。
 
-	- 对于equals方法，注意：equals方法不能作用于基本数据类型的变量。如果没有对equals方法进行重写，则比较的是引用类型的变量所指向的对象的地址；而String类对equals方法进行了重写，用来比较指向的字符串对象所存储的字符串是否相等。其他的一些类诸如Double，Date，Integer等，都对equals方法进行了重写用来比较指向的对象所存储的内容是否相等。
+  - 对于equals方法，注意：equals方法不能作用于基本数据类型的变量。如果没有对equals方法进行重写，则比较的是引用类型的变量所指向的对象的地址；而String类对equals方法进行了重写，用来比较指向的字符串对象所存储的字符串是否相等。其他的一些类诸如Double，Date，Integer等，都对equals方法进行了重写用来比较指向的对象所存储的内容是否相等。
 
 ```java
 /**
@@ -506,10 +507,11 @@ public static main([Ljava/lang/String;)V
 }
 ```
 
-+ 显然，通过字节码我们可以得出如下几点结论： 
-	- (1).String中使用 + 字符串连接符进行字符串连接时，连接操作最开始时如果都是字符串常量，编译后将尽可能多的直接将字符串常量连接起来，形成新的字符串常量参与后续连接（通过反编译工具jd-gui也可以方便的直接看出）；
++ 显然，通过字节码我们可以得出如下几点结论：
 
-	- (2).接下来的字符串连接是从左向右依次进行，对于不同的字符串，首先以最左边的字符串为参数创建StringBuilder对象，然后依次对右边进行append操作，最后将StringBuilder对象通过toString()方法转换成String对象（注意：中间的多个字符串常量不会自动拼接）。也就是说String c = “xx” + “yy ” + a + “zz” + “mm” + b; 实质上的实现过程是： String c = new StringBuilder(“xxyy “).append(a).append(“zz”).append(“mm”).append(b).toString();
+  - (1).String中使用 + 字符串连接符进行字符串连接时，连接操作最开始时如果都是字符串常量，编译后将尽可能多的直接将字符串常量连接起来，形成新的字符串常量参与后续连接（通过反编译工具jd-gui也可以方便的直接看出）；
+
+  - (2).接下来的字符串连接是从左向右依次进行，对于不同的字符串，首先以最左边的字符串为参数创建StringBuilder对象，然后依次对右边进行append操作，最后将StringBuilder对象通过toString()方法转换成String对象（注意：中间的多个字符串常量不会自动拼接）。也就是说String c = “xx” + “yy ” + a + “zz” + “mm” + b; 实质上的实现过程是： String c = new StringBuilder(“xxyy “).append(a).append(“zz”).append(“mm”).append(b).toString();
 
 + 由此得出结论：当使用+进行多个字符串连接时，实际上是产生了一个StringBuilder对象和一个String对象。
 
@@ -524,11 +526,13 @@ String s4 = s1 + s2 + s3;
 ```
 
 + 分析：变量s的创建等价于 String s = “abc”; 由上面例子可知编译器进行了优化，这里只创建了一个对象。由上面的例子也可以知道s4不能在编译期进行优化，其对象创建相当于：
+
 ```java
 StringBuilder temp = new StringBuilder(); 
 temp.append(a).append(b).append(c); 
 String s = temp.toString(); 
 ```
+
 + 由上面的分析结果，可就不难推断出String 采用连接运算符（+）效率低下原因分析，形如这样的代码：
 
 ```java
@@ -546,15 +550,15 @@ public class Test {
 
 + 10.String、StringBuffer、StringBuilder的区别
 
-	- 可变与不可变：String是不可变字符串对象，StringBuilder和StringBuffer是可变字符串对象（其内部的字符数组长度可变）。
+  - 可变与不可变：String是不可变字符串对象，StringBuilder和StringBuffer是可变字符串对象（其内部的字符数组长度可变）。
 
-	- 是否多线程安全：String中的对象是不可变的，也就可以理解为常量，显然线程安全。StringBuffer 与 StringBuilder 中的方法和功能完全是等价的，只是StringBuffer 中的方法大都采用了synchronized 关键字进行修饰，因此是线程安全的，而 StringBuilder 没有这个修饰，可以被认为是非线程安全的。
+  - 是否多线程安全：String中的对象是不可变的，也就可以理解为常量，显然线程安全。StringBuffer 与 StringBuilder 中的方法和功能完全是等价的，只是StringBuffer 中的方法大都采用了synchronized 关键字进行修饰，因此是线程安全的，而 StringBuilder 没有这个修饰，可以被认为是非线程安全的。
 
-	- String、StringBuilder、StringBuffer三者的执行效率： 
-	- StringBuilder > StringBuffer > String 当然这个是相对的，不一定在所有情况下都是这样。比如String str = “hello”+ “world”的效率就比 StringBuilder st = new StringBuilder().append(“hello”).append(“world”)要高。因此，这三个类是各有利弊，应当根据不同的情况来进行选择使用： 
-	- 当字符串相加操作或者改动较少的情况下，建议使用 String str=”hello”这种形式； 
-	- 当字符串相加操作较多的情况下，建议使用StringBuilder，如果采用了多线程，则使用StringBuffer。
+  - String、StringBuilder、StringBuffer三者的执行效率：
 
+  - StringBuilder > StringBuffer > String 当然这个是相对的，不一定在所有情况下都是这样。比如String str = “hello”+ “world”的效率就比 StringBuilder st = new StringBuilder().append(“hello”).append(“world”)要高。因此，这三个类是各有利弊，应当根据不同的情况来进行选择使用：
+  - 当字符串相加操作或者改动较少的情况下，建议使用 String str=”hello”这种形式；
+  - 当字符串相加操作较多的情况下，建议使用StringBuilder，如果采用了多线程，则使用StringBuffer。
 + 11.String中的final用法和理解
 
 ```java
@@ -569,14 +573,15 @@ a.append(“222”);//编译通过
 
 + 12.关于String str = new String(“abc”)创建了多少个对象？
 
-	- 这个问题在很多书籍上都有说到比如《Java程序员面试宝典》，包括很多国内大公司笔试面试题都会遇到，大部分网上流传的以及一些面试书籍上都说是2个对象，这种说法是片面的。
+  - 这个问题在很多书籍上都有说到比如《Java程序员面试宝典》，包括很多国内大公司笔试面试题都会遇到，大部分网上流传的以及一些面试书籍上都说是2个对象，这种说法是片面的。
 
-	- 首先必须弄清楚创建对象的含义，创建是什么时候创建的？这段代码在运行期间会创建2个对象么？毫无疑问不可能，用javap -c反编译即可得到JVM执行的字节码内容：
+  - 首先必须弄清楚创建对象的含义，创建是什么时候创建的？这段代码在运行期间会创建2个对象么？毫无疑问不可能，用javap -c反编译即可得到JVM执行的字节码内容：
 
-	- 很显然，new只调用了一次，也就是说只创建了一个对象。而这道题目让人混淆的地方就是这里，这段代码在运行期间确实只创建了一个对象，即在堆上创建了”abc”对象。而为什么大家都在说是2个对象呢，这里面要澄清一个概念，该段代码执行过程和类的加载过程是有区别的。在类加载的过程中，确实在运行时常量池中创建了一个”abc”对象，而在代码执行过程中确实只创建了一个String对象。 
-	- 因此，这个问题如果换成 String str = new String(“abc”)涉及到几个String对象？合理的解释是2个。 个人觉得在面试的时候如果遇到这个问题，可以向面试官询问清楚”是这段代码执行过程中创建了多少个对象还是涉及到多少个对象“再根据具体的来进行回答。
+  - 很显然，new只调用了一次，也就是说只创建了一个对象。而这道题目让人混淆的地方就是这里，这段代码在运行期间确实只创建了一个对象，即在堆上创建了”abc”对象。而为什么大家都在说是2个对象呢，这里面要澄清一个概念，该段代码执行过程和类的加载过程是有区别的。在类加载的过程中，确实在运行时常量池中创建了一个”abc”对象，而在代码执行过程中确实只创建了一个String对象。
 
-+ 13.字符串池的优缺点： 
+  - 因此，这个问题如果换成 String str = new String(“abc”)涉及到几个String对象？合理的解释是2个。 个人觉得在面试的时候如果遇到这个问题，可以向面试官询问清楚”是这段代码执行过程中创建了多少个对象还是涉及到多少个对象“再根据具体的来进行回答。
++ 13.字符串池的优缺点：
+
 + 字符串池的优点就是避免了相同内容的字符串的创建，节省了内存，省去了创建相同字符串的时间，同时提升了性能；另一方面，字符串池的缺点就是牺牲了JVM在常量池中遍历对象所需要的时间，不过其时间成本相比而言比较低。
 
 ### 综合实例
@@ -687,6 +692,7 @@ str4 = str5 : false
 str7 = str67 : false 
 str9 = str89 : true
 ```
+
 ## 参考资料
 
 [xhyxxx博客](http://blog.csdn.net/xhyxxx/article/details/65628990)

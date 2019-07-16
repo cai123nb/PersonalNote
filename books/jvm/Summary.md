@@ -1,7 +1,9 @@
 ## 图书介绍
+
 周志明老师的`深入了解Java虚拟机`图书, Java程序员必读经典, 让人不仅学会怎么用Java, 更是理解了Java的核心.
 
 ## 章节详情
+
 * [走近Java](https://github.com/cai123nb/PersonalNote/blob/master/books/jvm/StepIntoJava.md)
 
 * [Java内存区域与内存溢出异常](https://github.com/cai123nb/PersonalNote/blob/master/books/jvm/JavaMemoryArea.md)
@@ -25,3 +27,4 @@
 * [Java内存模型与线程](https://github.com/cai123nb/PersonalNote/blob/master/books/jvm/MemoryModel.md)
 
 * [线程安全和锁优化](https://github.com/cai123nb/PersonalNote/blob/master/books/jvm/ThreadSafe.md)
+
