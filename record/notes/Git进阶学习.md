@@ -63,6 +63,14 @@ Git本地存储分成三大部分:
 
 ## 进阶学习
 
+### GIT拉取远程分支到本地
+
++ 拉取远程分支到本地: `git fetch REMOTE_NAME dev`.
++ 本地新建对应分支, 并切换: `git checkout -b LOCAL_BRANCH_NAME REMOTE_NAME/REMOTE_BRANCH_NAME`.
++ 本地远程分支更新: `git pull origin REMOTE_BRANCH_NAME`.
++ do something.
++ 推送更新到远程分支: `git push origin REMOTE_BRANCH_NAME`.
+
 ### GIT自定义配置
 
 初次使用`GIT`时, 一般需要进行自定义的配置: 配置基本的用户信息(便于提交时辨识度), 配置自定义的别名(方便自己的操作习惯)等.
