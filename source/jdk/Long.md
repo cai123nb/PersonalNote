@@ -1791,4 +1791,3 @@ public final class Long extends Number implements Comparable<Long> {
 	@Native private static final long serialVersionUID = 4290774380558885855L;
 }
 ```
-

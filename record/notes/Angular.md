@@ -26,6 +26,3 @@
 + 获取路由参数:
   + 导入`ActivatedRoute`: `constructor(private route: ActivatedRoute)`.
   + 获取对应参数: `this.route.snapshot.paramMap.get('PARAMETER_NAME')`.
-
-## Angular零散知识点
-

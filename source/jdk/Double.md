@@ -1211,4 +1211,3 @@ public final class Double extends Number implements Comparable<Double> {
 	private static final long serialVersionUID = -9172774392245257468L;
 }
 ```
-

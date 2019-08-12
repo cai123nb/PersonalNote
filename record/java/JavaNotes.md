@@ -6,7 +6,7 @@
 
 Java技术书籍的读书笔记, 该类书籍不适合逐章书写笔记(如`EffectiveJava_3`), 这里简单记录一下图书的重点内容.
 
-### ***Spring微服务实战(Spring Microservices In Action)***
+### Spring微服务实战(Spring Microservices In Action)
 
 **微服务是什么?**
 
@@ -66,7 +66,7 @@ Java技术书籍的读书笔记, 该类书籍不适合逐章书写笔记(如`Eff
 
 ![route](https://image.cjyong.com/springCloud.png)
 
-## @Transactional
+## Transactional
 
 + PROPAGATION_REQUIRED--支持当前事务, 如果当前没有事务, 就新建一个事务.这是最常见的选择.
 + PROPAGATION_SUPPORTS--支持当前事务, 如果当前没有事务, 就以非事务方式执行.
@@ -91,7 +91,7 @@ Java技术书籍的读书笔记, 该类书籍不适合逐章书写笔记(如`Eff
 + sleep是线程类（Thread）的方法, 导致此线程暂停执行指定时间, 给执行机会给其他线程, 但是监控状态依然保持, 到时后会自动恢复. 调用sleep不会释放对象锁.
 + wait是Object类的方法, 对此对象调用wait方法导致本线程放弃对象锁, 进入等待此对象的等待锁定池, 只有针对此对象发出notify方法(或notifyAll)后本线程才进入对象锁定池准备获得对象锁进入运行状态.
 
-## |/||
+## 按位或逻辑或
 
 + 用法：condition 1 | condition 2. condition 1 || condition 2
 + "|"是按位或: 先判断条件1, 不管条件1是否可以决定结果(这里决定结果为true), 都会执行条件2.

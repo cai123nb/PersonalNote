@@ -1804,4 +1804,3 @@ public final class Integer extends Number implements Comparable<Integer> {
 	@Native private static final long serialVersionUID = 1360826667806852920L;
 }
 ```
-

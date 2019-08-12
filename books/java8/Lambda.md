@@ -18,7 +18,6 @@
 ### 函数式接口
 
 + 自定义一个抽象方法的接口.
-- 如:
 
 ```java
 public interface Runnable{

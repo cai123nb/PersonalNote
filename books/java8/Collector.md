@@ -1,4 +1,4 @@
-### 收集器简介
+# 收集器简介
 
 Collect,终端操作,一种归约操作,将流里面的所有元素进行转换操作,累积成一个汇总结果. 通过定义一个Collector接口传递给Collect来实现的.如:
 
@@ -13,16 +13,16 @@ public static <T> Collector<T, ?, List<T>> toList() {
 }
 ```
 
-### 预定义的归约和汇总
+## 预定义的归约和汇总
 
-##### couting
+### couting
 
 ```java
 long howManyDishes = menu.stream().collect(Collectors.counting());
 // long howManyDishes = menu.stream().count();
 ```
 
-##### maxBy minBy
+### maxBy minBy
 
 ```java
 Comparator<Dish> dishCaloriesComparator = Comparator.comparingInt(Dish::getCalories);
@@ -30,7 +30,7 @@ Optional<Dish> mostCalorieDish = menu.stream()
 	.collect(maxBy(dishCaloriesComparator));
 ```
 
-##### summingInt summingLong .../averagingInt .../summarizingInt ...
+### summingInt summingLong .../averagingInt .../summarizingInt ...
 
 ```java
 int totalCalories = menu.stream().collect(summingInt(Dish::getCalories));
@@ -40,13 +40,13 @@ IntSummaryStatistics avgCalories =
 avgCalories{count=9,sum=4300,min=120,average=477.77,max=800};
 ```
 
-##### joining
+### joining
 
 ```java
 String shortMenu = menu.stream().map(Dish:getName).collect(joining(", "));
 ```
 
-### 广义的归约汇总
+## 广义的归约汇总
 
 之前讨论的预定义收集器,都是可以使用reducing工厂方法来实现,可以看做是reducing工厂方法定义的归约过程的特殊情况.如:
 
@@ -91,7 +91,7 @@ Stream<Integer> stream = Arrays.asList(1,3,4,6,5).stream();
 Sream.reduce: 目标是将两个值结合在一起生成一个新值,是一个不可变的归约过程.在多线程操作过程中,存在着较多弊端.
 Collect.reducing: 修改容器来实现累加过程,在多线程过程中更加擅长.
 
-### 分组
+## 分组
 
 使用Collectors.groupingBy工厂方法
 
@@ -110,7 +110,7 @@ Map<CaloricLevel,List<Dish>) dishesByCaloricLevel = menu.stream()
     );
 ```
 
-##### 多级分组
+### 多级分组
 
 ```java
 Map<Dish.Type,Map<CaloricLevel,List<Dish>>> dishesByTypeCaloricLevel = 
@@ -127,7 +127,7 @@ Map<Dish.Type,Map<CaloricLevel,List<Dish>>> dishesByTypeCaloricLevel =
         );
 ```
 
-##### 利用子组进行数据收集
+### 利用子组进行数据收集
 
 由于groupingBy第二种构造函数的第二个参数允许不同的收集器,我们可以通过传入不同的收集器实现不同的功能,如:
 
@@ -215,7 +215,7 @@ public Map<Boolean, List<Integer>> partitionPrimes(int n){
 }
 ```
 
-### Collectors类静态工厂方法列表:
+## Collectors类静态工厂方法列表:
 
 + toList,返回List<T>,将流中的项目收集到一个List上
 
@@ -296,7 +296,7 @@ Map<Dish.Type,List<Dish>> dishesByType = menuStream.collect(groupingBy(Dish::get
 Map<Booean,List<Dish>> vegetarianDishes = menuStream.collect(partitioningBy(Dish::isVegetarian));w
 ```
 
-### 收集器接口
+## 收集器接口
 
 Java中源代码:
 
@@ -438,9 +438,9 @@ public class MyCollectors<T> implements Collector<T, List<T>, List<T>> {
 }
 ```
 
-### 开发自己的收集器
+## 开发自己的收集器
 
-#### 之前利用分区区分质数获得Map:
+### 之前利用分区区分质数获得Map:
 
 ```java
 public static Map<Boolean, List<Integer>> partitionPrimes(int n) {
@@ -455,7 +455,7 @@ public static boolean isPrime(int candidate) {
 }
 ```
 
-#### 同样我们可以利用收集器实现我们的想法
+### 同样我们可以利用收集器实现我们的想法
 
 ```java
 package MyCollectors;
@@ -528,7 +528,7 @@ public class PrimeNumbersCollector implements Collector<Integer, Map<Boolean,Lis
 
 ```
 
-#### 性能比较:
+### 性能比较:
 
 ```java
 long fastest = Long.MAX_VALUE;
@@ -556,7 +556,7 @@ System.out.println("Fastest execution done in " + fastest2 + "msecs");
 
 + 可以看出我们自己的收集器具有更加良好的性能
 
-#### 匿名收集器写法:
+### 匿名收集器写法:
 
 ```java
 public Map<Boolean, List<Integer>> partitionPrimesWithInlineCollector(int n) {
@@ -576,4 +576,3 @@ public Map<Boolean, List<Integer>> partitionPrimesWithInlineCollector(int n) {
                         });
     }
 ```
-

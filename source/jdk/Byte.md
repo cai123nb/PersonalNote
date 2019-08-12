@@ -566,4 +566,3 @@ public final class Byte extends Number implements Comparable<Byte> {
     private static final long serialVersionUID = -7183698231559129828L;
 }
 ```
-

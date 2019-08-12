@@ -32,6 +32,3 @@ class Void {
 	private Void() {}
 }
 ```
-
-## TESTASAS
-

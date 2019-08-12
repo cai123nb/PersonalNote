@@ -114,13 +114,15 @@ Git本地存储分成三大部分:
 + 修改注释信息: `git commit --amend`, 打开编辑页面, 修改注释信息, 选择`:wq`即可.
 + 追加修改信息: 首先将需要追加的修改信息, 添加到暂存区, 提交时使用`git commit -amend`, 直接保存退出即可.
 
+如果未提交到远程, 则可以首先通过`reflog`查看具体的操作日志, 然后使用`reset`跳转到对应的错误提交中, 使用`git commit --amend`更新提交信息, 然后使用`cherry-pick`将之后需要保留的提交保存下来.
+
 如果提交到了远程,就需要使用`rebase`命令, 具体操作参照官方解决方案:
 
 + On the command line, navigate to the repository that contains the commit you want to amend.
 + Use the git rebase -i HEAD~n command to display a list of the last n commits in your default text editor.
 
 ```
-$ git rebase -i HEAD~3 # Displays a list of the last 3 commits on the current branch
+$ git rebase -i HEAD~3 // Displays a list of the last 3 commits on the current branch
 ```
 
 The list will look similar to the following:
@@ -130,23 +132,19 @@ pick e499d89 Delete CNAME
 pick 0c39034 Better README
 pick f7fde4a Change the commit message but push the same commit.
 
-# Rebase 9fdb3bd..f7fde4a onto 9fdb3bd
-#
-# Commands:
-# p, pick = use commit
-# r, reword = use commit, but edit the commit message
-# e, edit = use commit, but stop for amending
-# s, squash = use commit, but meld into previous commit
-# f, fixup = like "squash", but discard this commit's log message
-# x, exec = run command (the rest of the line) using shell
-#
-# These lines can be re-ordered; they are executed from top to bottom.
-#
-# If you remove a line here THAT COMMIT WILL BE LOST.
-#
-# However, if you remove everything, the rebase will be aborted.
-#
-# Note that empty commits are commented out
+// Rebase 9fdb3bd..f7fde4a onto 9fdb3bd
+//
+// Commands:
+// p, pick = use commit
+// r, reword = use commit, but edit the commit message
+// e, edit = use commit, but stop for amending
+// s, squash = use commit, but meld into previous commit
+// f, fixup = like "squash", but discard this commit's log message
+// x, exec = run command (the rest of the line) using shell
+// These lines can be re-ordered; they are executed from top to bottom.
+// If you remove a line here THAT COMMIT WILL BE LOST.
+// However, if you remove everything, the rebase will be aborted.
+// Note that empty commits are commented out
 ```
 
 + Replace pick with reword before each commit message you want to change.
@@ -171,11 +169,11 @@ reword f7fde4a Change the commit message but push the same commit.
 
 ## 常见问题
 
-### 拉取失败时, 显示为`fatal: refusing to merge unrelated histories`
+### 拉取失败时RefusingMerge
 
 这时候一般`git`认为, 两个仓库可能不是同一个仓库(没有相同的`commit`), 这时候可以使用`git pull origin master --allow-unrelated-histories`告诉`git`, 自己已经确认好了.
 
-### 提交时报错,显示为`HEAD detached from xxxx`
+### 提交时报错HEADDetached
 
 [参考博文](https://blog.csdn.net/u011240877/article/details/76273335)
 

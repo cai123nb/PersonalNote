@@ -29,4 +29,3 @@
 * [Chapter11: Concurrency](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/Concurrency.md)
 
 * [Serialization](https://github.com/cai123nb/PersonalNote/blob/master/books/effectivejava_3/Serialization.md)
-
