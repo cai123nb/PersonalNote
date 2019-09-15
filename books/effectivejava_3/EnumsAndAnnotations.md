@@ -1,10 +1,10 @@
 # Enums And Annotations
 
-Java中支持两种特殊的引用类型: 一种特殊的类, 枚举; 一种特殊的接口, 注释. 本章主要是讲如何高效地使用这两种类型.
+Java 中支持两种特殊的引用类型: 一种特殊的类, 枚举; 一种特殊的接口, 注释. 本章主要是讲如何高效地使用这两种类型.
 
 ## Item 34: Use enums instead of int constants
 
-枚举类型是一种值, 由许多固定的常量组成. 如一年的四个季节, 太阳系的八大行星等等. 在枚举类型添加到Java之前, Java中有很多方式来代表泛型, 如:
+枚举类型是一种值, 由许多固定的常量组成. 如一年的四个季节, 太阳系的八大行星等等. 在枚举类型添加到 Java 之前, Java 中有很多方式来代表泛型, 如:
 
 ```java
 //The int enum pattern - severely deficient!
@@ -23,12 +23,12 @@ public static final int ORANGE_BLOOD        = 2;
 
 ```java
 public enum Apple {FUJI, PIPPIN, GRANNY_SMITH}
-public enum Orange {NAVEL, TEMPLE, BLOOD} 
+public enum Orange {NAVEL, TEMPLE, BLOOD}
 ```
 
-这就是使用枚举的表示方式, 简单明了. 枚举和很多别的编程语言中(C,C++,C#等)的枚举不一样. Java中的枚举是一个完备的类, 而别的语言大多数本质就是int常量. 因此更加成熟, 可用性也大大增强.
+这就是使用枚举的表示方式, 简单明了. 枚举和很多别的编程语言中(C,C++,C#等)的枚举不一样. Java 中的枚举是一个完备的类, 而别的语言大多数本质就是 int 常量. 因此更加成熟, 可用性也大大增强.
 
-Java中的枚举本质非常简单, 就是一类不变类, 然后导出内部的常量, 枚举中的每一个元素就对应着一个静态不变的实例, 并且只有这些实例. 换句话说, 就是枚举类型是`实例可控(instance-controlled)`的类型.
+Java 中的枚举本质非常简单, 就是一类不变类, 然后导出内部的常量, 枚举中的每一个元素就对应着一个静态不变的实例, 并且只有这些实例. 换句话说, 就是枚举类型是`实例可控(instance-controlled)`的类型.
 
 枚举保证了编译时的类型安全, 如声明了方法中的参数为某个泛型, 那么调用该方法时就只能传递该类型的泛型, 任何别的类型(包括别的泛型)都会编译失败. 另外枚举还允许你使用`==`进行枚举的判断, 因为枚举是`实例可控`的.
 
@@ -69,7 +69,7 @@ public enum Planet {
 }
 ```
 
-从这个简单实例, 就可以看出向一个枚举类型添加属性和方法也是非常简单的. 因为枚举本身就是一个类. 这里需要注意的是, 枚举设计的就是不变类, 这里的属性都是默认为final的, 虽然可以声明为public, 但是推荐声明为private, 然后提供public的访问函数.枚举本身实现了静态的`values`方法, 默认返回元素数组, 便于使用和遍历. 另外枚举本身默认实现了`toString`函数, 返回基本的名称, 如果想要自定义, 可以进行重写.
+从这个简单实例, 就可以看出向一个枚举类型添加属性和方法也是非常简单的. 因为枚举本身就是一个类. 这里需要注意的是, 枚举设计的就是不变类, 这里的属性都是默认为 final 的, 虽然可以声明为 public, 但是推荐声明为 private, 然后提供 public 的访问函数.枚举本身实现了静态的`values`方法, 默认返回元素数组, 便于使用和遍历. 另外枚举本身默认实现了`toString`函数, 返回基本的名称, 如果想要自定义, 可以进行重写.
 
 如果我们删除了枚举中的某个元素, 会有什么影响呢? 如太阳系中的九大行星中的冥王星被取消资格了.那么客户端没有指明使用到特定的元素就不会受到影响. 如果使用到了移除对象的引用, 那么会在编译时报错, 这时候编译器会弹出一个详细的错误信息, 告诉客户端该元素已经被移除了. 这比`整形枚举类型`效果好了很多. 另外如果一个枚举类型不是绑定在某个类的, 可以被广泛使用的, 可以声明该枚举类型为`顶级(top-level)类`, 即声明为`public static`, 这样便于代码重用.
 
@@ -95,9 +95,9 @@ public enum Operation {
 
 ```java
 public enum Operation {
-    PLUS {public double apply(double x, double y) {return x + y}}, 
-    MINUS {public double apply(double x, double y) {return x - y}}, 
-    TIMES {public double apply(double x, double y) {return x * y}}, 
+    PLUS {public double apply(double x, double y) {return x + y}},
+    MINUS {public double apply(double x, double y) {return x - y}},
+    TIMES {public double apply(double x, double y) {return x * y}},
     DIVIDE {public double apply(double x, double y) {return x / y}};
 
     public abstract double apply(double x, double y);
@@ -108,9 +108,9 @@ public enum Operation {
 
 ```java
 public enum Operation {
-    PLUS("+") {public double apply(double x, double y) {return x + y;}}, 
-    MINUS("-") {public double apply(double x, double y) {return x - y;}}, 
-    TIMES("*") {public double apply(double x, double y) {return x * y;}}, 
+    PLUS("+") {public double apply(double x, double y) {return x + y;}},
+    MINUS("-") {public double apply(double x, double y) {return x - y;}},
+    TIMES("*") {public double apply(double x, double y) {return x * y;}},
     DIVIDE("/") {public double apply(double x, double y) {return x / y;}};
 
     private final String symbol;
@@ -129,13 +129,13 @@ public static void main(String[] args) {
     double y = 3.23L;
     for (Operation op : Operation.values())
         System.out.printf("%f %s %f = %f%n", x, op, y, op.apply(x, y));
-    
+
     // 2.12 + 3.23 = 5.35
-    //... 
+    //...
 }
 ```
 
-注意枚举中内部实现了`valueOf(String)`函数, 来转换String为枚举实例. 如果你重写了`toString`方法, 推荐重写`valueOf(String)`方法, 来保证完整性. 这里提供一个通用的实现方法:
+注意枚举中内部实现了`valueOf(String)`函数, 来转换 String 为枚举实例. 如果你重写了`toString`方法, 推荐重写`valueOf(String)`方法, 来保证完整性. 这里提供一个通用的实现方法:
 
 ```java
 private static final Map<String, Operation> = stringToEnum = Stream.of(values()).collect(toMap(Object::toString, e -> e));
@@ -145,7 +145,7 @@ public static Option<Operation> fromString(String symbol) {
 }
 ```
 
-注意这里使用了一些`Stream`和`Lambda`表达式, 最后的`fromString`返回的是`Option`类型, 就是存在null值的可能, 但是将这个问题交给客户端进行解决. 注意这里的`Map`对象不允许放在构造函数中进行初始化, 因为在初始化的时候, 枚举中的实例对象还没有进行构造, 会报`NullPointerException`. 也就是说在枚举的构造函数中是不允许修改或者接触枚举中的元素的.
+注意这里使用了一些`Stream`和`Lambda`表达式, 最后的`fromString`返回的是`Option`类型, 就是存在 null 值的可能, 但是将这个问题交给客户端进行解决. 注意这里的`Map`对象不允许放在构造函数中进行初始化, 因为在初始化的时候, 枚举中的实例对象还没有进行构造, 会报`NullPointerException`. 也就是说在枚举的构造函数中是不允许修改或者接触枚举中的元素的.
 
 `实例特定方法(Constant-specific)`也有一个明显的缺点, 那就是重用代码的话就会变得非常困难. 但是对于大部分的枚举, 内部的元素并不需要全部重写指定的方法, 很多都可以公用一份代码. 比如一个计算工资的枚举`PayrollDay`, 根据每天的类型来计算工资.
 
@@ -160,7 +160,7 @@ public enum PayrollDay {
 
         int overtimePay;
         switch(this) {
-            case SATURDAY:  //Weekend 1.5 
+            case SATURDAY:  //Weekend 1.5
             case SUNDAY:
                 overtimePay = basePay / 2;
                 break;
@@ -187,7 +187,7 @@ public enum PayrollDay {
        return payType.pay(minutesWorked, payRate);
    }
 
-    
+
 
     private enum PayType {
         WEEKDAY {int overtimePay(int mins, int payRate){
@@ -248,11 +248,11 @@ public enum Ensemble {
 
 ## Item 36: Use EnumSet instead of bit fields
 
-如果一个枚举类型中的元素只是单纯的用于`Set`中, 以前一般的使用方法是使用`bit fields`.
+如果一个枚举类型中的元素只是单纯的用于`Set`中, 以前一般的使用方法是使用`bit fields`
 
 ```java
 public class Text {
-    public static final int STYLE_BOLD	        = 1 << 0;   //1
+    public static final int STYLE_BOLD          = 1 << 0;   //1
     public static final int STYLE_ITALIC        = 1 << 1;   //2
     public static final int STYLE_UNDERLINE     = 1 << 2;   //4
     public static final int STYLE_STRIKETHROUGH = 1 << 3;   //8
@@ -262,7 +262,7 @@ public class Text {
 text.applyStyles(STYLE_BOLD | STYLE_UNDERLINE);
 ```
 
-但是这是非常不好的. 这个存在所有`整形枚举模式`的问题. 另外, 这是很难翻译对应的值, 你获得的只是`int`值. 并且很难迭代所有的内部元素. 并且一旦你确定了类型(int, long), 那么枚举内的元素的极限也就确定了: 32和64. 你没有办法进行拓展.
+但是这是非常不好的. 这个存在所有`整形枚举模式`的问题. 另外, 这是很难翻译对应的值, 你获得的只是`int`值. 并且很难迭代所有的内部元素. 并且一旦你确定了类型(int, long), 那么枚举内的元素的极限也就确定了: 32 和 64. 你没有办法进行拓展.
 
 另外这里可以很好的使用`EnumSet`进行替代, 这里提供了所有的枚举的优点, 并且效率来说并不会比`bit field`慢多少, `EnumSet`本质也是通过`bit vector`进行实现的.
 
@@ -282,7 +282,7 @@ text.applyStyles(EnumSet.of(Style.BOLD, Style.ITALIC));
 
 ## Item 37: Use EnumMap instead of ordinal indexing
 
-有时候还是可以看到我们使用`ordinal`函数来定位一个元素在数组或者list中的位置. 如
+有时候还是可以看到我们使用`ordinal`函数来定位一个元素在数组或者 list 中的位置. 如
 
 ```java
 class Plant {
@@ -303,14 +303,14 @@ class Plant {
 
 //Use ordinal() to index into an array
 Set<Plant>[] plantsByLifeCycle = (Set<Plant>[]) new Set[Plant.LifeCycle.values().length];
-for (int i = 0; i < plantsByLifeCycle.length; i++) 
+for (int i = 0; i < plantsByLifeCycle.length; i++)
     plantsByLifeCycle[i] = new HashSet<>();
 
 for (Plant p : garden)
     plantsByLifeCycle[p.lifeCycle.ordinal()].add(p);
 
 //Print
-for (int i = 0; i < plantsByLifeCycle.length; i++) 
+for (int i = 0; i < plantsByLifeCycle.length; i++)
     System.out.printf("%s: %s%n", Plant.LifeCycle.values()[i], plantByLifeCycle[i]);
 ```
 
@@ -318,7 +318,7 @@ for (int i = 0; i < plantsByLifeCycle.length; i++)
 
 ```java
 Map<Plant.LifeCycle, Set<Plant>> plantsByLifeCycle = new EnumMap<>(Plant.LifeCycle.class);
-for (Plant.LifeCycle lc : Plant.LifeCycle.values()) 
+for (Plant.LifeCycle lc : Plant.LifeCycle.values())
     plantsByLifeCycle.put(lc, new HashSet<>());
 for (Plant p : garden)
     plantsByLifeCycle.get(p.lifeCycle).add(p);
@@ -361,7 +361,7 @@ public enum Phase {
 }
 ```
 
-这段代码看起来非常简短, 甚至有些优雅. 但是表象总是骗人的, 编译器是不保证数组的引用和index值之间的关联的. 即, 如果你简单移动了次序, 或者增加修改了元素都会变得特别容易出错. 同样你可以使用`EnumMap`进行修复:
+这段代码看起来非常简短, 甚至有些优雅. 但是表象总是骗人的, 编译器是不保证数组的引用和 index 值之间的关联的. 即, 如果你简单移动了次序, 或者增加修改了元素都会变得特别容易出错. 同样你可以使用`EnumMap`进行修复:
 
 ```java
 public enum Phase {
@@ -369,12 +369,12 @@ public enum Phase {
 
     public enum Transition {
         MELT(SOLID, LIQUID), FREEZE(LIQUID, SOLID), BOIL(LIQUID, GAS), CONDENSE(GAS, LIQUID), SUBLIME(SOLID, GAS), DEPOSIT(GAS, SOLID);
-        
+
         private final Phase from;
         private final Phase to;
 
         private static final Map<Phase, Map<Phase, Transition>> m = Stream.of(values())
-        .collect(gourpingBy(t -> t.from, () -> new EnumMap<>(Phase.class), 
+        .collect(gourpingBy(t -> t.from, () -> new EnumMap<>(Phase.class),
         toMap(t -> t.to, t -> t, (x, y) -> y, () -> new EnumMap<>(Phase.class))));
     }
 
@@ -384,7 +384,7 @@ public enum Phase {
 }
 ```
 
-虽然有些复杂, 但是极大的增加了灵活性. 如, 我们这里增加一个新的状态`PLASMA`, 这时候`Transition`也添加对应的状态变化`IONIZE`,`DEIONIZE`. 这时候如果是数组类型的话, 就需要从3 x 3的数组, 变成4 x 4的数组. 但是如果使用第二个版本, 就需要简单添加两行即可:
+虽然有些复杂, 但是极大的增加了灵活性. 如, 我们这里增加一个新的状态`PLASMA`, 这时候`Transition`也添加对应的状态变化`IONIZE`,`DEIONIZE`. 这时候如果是数组类型的话, 就需要从 3 x 3 的数组, 变成 4 x 4 的数组. 但是如果使用第二个版本, 就需要简单添加两行即可:
 
 ```java
 public enum Phase {
@@ -428,9 +428,9 @@ public interface Operation {
 }
 
 public enum BasicOperation implements Operation {
-    PLUS("+") {public double apply(double x, double y) {return x + y;}}, 
-    MINUS("-") {public double apply(double x, double y) {return x - y;}}, 
-    TIMES("*") {public double apply(double x, double y) {return x * y;}}, 
+    PLUS("+") {public double apply(double x, double y) {return x + y;}},
+    MINUS("-") {public double apply(double x, double y) {return x - y;}},
+    TIMES("*") {public double apply(double x, double y) {return x * y;}},
     DIVIDE("/") {public double apply(double x, double y) {return x / y;}};
 
     private final String symbol;
@@ -450,8 +450,8 @@ public enum BasicOperation implements Operation {
 
 ```java
 public enum ExtendedOperation implements Operation {
-    PLUS("^") {public double apply(double x, double y) {return Math.pow(x,y);}}, 
-    MINUS("%") {public double apply(double x, double y) {return x % y;}}, 
+    PLUS("^") {public double apply(double x, double y) {return Math.pow(x,y);}},
+    MINUS("%") {public double apply(double x, double y) {return x % y;}},
 
     private final String symbol;
 
@@ -477,7 +477,7 @@ public static void main(String[] args) {
 }
 
 private static <T extends Enum<T> & Operation> void test(Class<T> opEnumType, double x, double y) {
-    for (Operation op : opEnumType.getEnumConstants()) 
+    for (Operation op : opEnumType.getEnumConstants())
         System.out.printf("%f %s %f = %f%n", x, op, y, op.apply(x, y));
 }
 
@@ -489,7 +489,7 @@ public static void main(String[] args) {
 }
 
 private static void test(Collection<? extends Operation> opSet, double x, double y) {
-    for (Operation op : opSet) 
+    for (Operation op : opSet)
         System.out.printf("%f %s %f = %f%n", x, op, y, op.apply(x, y));
 }
 ```
@@ -502,9 +502,9 @@ private static void test(Collection<? extends Operation> opSet, double x, double
 
 ## Item 39: Prefer annotations for naming patterns
 
-在Java很多的框架中, 使用`命名模式`是非常常见的. 通过特殊的名称来暗示这个对象或者方法需要特殊的对待. 如在`JUnit`的第四个版本之前, `Junit`需要所有需要进行测试的方法名都要以`test`开头. 这种模式存在着非常多的问题, 首先就是打字错误会导致静默的错误, 如果你将`test`错误的拼写成了`tset`, 那么`Junit`并不会报任何错误, 只是单纯地将该方法略过. 第二就是没有办法保证所有的方法只会在要求的对象中执行, 如果我们将一个类设计成`TestSafetyMechanisms`这时候希望`Junnit`就会默认测试该类中的所有方法. 但是非常不幸的是, 并不会理解这个类, 更不会执行相关的测试. 第三就是命名模式处理相关参数的值.
+在 Java 很多的框架中, 使用`命名模式`是非常常见的. 通过特殊的名称来暗示这个对象或者方法需要特殊的对待. 如在`JUnit`的第四个版本之前, `Junit`需要所有需要进行测试的方法名都要以`test` 开头. 这种模式存在着非常多的问题, 首先就是打字错误会导致静默的错误, 如果你将`test`错误的拼写成了`tset`, 那么`Junit`并不会报任何错误, 只是单纯地将该方法略过. 第二就是没有办法保证所有的方法只会在要求的对象中执行, 如果我们将一个类设计成`TestSafetyMechanisms` 这时候希望`Junnit`就会默认测试该类中的所有方法. 但是非常不幸的是, 并不会理解这个  类, 更不会执行相关的测试. 第三就是命名模式处理  相关参数的值.
 
-自从注解的出现之后, 这些问题都解决了. 这里以开发自己的简单测试框架为例讲述相关的注解的使用. 假设我们想单纯地声明一个注解, 来指定某些方法需要进行测试, 如果抛出异常则失败.
+自从注解的出现之后, 这些问题都解决了. 这里以开发自己的简单测试框架为例讲述相关的注解的使用. 假设我们想单纯地声明一个注解,  来指定某些方法需要进行测试, 如果抛出异常则失败.
 
 ```java
 import java.lang.annotation.*;
@@ -520,7 +520,7 @@ public @interface Test {
 }
 ```
 
-这个注解简单命名为`Test`, 其中`@Retention`和`@Target`时元注解, 使用来修饰注释的注释. 其中第一个的含义为, 该注释在运行时保留. 第二个则是该注释作用于方法. 简单的使用案例为:
+这个注解简单命名为`Test`, 其中`@Retention`和`@Target`时元注解, 使用来修饰注释的注释. 其中第一个的含义为, 该注释在  运行时保留. 第二个则是该注释作用于方法. 简单的使用案例为:
 
 ```java
 public class Sample {
@@ -539,7 +539,7 @@ public class Sample {
 }
 ```
 
-这里的方法, 按照我们的设计应该有1个通过, 2个失败, 1个不合理. 但是注释并不会对代码有任何作用, 这需要我们进行自定义的处理：
+这里的方法, 按照我们的设计应该有 1 个通过, 2 个失败, 1 个不合理.  但是注释并不会对代码有任何作用, 这需要我们进行自定义的处理：
 
 ```java
 import java.lang.reflect.*;
@@ -568,7 +568,7 @@ public class RunTests {
 }
 ```
 
-接下来, 让我们更进一步来让注解只处理制定的异常：
+接下来, 让我们更进一步来让注解  只处理制定的异常：
 
 ```java
 //Annotation type with a parameter
@@ -581,7 +581,7 @@ public @interface ExceptionTest {
 }
 ```
 
-注意这里使用有界通配符来匹配参数为`Throwable`. 使用案例为：
+注意这里使用有界通配符  来匹配参数为`Throwable`. 使用  案例为：
 
 ```java
 //Program containing annotations with a parameter
@@ -658,7 +658,7 @@ if (m.isAnnotationPresent(ExceptionTest.class)) {
             if (excType.isInstance(exc)) {
                 passed++;
                 break;
-            } 
+            }
         }
         if (passed == oldPassed)
             System.out.printf("Test %s failed: %s %sn", m, exc);
@@ -669,7 +669,7 @@ if (m.isAnnotationPresent(ExceptionTest.class)) {
 ...
 ```
 
-在Java8之后添加了一个新的元注解来进行标明重复的注释`@Repeatable`. 如
+在 Java8 之后添加了一个新的元注解来进行标明重复的注释`@Repeatable`. 如
 
 ```java
 @Retention(RetentionPolicy.RUNTIME)
@@ -692,7 +692,7 @@ public @interface ExceptionTestContainer {
 public static void doublyBad(){...}
 ```
 
-通过合成一个容器注解来实现功能重复的效果. 但是这里在检测的时候会存在一个问题, 那就是如果存在重复注释的话调用`isAnnotationPresent`时返回的是容器注解, 但是没有重复的话又是基本的注解. 就需要检查两次. 并且获取的时候需要使用`getAnnotationByType`进行声明获取类型.
+通过合成  一个容器注解来实现功能  重复的效果. 但是这里在检测的时候会存在一个问题, 那就是如果存在重复注释的话调用`isAnnotationPresent` 时返回的是容器注解, 但是没有重复的话又是基本的  注解. 就需要检查两次. 并且获取的时候需要使用`getAnnotationByType`进行声明获取类型.
 
 ```java
 if (m.isAnnotationPresent(ExceptionTest.class) || m.isAnnotationPresent(ExceptionTestContainer.class)) {
@@ -707,7 +707,7 @@ if (m.isAnnotationPresent(ExceptionTest.class) || m.isAnnotationPresent(Exceptio
             if (excType.isInstance(exc)) {
                 passed++;
                 break;
-            } 
+            }
         }
         if (passed == oldPassed)
             System.out.printf("Test %s failed: %s %sn", m, exc);
@@ -717,7 +717,7 @@ if (m.isAnnotationPresent(ExceptionTest.class) || m.isAnnotationPresent(Exceptio
 }
 ```
 
-虽然`@Repeatable`可以获得较好的可读性, 但是会导致一些冗余代码. 这里需要程序员自己衡量是否使用. 虽然这里的测试框架只是一个简单的玩具, 但是为我们介绍了注释的使用. 因此, 尽量不要使用命名模式而是使用注释来替代.
+虽然`@Repeatable`可以  获得较好的可读性, 但是  会导致一些冗余代码. 这里需要程序员自己衡量是否使用. 虽然这里的测试框架只是一个简单的玩具, 但是为我们介绍了注释的使用. 因此, 尽量不要使用命名模式而是使用注释来替代.
 
 总而言之， 尽量不要使用命名模式而是使用注释来替代.
 
@@ -746,14 +746,14 @@ publc class Bigram {
     public static void main(String[] args) {
         Set<Bigram> s = new HashSet<>();
         for (int i = 0; i < 10; i++)
-            for (char ch = 'a'; ch <= 'z'; ch++) 
+            for (char ch = 'a'; ch <= 'z'; ch++)
                 s.add(new Bigram(ch, ch));
         System.out.println(s.size());
     }
 }
 ```
 
-这里就存在一个严重的问题, 本来预想中的最后的输出为26, 但是答案却是260. 这就是因为`equals()`方法没有被正确执行. 本以为我们的`equals()`方法可以正确重写,但是答案是否定的.
+这里就存在一个严重的问题, 本来预想中的最后的输出为 26, 但是答案却是 260. 这就是因为`equals()`方法没有被正确执行. 本以为我们的`equals()`方法可以正确重写,但是答案是否定的.
 
 ```java
  @Override
@@ -778,9 +778,8 @@ public boolean equals(Object o) {
 
 `marker interface`即标识接口, 内部没有实现方法, 只是单纯的标识这个类具有某些特殊功能. 如`Serializable`接口可以标识一个可以被正确的被序列化(`ObjectOutputStream`).
 
-这时候你也许会想到`Item 39`所说的, 为什么不使用注释来完成这项功能呢. 其实两者都有各自的优缺点. 其中标识接口最大的好处就是, 标识接口可以被实现, 而注释不可以. 这样可以允许你接受特定接口类型的参数进行编程, 并且在编译期进行类型校验. 第二就是, 标识接口可以更加精确的命中目标. 如: `Set`接口就是一个典型的`restricted marker interface`, 继承自`Collection`接口, 但是并没有添加任何新的方法, 只是对其中某些方法进行了一些特殊的限定. 这就是一个很好的使用案例.
+这时候你也许会想到`Item 39`所说的, 为什么不使用注释来完成这项功能呢. 其实两者都有各自的优缺点. 其中标识接口最大的好处就是, 标识  接口可以被实现, 而注释不可以. 这样可以允许你接受特定接口类型的参数进行编程, 并且在编译期进行类型校验. 第二就是, 标识接口可以更加精确的命中目标. 如: `Set`接口就是一个典型的`restricted marker interface`,  继承自`Collection`接口, 但是并没有添加任何新的方法, 只是对其中某些方法进行了一些特殊的限定. 这就是一个很好的使用案例.
 
 那注释相比下有什么优势呢? 首先注释的对象不仅仅是类和接口, 可以是成员变量, 方法等等. 如果你要标识的对象不仅仅是类和接口(即@Target(ElementType.TYPE)), 这是只能使用注释. 另外如果实在一个大型框架中, 且这个框架重度使用注释, 如`Spring boot`这时可以考虑使用注释.
 
 总而言之, 注释和标识接口各有各的优缺点. 如果只想定义一个类型, 没有任何的内部方法, 这时候可以使用标识接口, 可以带来更好的编码安全和体验. 如果标识的对象不仅仅是类和接口, 或者在一个重度使用注释的框架下, 那就可以考虑使用注释. 但是如果你发现注释的对象是类和接口(@Target(ElementType.METHOD)), 这时候可以好好考虑一下, 是不是标识接口更加合适呢.
-

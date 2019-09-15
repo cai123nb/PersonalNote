@@ -13,9 +13,9 @@
  * will remain constant over time.
  *
  * Hash table实现了Map接口的版本. 这个实现实现了所有的可选的Map操作和允许null值作为
- * key值和value值. 总体上的功能类似Hashtable(除了HashMap是非同步并且允许null值, 
+ * key值和value值. 总体上的功能类似Hashtable(除了HashMap是非同步并且允许null值,
  * HashTable同步并且不允许null值). 这个类不会保证存储对象的顺序.
- * 
+ *
  * <p>This implementation provides constant-time performance for the basic
  * operations (<tt>get</tt> and <tt>put</tt>), assuming the hash function
  * disperses the elements properly among the buckets.  Iteration over
@@ -28,7 +28,7 @@
  * 固定时间的表现性能. 迭代所需的时间和"容量(capacity)"(计算方式: 桶数量 + 成员数)
  * 密切相关. 因此, 如果你想要迭代的性能好一点, 设置的初始化容量(capacity)不要太高和
  * 加载因子(load factor)不要太低是非常重要的.
- * 
+ *
  * <p>An instance of <tt>HashMap</tt> has two parameters that affect its
  * performance: <i>initial capacity</i> and <i>load factor</i>.  The
  * <i>capacity</i> is the number of buckets in the hash table, and the initial
@@ -44,7 +44,7 @@
  * 桶的初始化数量. 加载因子就是恒量hash table是不是已经满了需要额外的扩充. 如果当
  * 前的数量与容量的比例达到了加载因子, hash table就会触发rehashed函数, 将里面的
  * 数据结构重构, 重构之后的hash table的容量(桶的数量)大约是之前容量的两倍.
- * 
+ *
  * <p>As a general rule, the default load factor (.75) offers a good
  * tradeoff between time and space costs.  Higher values decrease the
  * space overhead but increase the lookup cost (reflected in most of
@@ -60,7 +60,7 @@
  * 函数). 期待会使用的数量和加载因子应该一起作为初始容量的参考(一般: 期待数量 / 0.75
  * = 初始容量)以减少rehash函数的调用次数. 如果初始容量大于, 最大数量 / 加载因子, 那
  * 么就不会出现rehash操作.
- * 
+ *
  * <p>If many mappings are to be stored in a <tt>HashMap</tt>
  * instance, creating it with a sufficiently large capacity will allow
  * the mappings to be stored more efficiently than letting it perform
@@ -75,7 +75,7 @@
  * key实现了comparable接口, 我们应该使用不同的比较顺序来区分不同的key来帮助断开之间
  * 的连接.(在HashMap的桶中, 相同hashcode的key的对象会放到一个桶中, 以链表的形式存
  * 储, 而链表的寻址代价高昂, 尽量减少)
- * 
+ *
  * <p><strong>Note that this implementation is not synchronized.</strong>
  * If multiple threads access a hash map concurrently, and at least one of
  * the threads modifies the map structurally, it <i>must</i> be
@@ -87,7 +87,7 @@
  * 注意这个实现不是同步的. 如果多个线程同时访问一个hashmap, 并且至少一个线程修改了
  * map中的内容, 那么这个操作必须放在同步语句中去. (这个修改内容包括任意删除, 但是
  * 修改某一个key的value是可以的). 这通常是放在一个同步语句中进行完成.
- * 
+ *
  * If no such object exists, the map should be "wrapped" using the
  * {@link Collections#synchronizedMap Collections.synchronizedMap}
  * method.  This is best done at creation time, to prevent accidental
@@ -95,7 +95,7 @@
  *   Map m = Collections.synchronizedMap(new HashMap(...));</pre>
  * 如果没有这类对象存在, map应该是包装的, 使用Collections.synchronizedMap
  * 方法. 最好是在一开始创建的时候就是用, 放置别的意外的非同步的操作.
- * 
+ *
  * <p>The iterators returned by all of this class's "collection view methods"
  * are <i>fail-fast</i>: if the map is structurally modified at any time after
  * the iterator is created, in any way except through the iterator's own
@@ -109,7 +109,7 @@
  * 默认的在一个新的线程中执行, 不会与map同时关联, 当你修改map之后, 而迭代器内部没有
  * 修改, 就会发现这个问题, 找不到对应的值) 因此面临同步异常的时候, 迭代器会尽快抛出异
  * 常 而不是在未来某个不确定的时间发生不确定的行为.
- * 
+ *
  * <p>Note that the fail-fast behavior of an iterator cannot be guaranteed
  * as it is, generally speaking, impossible to make any hard guarantees in the
  * presence of unsynchronized concurrent modification.  Fail-fast iterators
@@ -118,14 +118,14 @@
  * exception for its correctness: <i>the fail-fast behavior of iterators
  * should be used only to detect bugs.</i>
  * 注意这个快速失败行为是不会保证的, 一般来说, 不可能给出确定的保证当非同步的修改出现.
- * 快速失败迭代器抛出ConcurrentModificationException是居于最后的效率的目的. 
+ * 快速失败迭代器抛出ConcurrentModificationException是居于最后的效率的目的.
  * 因此不能依靠这个异常来编码, 而只是应该用来调试bugs.
- * 
+ *
  * <p>This class is a member of the
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  * HashMap是Java Collemtions Framework中的一员.
- * 
+ *
  * /
 ```
 
@@ -139,9 +139,9 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     ...
 ```
 
-### 实现的接口有: Map, Cloneable, Serializable.
+### 实现的接口有: Map, Cloneable, Serializable
 
-#### Cloneable: HashMap实现了深复制, 但是需要注意的是, 内部的值没有进行clone:
+#### Cloneable: HashMap 实现了深复制, 但是需要注意的是, 内部的值没有进行 clone
 
 ```java
 /**
@@ -166,7 +166,7 @@ public Object clone() {
 }
 ```
 
-#### Serizalizable: HashMap实现了序列化操作.
+#### Serizalizable: HashMap 实现了序列化操作
 
 ```java
 /**
@@ -250,7 +250,7 @@ private void readObject(java.io.ObjectInputStream s)
             putVal(hash(key), key, value, false, false);
         }
     }
-}  
+}
 /**
  * Reset to initial default state.  Called by clone and readObject.
  */
@@ -265,7 +265,7 @@ void reinitialize() {
 }
 ```
 
-#### Map接口:
+#### Map 接口
 
 ```java
 public interface Map<K,V> {
@@ -306,7 +306,7 @@ default void forEach(BiConsumer<? super K, ? super V> action) {
 }
 //...这里省略一些JDK1.8之后的默认方法, 详情请查看源代码
 interface Entry<K,V> { //内部接口, 键值对
-	K getKey();
+   K getKey();
     V getValue();
     V setValue(V value);
     boolean equals(Object o);
@@ -314,7 +314,7 @@ interface Entry<K,V> { //内部接口, 键值对
     public static <K extends Comparable<? super K>, V> Comparator<Map.Entry<K,V>> comparingByKey() {
     return (Comparator<Map.Entry<K, V>> & Serializable)
         (c1, c2) -> c1.getKey().compareTo(c2.getKey());
-	}
+   }
     public static <K, V extends Comparable<? super V>> Comparator<Map.Entry<K,V>> comparingByValue() {
     return (Comparator<Map.Entry<K, V>> & Serializable)
         (c1, c2) -> c1.getValue().compareTo(c2.getValue());
@@ -323,13 +323,13 @@ interface Entry<K,V> { //内部接口, 键值对
     Objects.requireNonNull(cmp);
     return (Comparator<Map.Entry<K, V>> & Serializable)
         (c1, c2) -> cmp.compare(c1.getKey(), c2.getKey());
-	}
+   }
     public static <K, V> Comparator<Map.Entry<K, V>> comparingByValue(Comparator<? super V> cmp) {
         Objects.requireNonNull(cmp);
         return (Comparator<Map.Entry<K, V>> & Serializable)
             (c1, c2) -> cmp.compare(c1.getValue(), c2.getValue());
     }
-	}
+   }
 }
 ```
 
@@ -484,7 +484,7 @@ final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
         tab[i] = newNode(hash, key, value, null);
     else { //否则插入链表或者树中去(也有可能是替换)
         Node<K,V> e; K k;
-        if (p.hash == hash && 
+        if (p.hash == hash &&
             ((k = p.key) == key || (key != null && key.equals(k))))
             e = p; //如果key完全相同, 替换value值
         else if (p instanceof TreeNode) //如果当前情况为树存储情况
@@ -504,7 +504,7 @@ final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
             }
         }
         if (e != null) { // existing mapping for key
-            V oldValue = e.value; 
+            V oldValue = e.value;
             if (!onlyIfAbsent || oldValue == null) //进行替换原来的value值
                 e.value = value;
             afterNodeAccess(e); //插入回调函数钩子, 暂未实现内容(代码中实现为空)
@@ -537,7 +537,7 @@ final Node<K,V>[] resize() {
     else {               // zero initial threshold signifies using defaults
         newCap = DEFAULT_INITIAL_CAPACITY; //用默认值
         newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
-    } 
+    }
     if (newThr == 0) { //处理个别情况, 如果newThr为0
         float ft = (float)newCap * loadFactor;
         newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
@@ -616,7 +616,7 @@ final void treeifyBin(Node<K,V>[] tab, int hash) {
 
 ## 附录
 
-### TreeNode类源码:
+### TreeNode 类源码
 
 ```java
 static final class TreeNode<K,V> extends LinkedHashMap.Entry<K,V> {

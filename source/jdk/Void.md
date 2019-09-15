@@ -16,19 +16,19 @@ package java.lang;
 public final
 class Void {
 
-	/**
-	 * The {@code Class} object representing the pseudo-type(伪类型) corresponding to
-	 * the keyword {@code void}.
-	 *
-	 * 获得JVM中定义的原始类型void的Class对象
-	 *
-	 */
-	@SuppressWarnings("unchecked")
-	public static final Class<Void> TYPE = (Class<Void>) Class.getPrimitiveClass("void");
+   /**
+    * The {@code Class} object representing the pseudo-type(伪类型) corresponding to
+    * the keyword {@code void}.
+    *
+    * 获得JVM中定义的原始类型void的Class对象
+    *
+    */
+   @SuppressWarnings("unchecked")
+   public static final Class<Void> TYPE = (Class<Void>) Class.getPrimitiveClass("void");
 
-	/*
-	 * The Void class cannot be instantiated(实例化).
-	 */
-	private Void() {}
+   /*
+    * The Void class cannot be instantiated(实例化).
+    */
+   private Void() {}
 }
 ```

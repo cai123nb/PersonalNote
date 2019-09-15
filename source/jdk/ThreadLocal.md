@@ -1,4 +1,4 @@
-# ThreadLocal源码解读
+# ThreadLocal 源码解读
 
 ThreadLocal, 为每个线程实例存储单独的变量.
 
@@ -101,7 +101,7 @@ public static <S> ThreadLocal<S> withInitial(Supplier<? extends S> supplier) {
 /**
     * An extension of ThreadLocal that obtains its initial value from
     * the specified {@code Supplier}.
-    * 
+    *
     * 拓展的子类,内部包含了一个Supplier.
     */
 static final class SuppliedThreadLocal<T> extends ThreadLocal<T> {
@@ -644,7 +644,7 @@ ThreadLocalMap getMap(Thread t) {
     * Variant of set() to establish initialValue. Used instead
     * of set() in case user has overridden the set() method.
     *
-    * 使用默认值, 调用initialValue获取默认值. 
+    * 使用默认值, 调用initialValue获取默认值.
     *
     * @return the initial value
     */

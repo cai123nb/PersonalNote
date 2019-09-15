@@ -92,7 +92,7 @@ public class CurrentConditionsDisplay implements Observer, DisplayElement {
 }
 //... 其他例子
 
-//测试          
+//测试
 package com.cjyong.headfirst.observer.base;
 
 public class WeatherStation {
@@ -110,9 +110,9 @@ public class WeatherStation {
 }
 ```
 
-## Java内置观察者模式
+## Java 内置观察者模式
 
-Java内置在util包中, 主题者通过Observable类进行实现, 订阅者通过接口Observer进行实现.
+Java 内置在 util 包中, 主题者通过 Observable 类进行实现, 订阅者通过接口 Observer 进行实现.
 源代码:
 
 ```java
@@ -284,7 +284,7 @@ public interface Observer {
 }
 ```
 
-Observable中通过一个Vector进行存储所有的订阅者, 并且添加多个synchronized关键字保证并发情况下的安全性. 通过change变量判断数据是否进行了修改.另外这边的订阅者接口传递了Observable参数, 这边可以由订阅者手动get数据(自定义获取的数据), 并不仅仅是由主题者推送所有的数据.
+Observable 中通过一个 Vector 进行存储所有的订阅者, 并且添加多个 synchronized 关键字保证并发情况下的安全性. 通过 change 变量判断数据是否进行了修改.另外这边的订阅者接口传递了 Observable 参数, 这边可以由订阅者手动 get 数据(自定义获取的数据), 并不仅仅是由主题者推送所有的数据.
 简单的气象站的例子:
 
 ```java
@@ -368,5 +368,5 @@ public class CurrentConditionsDisplay implements Observer, DisplayElement {
 3. 观察者和可观察者之间用松耦合的方式结合(loosecoupling), 可观察者不知道观察者的细节, 只知道观察者实现了观察者的接口.两者的联系通过组合的形式而不是继承等形式进行关联.
 4. 你可从被观察者处推(Push)或拉(Pull)数据, 然而推的方式被认为更加`正确`.
 5. 有多个观察者时, 不可以依赖特定的通知顺序.
-6. Java中在Util包中提供了基本提供, 但是需要注意的是Observable一个类的缺陷和问题.
+6. Java 中在 Util 包中提供了基本提供, 但是需要注意的是 Observable 一个类的缺陷和问题.
 7. 该模式应用到很多地方.

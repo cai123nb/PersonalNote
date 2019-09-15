@@ -1,16 +1,16 @@
 # Serialization
 
-本章主要关注对象序列化相关的知识. 序列化(Serializing): 将对象序列化成字节流(byte streams). 反序列化(Deserializing): 从字节流构造对象. 一旦对象被序列化, 可以从一个VM传递给另一个VM, 存储在本地磁盘, 发送到远程网络等. 本章主要关注序列化的危险性和最小化使用他们.
+本章主要关注对象序列化相关的知识. 序列化(Serializing): 将对象序列化成字节流(byte streams). 反序列化(Deserializing): 从字节流构造对象. 一旦对象被序列化, 可以从一个 VM 传递给另一个 VM, 存储在本地磁盘, 发送到远程网络等. 本章主要关注序列化的危险性和最小化使用他们.
 
 ## Item 85: Prefer alternatives to Java serialization
 
-序列化是在1997年加入Java, 被公认的非常危险的, 其中包含非常多的安全漏洞. 最近一起导致的重大事件的是2016年11月的旧金山的铁路系统(SFMTA Muni)停工两个小时. 其中最主要的问题是: 反序列化的攻击面太广了, 而难以防备. 反序列化调用`readObject`方法, 而该方法的实现是由任何实现了`Serializable`类自定义实现的, 这是类自定义实现的, 无法保证执行的代码一定是正确且安全的.
+序列化是在 1997 年加入 Java, 被公认的非常危险的, 其中包含非常多的安全漏洞. 最近一起导致的重大事件的是 2016 年 11 月的旧金山的铁路系统(SFMTA Muni)停工两个小时. 其中最主要的问题是: 反序列化的攻击面太广了, 而难以防备. 反序列化调用`readObject`方法, 而该方法的实现是由任何实现了`Serializable`类自定义实现的, 这是类自定义实现的, 无法保证执行的代码一定是正确且安全的.
 
 引用`Robert Seacord`的话语:
 
 **Java deserialization is clear and present danger as it is widely used both directly by applications and indirectly by Java subsystems such as RMI, JMX and JMS. Desertialization of untrusted streams can result in remote code execution(RCE), denial-of-service(DoS), and a range of other exploits. Applications can be vulnerable to these attacks even if they did nothing wrong.**
 
-很多攻击者和安全专家研究Java标准库和常用的第三方库中Java序列化方法, 寻找潜在调用时可以执行地一些危险操作, 这些方法就称为`gadgets`. 多个序列化方法会组成`gadget-chain`. 通过`gadget-chain`的组合足够执行致命的操作. 旧金山铁路系统的崩溃就是使用这种方法. 另外还有一个常见的问题就是`deserialization bombs`: 一个对象在序列化的时候需要花费非常长的时间, 可以导致DoS.
+很多攻击者和安全专家研究 Java 标准库和常用的第三方库中 Java 序列化方法, 寻找潜在调用时可以执行地一些危险操作, 这些方法就称为`gadgets`. 多个序列化方法会组成`gadget-chain`. 通过`gadget-chain`的组合足够执行致命的操作. 旧金山铁路系统的崩溃就是使用这种方法. 另外还有一个常见的问题就是`deserialization bombs`: 一个对象在序列化的时候需要花费非常长的时间, 可以导致 DoS.
 
 ```java
 //Deserialization bomb - deserializing this stream takes forever
@@ -31,11 +31,11 @@ static byte[] bomb() {
 }
 ```
 
-`root`对象由201个`HashSet`组成, 每个实例包含3个(或者更少)对象实例引用, 序列化之后为5744字节. 但是如果使用序列化的话, 就需要花费非常非常长的时间进行处理. 这个问题是反序列化`HashSet`时需要计算哈希值, 但是root内部高度达到100层, 递归计算哈希值时需要调用`2^100`.
+`root`对象由 201 个`HashSet`组成, 每个实例包含 3 个(或者更少)对象实例引用, 序列化之后为 5744 字节. 但是如果使用序列化的话, 就需要花费非常非常长的时间进行处理. 这个问题是反序列化`HashSet`时需要计算哈希值, 但是 root 内部高度达到 100 层, 递归计算哈希值时需要调用`2^100`.
 
 如何抵抗这些问题呢? 不要反序列任何你不相信来源的`stream`. 最好的方法就是不要反序列化任何对象. **The only winning move is not to play.** 如果是构建新系统的话, 没有任何理由使用序列化相关操作. 如果有将对象转换为字节流的需求的话, 可以使用一些跨平台的通用语言格式, 如`JSON,Protobuf`. 两者的差别是`JSON`是可读的, 基于文本的. 而`Protobuf`是基于二进制流的, 高效率的.
 
-如果不能避免使用序列化, 那就使用`java.io.ObjectInputFilter`, 对序列化的对象进行过滤(Java9添加). 这里提供了一个类粒度的卡关模式, 在序列化之前进行过滤. 一般提供一个拒绝列表`Black list`和接收列表`White list`. **优先使用白名单而不是黑名单.** 当然还有一个可选项就是: 重构整个系统, 放弃使用Java序列化.
+如果不能避免使用序列化, 那就使用`java.io.ObjectInputFilter`, 对序列化的对象进行过滤(Java9 添加). 这里提供了一个类粒度的卡关模式, 在序列化之前进行过滤. 一般提供一个拒绝列表`Black list`和接收列表`White list`. **优先使用白名单而不是黑名单.** 当然还有一个可选项就是: 重构整个系统, 放弃使用 Java 序列化.
 
 总而言之, 序列化操作是非常危险的. 如果设计系统时有这方面的需求, 推荐使用跨平台的数据结构(JSON,Protobuf).不要反序列化任何不安全的数据来源. 如果必须使用序列化, 使用序列化过滤, 但是需要明白这不能完全保证安全性. 避免书写任何序列化的类, 如果一定需要, 一定要小心谨慎.
 
@@ -82,7 +82,7 @@ public class Name implements Serializable {
 }
 ```
 
-在这种简单的情况下使用默认的序列化样式即可. 但是即使使用默认的序列化样式, 也推荐重写`writeObject`和`readObject`进行null值校验. 对于某些特殊的类, 默认的序列化格式往往不能满足要求:
+在这种简单的情况下使用默认的序列化样式即可. 但是即使使用默认的序列化样式, 也推荐重写`writeObject`和`readObject`进行 null 值校验. 对于某些特殊的类, 默认的序列化格式往往不能满足要求:
 
 ```java
 //Awful candidate for default serialized form
@@ -102,13 +102,13 @@ public final class StringList implements Serializable {
 
 这里使用的默认的序列化样式, 就会完成一致的拷贝所有的`Entry`, 每个`Entry`都包含所有的数据, 和前后的指针. 这就是非常冗余了. 一般来说, 使用默认的序列化样式有如下缺点:
 
-+ 限制住了API的特性, 后续的维护和开发必须维护当前对象的可实现性.
+- 限制住了 API 的特性, 后续的维护和开发必须维护当前对象的可实现性.
 
-+ 花费更多的空间: 默认的序列化样式不知道类的具体含义, 而是使用递归遍历所有的属性进行存储.
+- 花费更多的空间: 默认的序列化样式不知道类的具体含义, 而是使用递归遍历所有的属性进行存储.
 
-+ 可能消耗大量的时间.
+- 可能消耗大量的时间.
 
-+ 可能导致堆栈异常(overflow). 如上面的StringList, 长度在1000-1800之间时, 就有可能导致堆栈异常.
+- 可能导致堆栈异常(overflow). 如上面的 StringList, 长度在 1000-1800 之间时, 就有可能导致堆栈异常.
 
 合理的`StringList`实现:
 
@@ -150,7 +150,7 @@ public final class StringList implements Serializable {
 }
 ```
 
-注意这里虽然变量都是`transient`, 但是还是推荐调用`s.defaultWriteObject()`和`s.defaultReadObject()`, 并进行合理的注释. 同时使用默认序列化样式时, 需要注意的是不适用于那些随着运行的时间而变化的对象, 如`HashTable`. 另外为了维护序列化对象的版本迭代, 推荐声明`serialVersionUID`, 这样可以避免在运行时动态产生. 并且保持一致的话, 可以兼容相同的版本(即使修改了内容). 不然地话, 在运行时动态产生`serialVersionUID`, 如果你修改了某一项属性, 就会导致`InvalidClassException`. **尽量不要轻易修改version UID, 除非你想破坏之前的兼容性**.
+注意这里虽然变量都是`transient`, 但是还是推荐调用`s.defaultWriteObject()`和`s.defaultReadObject()`, 并进行合理的注释. 同时使用默认序列化样式时, 需要注意的是不适用于那些随着运行的时间而变化的对象, 如`HashTable`. 另外为了维护序列化对象的版本迭代, 推荐声明`serialVersionUID`, 这样可以避免在运行时动态产生. 并且保持一致的话, 可以兼容相同的版本(即使修改了内容). 不然地话, 在运行时动态产生`serialVersionUID`, 如果你修改了某一项属性, 就会导致`InvalidClassException`. **尽量不要轻易修改 version UID, 除非你想破坏之前的兼容性**.
 
 总而言之, 不要轻易使用默认的序列化样式, 尽量进行自定义序列化样式和完善`version UID`.
 
@@ -275,13 +275,13 @@ private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundEx
 
 总而言之, 对于`readObject`方法:
 
-+ 对于任何实例对象, 都应该保持`private`, 并且在方法中进行检测和复制性拷贝.
+- 对于任何实例对象, 都应该保持`private`, 并且在方法中进行检测和复制性拷贝.
 
-+ 如果检测出错的需要抛出`InvalidObjectException`.
+- 如果检测出错的需要抛出`InvalidObjectException`.
 
-+ 如果整个对象必须序列化之后才能进行校验, 使用`ObjectInputValidation`接口.
+- 如果整个对象必须序列化之后才能进行校验, 使用`ObjectInputValidation`接口.
 
-+ 不要在方法内部调用任何可重写的方法.
+- 不要在方法内部调用任何可重写的方法.
 
 ## Item 89: For instance control, prefer enum types to readResolve
 
@@ -295,7 +295,7 @@ public class Elvis {
 }
 ```
 
-如果需要实现序列化怎么办? 序列化相当于一个特殊的构造函数, 那怎么在序列化过程中保证实例控制呢? 可以通过`readResolve`方法进行过滤. JVM在对对象进行序列化后, 如果发现对象实现了`readResolve`方法, 会调用该方法(产生的新对象)替换之前序列化的对象进行返回. 而我们只需要简单地在这个方法中进行过滤:
+如果需要实现序列化怎么办? 序列化相当于一个特殊的构造函数, 那怎么在序列化过程中保证实例控制呢? 可以通过`readResolve`方法进行过滤. JVM 在对对象进行序列化后, 如果发现对象实现了`readResolve`方法, 会调用该方法(产生的新对象)替换之前序列化的对象进行返回. 而我们只需要简单地在这个方法中进行过滤:
 
 ```java
 // readResolve for instance control - you can do better!
@@ -373,7 +373,7 @@ public class ElvisImpersonator {
 }
 ```
 
-这里例子需要理解Java序列化字节码信息, 可以[参照jyt的博客](https://www.jyt0532.com/2017/10/22/prefer-enum-for-instance-control/)进行深入理解. 当然解决方案也非常简单, 就是声明`favoriteSongs`为`transient`. 除了这种解决方案, 更好的解决方案为枚举类:
+这里例子需要理解 Java 序列化字节码信息, 可以[参照 jyt 的博客](https://www.jyt0532.com/2017/10/22/prefer-enum-for-instance-control/)进行深入理解. 当然解决方案也非常简单, 就是声明`favoriteSongs`为`transient`. 除了这种解决方案, 更好的解决方案为枚举类:
 
 ```java
 // Enum singleton - the preferred approach

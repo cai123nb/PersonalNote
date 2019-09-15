@@ -4,23 +4,23 @@
 
 在现实生活中, 适配器到处都可以看到, 如电流适配器. 适配器扮演着这样一个角色: 将一个接口转换为另一个接口, 以符合客户的希望.
 
-这里以之前的Duck类进行举例子, 如果这就是我们的鸭子接口:
+这里以之前的 Duck 类进行举例子, 如果这就是我们的鸭子接口:
 
 ```java
 public interface Duck {
-	public void quack();
-	public void fly();
+   public void quack();
+   public void fly();
 }
 
 //具体实例之一
 public class MallardDuck implements Duck {
-	public void quack() {
-		System.out.println("Quack");
-	}
- 
-	public void fly() {
-		System.out.println("I'm flying");
-	}
+   public void quack() {
+      System.out.println("Quack");
+   }
+
+   public void fly() {
+      System.out.println("I'm flying");
+   }
 }
 ```
 
@@ -28,19 +28,19 @@ public class MallardDuck implements Duck {
 
 ```java
 public interface Turkey {
-	public void gobble();	//火鸡不会呱呱叫, 而是咕咕叫
-	public void fly();	//火鸡虽然也可以飞, 但是飞的很短
+   public void gobble();   //火鸡不会呱呱叫, 而是咕咕叫
+   public void fly();   //火鸡虽然也可以飞, 但是飞的很短
 }
 
 //具体实例之一
 public class WildTurkey implements Turkey {
-	public void gobble() {
-		System.out.println("Gobble gobble");
-	}
- 
-	public void fly() {
-		System.out.println("I'm flying a short distance");
-	}
+   public void gobble() {
+      System.out.println("Gobble gobble");
+   }
+
+   public void fly() {
+      System.out.println("I'm flying a short distance");
+   }
 }
 ```
 
@@ -48,21 +48,21 @@ public class WildTurkey implements Turkey {
 
 ```java
 public class TurkeyAdapter implements Duck {
-	Turkey turkey;
- 
-	public TurkeyAdapter(Turkey turkey) {	//我们需要传递一个火鸡对象, 并实现鸭子接口
-		this.turkey = turkey;
-	}
-    
-	public void quack() {
-		turkey.gobble();
-	}
-  
-	public void fly() {
-		for(int i=0; i < 5; i++) {
-			turkey.fly();
-		}
-	}
+   Turkey turkey;
+
+   public TurkeyAdapter(Turkey turkey) {   //我们需要传递一个火鸡对象, 并实现鸭子接口
+      this.turkey = turkey;
+   }
+
+   public void quack() {
+      turkey.gobble();
+   }
+
+   public void fly() {
+      for(int i=0; i < 5; i++) {
+         turkey.fly();
+      }
+   }
 }
 ```
 
@@ -72,12 +72,12 @@ public class TurkeyAdapter implements Duck {
 2. 适配器使用被适配器接口吧请求转换成被适配者的一个或者多个调用接口.
 3. 客户收到调用结果, 但并未察觉这一切是适配器在起作用.
 
-### 定义
+### 适配器模式定义
 
 适配器模式: 将一个类接口, 转换成客户期望的另一个接口. 适配器让原本接口不兼容的类可以合作无间.
 
-适配器模式主要分为两种, "对象"适配器和"类"适配器. "对象"适配器就类似之前的火鸡适配器一样, 通过实现目标的接口(Duck), 然后利用组合的形式引入Turkey对象, 在内部调用turkey的方法实现适配的功能.
-"类"适配器: 则是通过同时继承目标和被适配对象来获得方法, 而不是通过组合的形式获取和实现接口功能. 但是Java中暂不实现多重继承.
+适配器模式主要分为两种, "对象"适配器和"类"适配器. "对象"适配器就类似之前的火鸡适配器一样, 通过实现目标的接口(Duck), 然后利用组合的形式引入 Turkey 对象, 在内部调用 turkey 的方法实现适配的功能.
+"类"适配器: 则是通过同时继承目标和被适配对象来获得方法, 而不是通过组合的形式获取和实现接口功能. 但是 Java 中暂不实现多重继承.
 
 让我们回到新的话题, 如果我们想组合一套家庭影院, 打我们想看电影时, 我们需要:
 
@@ -86,7 +86,7 @@ public class TurkeyAdapter implements Duck {
 3. 将灯光调暗
 4. 放下屏幕
 5. 打开投影机
-6. 将投影机的输入切换到DVD
+6. 将投影机的输入切换到 DVD
 7. ...
 
 如果我们要一个一个写这些接口, 就会显的很麻烦:
@@ -112,104 +112,104 @@ dvd.play(movie);
 
 ```java
 public class HomeTheaterFacade {
-	Amplifier amp;
-	Tuner tuner;
-	DvdPlayer dvd;
-	CdPlayer cd;
-	Projector projector;
-	TheaterLights lights;
-	Screen screen;
-	PopcornPopper popper;
- 
-	public HomeTheaterFacade(Amplifier amp, 
-				 Tuner tuner, 
-				 DvdPlayer dvd, 
-				 CdPlayer cd, 
-				 Projector projector, 
-				 Screen screen,
-				 TheaterLights lights,
-				 PopcornPopper popper) {
- 
-		this.amp = amp;
-		this.tuner = tuner;
-		this.dvd = dvd;
-		this.cd = cd;
-		this.projector = projector;
-		this.screen = screen;
-		this.lights = lights;
-		this.popper = popper;
-	}
- 
-	public void watchMovie(String movie) {
-		System.out.println("Get ready to watch a movie...");
-		popper.on();
-		popper.pop();
-		lights.dim(10);
-		screen.down();
-		projector.on();
-		projector.wideScreenMode();
-		amp.on();
-		amp.setDvd(dvd);
-		amp.setSurroundSound();
-		amp.setVolume(5);
-		dvd.on();
-		dvd.play(movie);
-	}
- 
- 
-	public void endMovie() {
-		System.out.println("Shutting movie theater down...");
-		popper.off();
-		lights.on();
-		screen.up();
-		projector.off();
-		amp.off();
-		dvd.stop();
-		dvd.eject();
-		dvd.off();
-	}
+   Amplifier amp;
+   Tuner tuner;
+   DvdPlayer dvd;
+   CdPlayer cd;
+   Projector projector;
+   TheaterLights lights;
+   Screen screen;
+   PopcornPopper popper;
 
-	public void listenToCd(String cdTitle) {
-		System.out.println("Get ready for an audiopile experence...");
-		lights.on();
-		amp.on();
-		amp.setVolume(5);
-		amp.setCd(cd);
-		amp.setStereoSound();
-		cd.on();
-		cd.play(cdTitle);
-	}
+   public HomeTheaterFacade(Amplifier amp,
+             Tuner tuner,
+             DvdPlayer dvd,
+             CdPlayer cd,
+             Projector projector,
+             Screen screen,
+             TheaterLights lights,
+             PopcornPopper popper) {
 
-	public void endCd() {
-		System.out.println("Shutting down CD...");
-		amp.off();
-		amp.setCd(cd);
-		cd.eject();
-		cd.off();
-	}
+      this.amp = amp;
+      this.tuner = tuner;
+      this.dvd = dvd;
+      this.cd = cd;
+      this.projector = projector;
+      this.screen = screen;
+      this.lights = lights;
+      this.popper = popper;
+   }
 
-	public void listenToRadio(double frequency) {
-		System.out.println("Tuning in the airwaves...");
-		tuner.on();
-		tuner.setFrequency(frequency);
-		amp.on();
-		amp.setVolume(5);
-		amp.setTuner(tuner);
-	}
+   public void watchMovie(String movie) {
+      System.out.println("Get ready to watch a movie...");
+      popper.on();
+      popper.pop();
+      lights.dim(10);
+      screen.down();
+      projector.on();
+      projector.wideScreenMode();
+      amp.on();
+      amp.setDvd(dvd);
+      amp.setSurroundSound();
+      amp.setVolume(5);
+      dvd.on();
+      dvd.play(movie);
+   }
 
-	public void endRadio() {
-		System.out.println("Shutting down the tuner...");
-		tuner.off();
-		amp.off();
-	}
+
+   public void endMovie() {
+      System.out.println("Shutting movie theater down...");
+      popper.off();
+      lights.on();
+      screen.up();
+      projector.off();
+      amp.off();
+      dvd.stop();
+      dvd.eject();
+      dvd.off();
+   }
+
+   public void listenToCd(String cdTitle) {
+      System.out.println("Get ready for an audiopile experence...");
+      lights.on();
+      amp.on();
+      amp.setVolume(5);
+      amp.setCd(cd);
+      amp.setStereoSound();
+      cd.on();
+      cd.play(cdTitle);
+   }
+
+   public void endCd() {
+      System.out.println("Shutting down CD...");
+      amp.off();
+      amp.setCd(cd);
+      cd.eject();
+      cd.off();
+   }
+
+   public void listenToRadio(double frequency) {
+      System.out.println("Tuning in the airwaves...");
+      tuner.on();
+      tuner.setFrequency(frequency);
+      amp.on();
+      amp.setVolume(5);
+      amp.setTuner(tuner);
+   }
+
+   public void endRadio() {
+      System.out.println("Shutting down the tuner...");
+      tuner.off();
+      amp.off();
+   }
 }
 ```
 
-这时候我们简单地调用watchMover(), 即可完成观看电影的所有操作, 而结束观看电影也可以正确的关闭所有操作. 通过外观模式, 我们可以将这些底层操作封装起来, 与我们解耦, 我们只是简单的高层次接口进行操控.
+这时候我们简单地调用 watchMover(), 即可完成观看电影的所有操作, 而结束观看电影也可以正确的关闭所有操作. 通过外观模式, 我们可以将这些底层操作封装起来, 与我们解耦, 我们只是简单的高层次接口进行操控.
 
 ## 外观模式
 
-### 定义
+### 外观模式定义
 
 外观模式: 提供了一个统一的接口用来访问子系统中的一群接口. 外观定义了一个高层接口, 让子系统更容易使用.
 
@@ -220,6 +220,7 @@ public class HomeTheaterFacade {
 
 **如何不要赢得太多的朋友和影响太多的对象**
 就任何对象而言, 在该对象的方法内, 我们只应该调用属于以下范围的方法:
+
 1. 该对象本身的方法
 2. 被当做方法的参数而传递进来的对象
 3. 此方法所创建或实例化的任何对象
@@ -229,35 +230,35 @@ public class HomeTheaterFacade {
 
 ```java
 public float getTemp() {
-	Thermometer thermometer = station.getThermometer();
+   Thermometer thermometer = station.getThermometer();
     return thermometer.getTemperature();
 }
 //这里就没有采用这个原则, 调用了第三方的对象, 增加了新的依赖.
 
 public float getTemp() {
-	return station.getTemperature();
+   return station.getTemperature();
 }
 //这里我们应该在Station站中添加这个方法, 因为Thermometer本身就是Station中的组件, 我们在Station类中添加这个方法, 并不会添加新的依赖.
 ```
 
 ## 总结
 
-OO基础:
+OO 基础:
 
-+ 抽象
-+ 封装
-+ 多态
-+ 继承
+- 抽象
+- 封装
+- 多态
+- 继承
 
-OO原则:
+OO 原则:
 
-+ 封装变化
-+ 多用组合, 少用继承
-+ 针对接口编程, 不针对实现编程
-+ 为交互对象之间的松耦合设计而努力
-+ 对拓展开放, 对修改关闭
-+ 依赖抽象, 不要依赖具体的类
-+ 只和朋友说话
+- 封装变化
+- 多用组合, 少用继承
+- 针对接口编程, 不针对实现编程
+- 为交互对象之间的松耦合设计而努力
+- 对拓展开放, 对修改关闭
+- 依赖抽象, 不要依赖具体的类
+- 只和朋友说话
 
 适配器模式: 将一个类接口, 转换成客户期望的另一个接口. 适配器让原本接口不兼容的类可以合作无间.
 

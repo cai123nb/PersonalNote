@@ -2567,7 +2567,7 @@ public class Arrays {
         return -(low + 1);  // key not found.
     }
 
-    // Equality Testing 原始数据类型单独实现了的有: int, long, short, double, float, char, byte, 
+    // Equality Testing 原始数据类型单独实现了的有: int, long, short, double, float, char, byte,
 
     /**
      * Returns <tt>true</tt> if the two specified arrays of longs are

@@ -1,7 +1,7 @@
 # 函数式编程
 
-如果一个方法既不修改它内嵌类的状态, 也不修改其他对象的状态, 使用return返回所有的计算结果. 那么我们称其为纯粹的或者无副作用的.
-副作用: 函数的效果已经超出函数本身的范畴. 如: 除了构造器内的初始化操作, 对类内部数据的任何修改, 包括赋值操作(如Stter方法); 抛出异常; 进行输入输出操作, 如向文件写入数据.
+如果一个方法既不修改它内嵌类的状态, 也不修改其他对象的状态, 使用 return 返回所有的计算结果. 那么我们称其为纯粹的或者无副作用的.
+副作用: 函数的效果已经超出函数本身的范畴. 如: 除了构造器内的初始化操作, 对类内部数据的任何修改, 包括赋值操作(如 Stter 方法); 抛出异常; 进行输入输出操作, 如向文件写入数据.
 
 > 声明式编程: 我们编程一般使用两种思考方式, 一种专注于如何实现, 如"首先需要做..., 然后需要做..., 最后需要做...". 如我们检索所有的交易记录, 寻找最贵的一条记录:
 >
@@ -27,28 +27,29 @@
 > 我们把要做什么留给函数库进行实现, 我们称这种思想称为内部迭代. 这样我们看起代码来, 就像是看待问题陈述一样. 这种编程风格称为声明式编程. 而函数式编程就是这种思想的实践.
 
 函数式编程是什么: 使用函数进行编程的方式. `函数`接受零个或者多个参数, 生成一个或多个结果, 并且不会产生任何副作用. 就像`黑盒`一样, 一般我们分为两种:
-+ 纯粹的函数式编程: 像数学函数一样, 完全没有副作用, 完全使用函数式操作,
-+ 函数式编程: 函数具有一定的副作用, 不过该副作用不会被其他调用者所感知.
-其中, 函数式编程需要满足`引用透明性`特性: 函数无论何时/何处调用, 如果使用相同的输入, 总能得到一样的结果.
+
+- 纯粹的函数式编程: 像数学函数一样, 完全没有副作用, 完全使用函数式操作,
+- 函数式编程: 函数具有一定的副作用, 不过该副作用不会被其他调用者所感知.
+  其中, 函数式编程需要满足`引用透明性`特性: 函数无论何时/何处调用, 如果使用相同的输入, 总能得到一样的结果.
 
 ## 函数式编程实战
 
-给定一个列表List<Value>, 获取他的所有子集. 如给定{1,2}, 返回的子集有: {1}, {2}, {}, {1,2}.
+给定一个列表`List<Value>`, 获取他的所有子集. 如给定{1,2}, 返回的子集有: {1}, {2}, {}, {1,2}.
 
 ```java
 static List<List<Integer>> subsets(List<Integer> list){
-	if(list.empty()){
-    	List<List<Integer>> ans = new ArrayList<>();
+   if(list.empty()){
+       List<List<Integer>> ans = new ArrayList<>();
         ans.add(Collections.emptyList());
         return ans;
     }
-    
+
     Integer first = list.get(0);
     List<Integer> rest = list.subList(1, list.size());
-    
+
     List<List<Integer>> subans = subsets(rest);
     List<List<Integer>> subans2 = insertAll(first, subans);
-    
+
     return concat(subans, subans2);
 }
 
@@ -73,7 +74,7 @@ static List<List<Integer>> subsets(List<Integer> list){
 
 ## 递归和迭代
 
-纯粹的函数式编程语言通常不包含while和for这样的迭代器. 因为这种类型的构造器经常隐藏陷阱, 诱导你修改对象.(这一点不太理解或认同) 所以纯粹的函数编程大多使用递归:
+纯粹的函数式编程语言通常不包含 while 和 for 这样的迭代器. 因为这种类型的构造器经常隐藏陷阱, 诱导你修改对象.(这一点不太理解或认同) 所以纯粹的函数编程大多使用递归:
 如:
 
 ```java
@@ -104,14 +105,15 @@ public static long factorialHelper(long acc, long n) {
 }
 ```
 
-> Java还没有支持`尾递(tail-call optimization)` 优化, 但是它为编译器优化打开了一扇门.
+> Java 还没有支持`尾递(tail-call optimization)` 优化, 但是它为编译器优化打开了一扇门.
 
 ### 高阶函数
 
 满足任一要求的函数:
-+ 接受至少一个函数作为参数
-+ 返回的结果是一个函数
-如:
+
+- 接受至少一个函数作为参数
+- 返回的结果是一个函数
+  如:
 
 ```java
 Function<Function<Double, Double>  differentiate(Function<Double, Double> func);
@@ -121,7 +123,7 @@ Function<Function<Double, Double>  differentiate(Function<Double, Double> func);
 
 ## 科里化
 
-定义: 将一种具备两个参数(如x,y)的函数f转化为使用一个参数的函数g, 并且这个函数的返回值也是一个函数, 它会作为新函数的一个参数. 前后两者的返回值相同. 如: f(x, y) = (g(x))(y);
+定义: 将一种具备两个参数(如 x,y)的函数 f 转化为使用一个参数的函数 g, 并且这个函数的返回值也是一个函数, 它会作为新函数的一个参数. 前后两者的返回值相同. 如: f(x, y) = (g(x))(y);
 一个简单的例子:
 
 ```java
@@ -284,9 +286,9 @@ public static Tree fupdate(String k, int newval, Tree t) {
 }
 ```
 
-## Stream的延迟计算
+## Stream 的延迟计算
 
-Stream: 当你向一个Stream发起一系列的操作请求时, 这些请求会被保存起来, 只有当你向Stream发起一个终端请求时, 才会实际地进行计算. 你可以将一个函数作为值放入到某个数据结构中, 大多数的时候它就静静地待在哪里, 一旦对其进行调用, 它能创建更多的结构.
+Stream: 当你向一个 Stream 发起一系列的操作请求时, 这些请求会被保存起来, 只有当你向 Stream 发起一个终端请求时, 才会实际地进行计算. 你可以将一个函数作为值放入到某个数据结构中, 大多数的时候它就静静地待在哪里, 一旦对其进行调用, 它能创建更多的结构.
 
 ```java
 public class LazyLists {
@@ -422,9 +424,9 @@ public class LazyLists {
 ```java
 final Map<Range, Integer> numberOfNodes = new HashMap<>();
 Integer computerNumberOfNodesUsingCache(Range range){
-	Integer result = numberOfNodes.get(range);
+   Integer result = numberOfNodes.get(range);
     if(result != null){
-    	return result;
+       return result;
     }
     result = computeNumberOfNodes(range);
     numberOfNodes.put(range, result);
@@ -432,7 +434,7 @@ Integer computerNumberOfNodesUsingCache(Range range){
 }
 //或者
 Integer computerNumberOfNodesUsingCache(Range range) {
-	return numberOfNodes.computeIfAbsent(range, this::computeNumberOfNodes);
+   return numberOfNodes.computeIfAbsent(range, this::computeNumberOfNodes);
 }
 ```
 
@@ -462,4 +464,3 @@ public class Combinators {
     }
 }
 ```
-

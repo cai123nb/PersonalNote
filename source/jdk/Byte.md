@@ -26,24 +26,24 @@ public final class Byte extends Number implements Comparable<Byte> {
     /**
      * A constant holding the minimum value a {@code byte} can
      * have, -2<sup>7</sup>.
-	 *
-	 * 最小值-2^7, 8bit, 一位符号位
+    *
+    * 最小值-2^7, 8bit, 一位符号位
      */
     public static final byte   MIN_VALUE = -128;
 
     /**
      * A constant holding the maximum value a {@code byte} can
      * have, 2<sup>7</sup>-1.
-	 *
-	 * 最大值2^7 - 1,
+    *
+    * 最大值2^7 - 1,
      */
     public static final byte   MAX_VALUE = 127;
 
     /**
      * The {@code Class} instance representing the primitive type
      * {@code byte}.
-	 *
-	 * 获取JVM中byte的原始类型byte的Class对象
+    *
+    * 获取JVM中byte的原始类型byte的Class对象
      */
     @SuppressWarnings("unchecked")
     public static final Class<Byte>     TYPE = (Class<Byte>) Class.getPrimitiveClass("byte");
@@ -52,8 +52,8 @@ public final class Byte extends Number implements Comparable<Byte> {
      * Returns a new {@code String} object representing the
      * specified {@code byte}. The radix is assumed to be 10.
      *
-	 * 转换为int类型,调用int的转换方法(byte转换为int, 向上转型,不会丢失精度),默认10进制
-	 *
+    * 转换为int类型,调用int的转换方法(byte转换为int, 向上转型,不会丢失精度),默认10进制
+    *
      * @param b the {@code byte} to be converted
      * @return the string representation of the specified {@code byte}
      * @see java.lang.Integer#toString(int)
@@ -62,7 +62,7 @@ public final class Byte extends Number implements Comparable<Byte> {
         return Integer.toString((int)b, 10);
     }
 
-	//缓存Cache, 缓存-128到127内所有的Byte对象
+   //缓存Cache, 缓存-128到127内所有的Byte对象
     private static class ByteCache {
         private ByteCache(){}
 
@@ -83,9 +83,9 @@ public final class Byte extends Number implements Comparable<Byte> {
      * significantly better space and time performance since
      * all byte values are cached.
      *
-	 * 静态工厂方法, 默认使用内部缓存Byte对象. 应该默认使用,而不是
-	 * 构造方法
-	 *
+    * 静态工厂方法, 默认使用内部缓存Byte对象. 应该默认使用,而不是
+    * 构造方法
+    *
      * @param  b a byte value.
      * @return a {@code Byte} instance representing {@code b}.
      * @since  1.5
@@ -107,10 +107,10 @@ public final class Byte extends Number implements Comparable<Byte> {
      * indicate a positive value.  The resulting {@code byte} value is
      * returned.
      *
-	 * 按照对应的进制（radix），将string转换为byte, 通过调用Integer.paraseInt
-	 * 实现. 限制如下, 第一个符号如非数字, 则必须为+/-, radix >= 2,<= 36等.
-	 * 详细查看Integer.paraseInt方法.
-	 * 
+    * 按照对应的进制（radix），将string转换为byte, 通过调用Integer.paraseInt
+    * 实现. 限制如下, 第一个符号如非数字, 则必须为+/-, radix >= 2,<= 36等.
+    * 详细查看Integer.paraseInt方法.
+    *
      * <p>An exception of type {@code NumberFormatException} is
      * thrown if any of the following situations occurs:
      * <ul>
@@ -143,8 +143,8 @@ public final class Byte extends Number implements Comparable<Byte> {
     public static byte parseByte(String s, int radix)
         throws NumberFormatException {
         int i = Integer.parseInt(s, radix);
-		//查看是否超出byte的范围
-        if (i < MIN_VALUE || i > MAX_VALUE) 
+      //查看是否超出byte的范围
+        if (i < MIN_VALUE || i > MAX_VALUE)
             throw new NumberFormatException(
                 "Value out of range. Value:\"" + s + "\" Radix:" + radix);
         return (byte)i;
@@ -161,8 +161,8 @@ public final class Byte extends Number implements Comparable<Byte> {
      * argument and the radix 10 were given as arguments to the {@link
      * #parseByte(java.lang.String, int)} method.
      *
-	 * 同理转换string为byte, 默认进制为10
-	 *
+    * 同理转换string为byte, 默认进制为10
+    *
      * @param s         a {@code String} containing the
      *                  {@code byte} representation to be parsed
      * @return          the {@code byte} value represented by the
@@ -184,9 +184,9 @@ public final class Byte extends Number implements Comparable<Byte> {
      * int)} method. The result is a {@code Byte} object that
      * represents the {@code byte} value specified by the string.
      *
-	 * 将String对象转换为Byte对象, 通过parseByte进行转换, 然后调用
-	 * 静态工厂方法valueOf获取缓存对象.
-	 *
+    * 将String对象转换为Byte对象, 通过parseByte进行转换, 然后调用
+    * 静态工厂方法valueOf获取缓存对象.
+    *
      * <p> In other words, this method returns a {@code Byte} object
      * equal to the value of:
      *
@@ -219,9 +219,9 @@ public final class Byte extends Number implements Comparable<Byte> {
      * <p> In other words, this method returns a {@code Byte} object
      * equal to the value of:
      *
-	 * 将String对象转换为Byte对象, 通过parseByte进行转换, 然后调用
-	 * 静态工厂方法valueOf获取缓存对象. 默认进制为10.
-	 *
+    * 将String对象转换为Byte对象, 通过parseByte进行转换, 然后调用
+    * 静态工厂方法valueOf获取缓存对象. 默认进制为10.
+    *
      * <blockquote>
      * {@code new Byte(Byte.parseByte(s))}
      * </blockquote>
@@ -241,9 +241,9 @@ public final class Byte extends Number implements Comparable<Byte> {
      * Accepts decimal, hexadecimal, and octal numbers given by
      * the following grammar:
      *
-	 * 解密String类型为byte类型, 接收十进制(0)，十六进制(0x/oX)，八进制(#)
-	 * 通过调用Integer.decode()方法, 详细查阅该方法.
-	 *
+    * 解密String类型为byte类型, 接收十进制(0)，十六进制(0x/oX)，八进制(#)
+    * 通过调用Integer.decode()方法, 详细查阅该方法.
+    *
      * <blockquote>
      * <dl>
      * <dt><i>DecodableString:</i>
@@ -292,8 +292,8 @@ public final class Byte extends Number implements Comparable<Byte> {
     /**
      * The value of the {@code Byte}.
      *
-	 * 封装的byte值, 是不可修改的
-	 * 
+    * 封装的byte值, 是不可修改的
+    *
      * @serial
      */
     private final byte value;
@@ -302,8 +302,8 @@ public final class Byte extends Number implements Comparable<Byte> {
      * Constructs a newly allocated {@code Byte} object that
      * represents the specified {@code byte} value.
      *
-	 * 构造函数, 返回一个Byte对象(不推荐),推荐valueOf(byte)
-	 *
+    * 构造函数, 返回一个Byte对象(不推荐),推荐valueOf(byte)
+    *
      * @param value     the value to be represented by the
      *                  {@code Byte}.
      */
@@ -318,9 +318,9 @@ public final class Byte extends Number implements Comparable<Byte> {
      * {@code byte} value in exactly the manner used by the
      * {@code parseByte} method for radix 10.
      *
-	 * 构造函数, 返回一个Byte对象(不推荐),推荐valueOf(String)
-	 * 默认进制为10, 进行转换
-	 *
+    * 构造函数, 返回一个Byte对象(不推荐),推荐valueOf(String)
+    * 默认进制为10, 进行转换
+    *
      * @param s         the {@code String} to be converted to a
      *                  {@code Byte}
      * @throws           NumberFormatException If the {@code String}
@@ -334,8 +334,8 @@ public final class Byte extends Number implements Comparable<Byte> {
     /**
      * Returns the value of this {@code Byte} as a
      * {@code byte}.
-	 *
-	 * 获取代表的byte值 
+    *
+    * 获取代表的byte值
      */
     public byte byteValue() {
         return value;
@@ -345,8 +345,8 @@ public final class Byte extends Number implements Comparable<Byte> {
      * Returns the value of this {@code Byte} as a {@code short} after
      * a widening primitive conversion.
      * @jls 5.1.2 Widening Primitive Conversions
-	 *
-	 * 获取代表的short值(以下包括自己都是宽转型, 不会丢失精度)
+    *
+    * 获取代表的short值(以下包括自己都是宽转型, 不会丢失精度)
      */
     public short shortValue() {
         return (short)value;
@@ -356,8 +356,8 @@ public final class Byte extends Number implements Comparable<Byte> {
      * Returns the value of this {@code Byte} as an {@code int} after
      * a widening primitive conversion.
      * @jls 5.1.2 Widening Primitive Conversions
-	 *
-	 * 获取代表的int值
+    *
+    * 获取代表的int值
      */
     public int intValue() {
         return (int)value;
@@ -367,8 +367,8 @@ public final class Byte extends Number implements Comparable<Byte> {
      * Returns the value of this {@code Byte} as a {@code long} after
      * a widening primitive conversion.
      * @jls 5.1.2 Widening Primitive Conversions
-	 *
-	 * 获取代表的long值
+    *
+    * 获取代表的long值
      */
     public long longValue() {
         return (long)value;
@@ -378,8 +378,8 @@ public final class Byte extends Number implements Comparable<Byte> {
      * Returns the value of this {@code Byte} as a {@code float} after
      * a widening primitive conversion.
      * @jls 5.1.2 Widening Primitive Conversions
-	 *
-	 * 获取代表的float值
+    *
+    * 获取代表的float值
      */
     public float floatValue() {
         return (float)value;
@@ -388,8 +388,8 @@ public final class Byte extends Number implements Comparable<Byte> {
     /**
      * Returns the value of this {@code Byte} as a {@code double}
      * after a widening primitive conversion.
-	 *
-	 * 获取代表的double值
+    *
+    * 获取代表的double值
      */
     public double doubleValue() {
         return (double)value;
@@ -402,8 +402,8 @@ public final class Byte extends Number implements Comparable<Byte> {
      * the {@code byte} value were given as an argument to the
      * {@link java.lang.Byte#toString(byte)} method.
      *
-	 * 将Byte转换为String对象, 调用Integer.toString进行转换.
-	 *
+    * 将Byte转换为String对象, 调用Integer.toString进行转换.
+    *
      * @return  a string representation of the value of this object in
      *          base&nbsp;10.
      */
@@ -414,9 +414,9 @@ public final class Byte extends Number implements Comparable<Byte> {
     /**
      * Returns a hash code for this {@code Byte}; equal to the result
      * of invoking {@code intValue()}.
-     * 
-	 * byte的哈希码为value值
-	 *
+     *
+    * byte的哈希码为value值
+    *
      * @return a hash code value for this {@code Byte}
      */
     @Override
@@ -428,8 +428,8 @@ public final class Byte extends Number implements Comparable<Byte> {
      * Returns a hash code for a {@code byte} value; compatible with
      * {@code Byte.hashCode()}.
      *
-	 * byte的哈希码为value值
-	 *
+    * byte的哈希码为value值
+    *
      * @param value the value to hash
      * @return a hash code value for a {@code byte} value.
      * @since 1.8
@@ -444,8 +444,8 @@ public final class Byte extends Number implements Comparable<Byte> {
      * {@code null} and is a {@code Byte} object that
      * contains the same {@code byte} value as this object.
      *
-	 * equals方法判断内部值是否相等.
-	 *
+    * equals方法判断内部值是否相等.
+    *
      * @param obj       the object to compare with
      * @return          {@code true} if the objects are the same;
      *                  {@code false} otherwise.
@@ -460,8 +460,8 @@ public final class Byte extends Number implements Comparable<Byte> {
     /**
      * Compares two {@code Byte} objects numerically.
      *
-	 * Byte比较,通过比较内部byte值
-	 *
+    * Byte比较,通过比较内部byte值
+    *
      * @param   anotherByte   the {@code Byte} to be compared.
      * @return  the value {@code 0} if this {@code Byte} is
      *          equal to the argument {@code Byte}; a value less than
@@ -505,9 +505,9 @@ public final class Byte extends Number implements Comparable<Byte> {
      * byte} values are mapped to an {@code int} value equal to the
      * input plus 2<sup>8</sup>.
      *
-	 * 转换为无符号数字, 应为上限变大, 需要转换为int. 先转换为int, 将前
-	 * 24为填充为符号位, 然后& 0xff, 取最后8为bit, 并将前24位置0.
-	 *
+    * 转换为无符号数字, 应为上限变大, 需要转换为int. 先转换为int, 将前
+    * 24为填充为符号位, 然后& 0xff, 取最后8为bit, 并将前24位置0.
+    *
      * @param  x the value to convert to an unsigned {@code int}
      * @return the argument converted to {@code int} by an unsigned
      *         conversion
@@ -528,9 +528,9 @@ public final class Byte extends Number implements Comparable<Byte> {
      * byte} values are mapped to a {@code long} value equal to the
      * input plus 2<sup>8</sup>.
      *
-	 * 转换为无符号数字, 应为上限变大, 这里转换为long. 先转换为long, 将前
-	 * 56为填充为符号位, 然后& 0xff, 取最后8为bit, 并将前56位置0.
-	 *
+    * 转换为无符号数字, 应为上限变大, 这里转换为long. 先转换为long, 将前
+    * 56为填充为符号位, 然后& 0xff, 取最后8为bit, 并将前56位置0.
+    *
      * @param  x the value to convert to an unsigned {@code long}
      * @return the argument converted to {@code long} by an unsigned
      *         conversion
@@ -545,8 +545,8 @@ public final class Byte extends Number implements Comparable<Byte> {
      * The number of bits used to represent a {@code byte} value in two's
      * complement binary form.
      *
-	 * Byte默认占据8bit
-	 * 
+    * Byte默认占据8bit
+    *
      * @since 1.5
      */
     public static final int SIZE = 8;
@@ -555,13 +555,13 @@ public final class Byte extends Number implements Comparable<Byte> {
      * The number of bytes used to represent a {@code byte} value in two's
      * complement binary form.
      *
-	 * Byte默认占据1byte
-	 *
+    * Byte默认占据1byte
+    *
      * @since 1.8
      */
     public static final int BYTES = SIZE / Byte.SIZE;
 
-	//序列号, 兼容JDK1.1
+   //序列号, 兼容JDK1.1
     /** use serialVersionUID from JDK 1.1. for interoperability */
     private static final long serialVersionUID = -7183698231559129828L;
 }
