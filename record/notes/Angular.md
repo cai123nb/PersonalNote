@@ -1,5 +1,7 @@
 # Angular 学习笔记
 
+Angular 入门学习笔记.
+
 ## 入门基础
 
 - 请查阅[官方网站](https://angular.io).
