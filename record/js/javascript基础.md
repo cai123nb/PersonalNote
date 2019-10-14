@@ -58,3 +58,46 @@ JavaScript 含义比**ECMA-262**中规定的要多得多, 一个完整 JavaScrip
   <p>本页面需要浏览器支持(启用)JavaScript。
 </noscript>
 ```
+
+## ECMAScript3 基本概念
+
+### 语法
+
+- 区分大小写
+- 标识符的第一个字符串必须是字母,下划线或者\$.
+- 单行注释: `//`, 多行注释: `/* */`.
+- 语句以分号结尾(也可以省略, 但不推荐).
+- 关键字: `break, do, instanceof, typeof, case, else, new, var, catch, finally, return, void, continue, for, switch, while, debugger, function, this, with, default, if, throw, delete, in, try, implements, package, public, interface, private, static, let, protected, yield`.
+
+### 数据类型
+
+数据类型: 5 + 1, 5 基本类型: `Undefined, Null, Boolean, Number, String`, 1 复杂类型: `Object`. 通过`typeof`可以获取对象的类型, 返回值如下:
+
+- undefined: 对象未定义.
+- boolean: Boolean
+- string: 字符串
+- number: 数值
+- object: 值为对象或者 null.
+- function: 函数
+
+5 大基本类型:
+
+- Undefined: 只含有 undefined 一个值, 声明变量未初始化时, 默认的值.
+- Null: 只含有特殊值 null, 逻辑上表示为空指针. 使用`typeof`时返回`object`, `undefined`派生自`null`两者相等, 但不全等.
+- Boolean: 含有两个字面值: `true, false`. `true`: `非空字符串, 非零数字, 任何对象, n/a`. `false`: `空字符串, 0和NaN, null, undefined`.
+- Number: 使用`IEEE754`格式使用64位表示整数和浮点数. 整数: 默认10进制整数, 0开头默认八进制(如果内部超过了7则认为是十进制整数), 0x开头默认十六进制. 浮点数计算会存在误差, 请不用测试特定的值(如0.1 + 0.2永远不会等于0.3). 范围为: `Number.MIN_VALUE - Number.MAX_VALUE`. `NaN`表示特殊数值: 本来应该返回的数值操作, 却没有返回数值(通过这种方式, 防止报错). 如`Number('Hello world!')`. 首先, 任何涉及`NaN`的操作都返回`NaN`. 其次, `NaN与任何值都不相等, 包括本身.`
+- String: 零或多个16位Unicode字符组成的字符串序列. 单引号和双引号没有任何区别.
+
+复杂数据类型:
+
+Object: 一组数据和功能的集合. 通过`new + 对象名称`来创建. 基本方法有:
+
+- constructor: 构造函数, 默认新建时调用.
+- hasOwnProperty(propertyName): 用于检查当前对象是否包含某项属性(不是在原型中继承的).
+- isPrototypeOf(object): 是否是传入对象的原型(在原型链中是不是, 传入对象的爸爸)).
+- propertyIsEnumerable(propertyName): 某项属性是否可以枚举(使用for-in).
+- toLocaleString: 返回本地自定义字符串.
+- toString: 字符串.
+- valueOf: 返回对象的字符串, 数值或布尔值表示.
+
+需要注意的一点是JS中的函数, JS函数对参数没有任何限制, 是使用一个数组进行存储(`arguments`), 可以通过这个数组访问内部所有的数据, 另外函数没有`重载`. 后定义的会覆盖前面的函数.
