@@ -73,6 +73,11 @@ add_header X-Frame-Options SAMEORIGIN;
 
 ## Redis 相关操作
 
+- 进入命令行: `redis-cli`.
+- 授权登录: `auth PASSWORD`
+- 查看所有的KEY: `KEYS *`
+- 详细密码列表:[官方文档](https://redis.io/commands)
+
 ### Redis 序列化失败问题
 
 当出现序列化失败时, 检查序列化的对象是否实现了`Serializable`, 并显式设置了`serialVersionUID`(如果不显式设置, 修改之后将会自动生成新的 UID, 将不会兼容之前的缓存).
