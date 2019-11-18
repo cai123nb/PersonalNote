@@ -65,7 +65,8 @@ Git 本地存储分成三大部分:
 
 ### GIT 拉取远程分支到本地
 
-- 本地新建对应分支, 并切换: `git checkout -b LOCAL_BRANCH_NAME REMOTE_NAME/REMOTE_BRANCH_NAME`.
+- 拉取远程分支更新: `git fetch`.
+- 本地新建对应分支, 并切换到对应分支: `git checkout -b LOCAL_BRANCH_NAME REMOTE_NAME/REMOTE_BRANCH_NAME`.
 - 本地远程分支更新: `git pull origin REMOTE_BRANCH_NAME`.
 - do something.
 - 推送更新到远程分支: `git push origin REMOTE_BRANCH_NAME`.
