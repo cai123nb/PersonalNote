@@ -84,6 +84,16 @@ add_header X-Frame-Options SAMEORIGIN;
 
 清除缓存: `redis-cli, flushdb/flushall`
 
+### Redis keys无效
+
+当我们使用`keys *`查看所有的key时没有效果.往往是当前数据库不对.
+查看和切换数据库的方法:
+
+- `CONFIG GET databases`: 查看当前几个数据库.
+- `info keyspace`: 查看那几个数据库存在key(存在使用情况)
+- `select num`: 选择你要去的数据库, 如`select 2`.
+- `keys *`: 查看所有key.
+
 ## Docker 相关操作
 
 ### Docker 基本指令
