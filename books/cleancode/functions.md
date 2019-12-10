@@ -381,9 +381,7 @@ private void logError(Exception e) {
 
 ### Error Handling Is One Thing
 
-函数应该只做一件事, 要不就是逻辑处理, 要不就是错误处理. 就像上面的示例一样.
-
-### The Error.java Dependency Magnet
+函数应该只做一件事, 要不就是逻辑处理, 要不就是错误处理. 就像上面的示例一样. 另外:
 
 ```java
 public enum Error {
