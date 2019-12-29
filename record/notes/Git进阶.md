@@ -250,12 +250,12 @@ git log --pretty="%h - %s" --author=gitster --since="2008-10-01" \
 |-|:-|:-|:-|:-|
 |Commit Level|||||
 |reset --soft [commit]|REF|NO|NO|YES|
-|reset [commit]|REF|YES|NO|YES
-|reset --hard [commit]|REF|YES|YES|NO
-|checkout [commit]|HEAD|YES|YES|YES
+|reset [commit]|REF|YES|NO|YES|
+|reset --hard [commit]|REF|YES|YES|NO|
+|checkout [commit]|HEAD|YES|YES|YES|
 |File Level|||||
-|reset (commit) [file]|NO|YES|NO|YES
-|checkout (commit) [file]|NO|YES|YES|NO
+|reset (commit) [file]|NO|YES|NO|YES|
+|checkout (commit) [file]|NO|YES|YES|NO|
 
 ### 子模块处理(submodule)
 
