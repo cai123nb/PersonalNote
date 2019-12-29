@@ -246,9 +246,9 @@ git log --pretty="%h - %s" --author=gitster --since="2008-10-01" \
 
 总结:
 
-||HEAD|Index|Workdir|WD Safe?|
+|-|HEAD|Index|Workdir|WD Safe?|
 |:-|:-|:-|:-|:-|
-|Commit Level|||||
+|Commit Level|-|-|-|-|
 |reset --soft [commit]|REF|NO|NO|YES|
 |reset [commit]|REF|YES|NO|YES|
 |reset --hard [commit]|REF|YES|YES|NO|
