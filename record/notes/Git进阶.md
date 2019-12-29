@@ -60,8 +60,13 @@ Git 本地存储分成三大部分:
   - 合并分支: `git merge MERGE_BRANCH_NAME`, 注意的是, 如果出现了冲突, 就需要修改冲突文件, 然后提交. 默认合并分支时会删除分支信息, 如果想保留可以使用`--no-ff`参数, 如`git merge --no-ff -m "merge with no-ff" dev`.
   - 删除分支: `git branch -d BRANCH_NAME`, 注意, 如果在分支未合并的时候进行删除就会报错, 如果这时候不想保留分支代码, 可以强制删除将`-d`替换为`-D`.
 - 保留工作现场: `git stash`, 该命令会将现在工作目录中的更改临时存储, 这时你可以自由地切换分支了.
-- 查看工作现场: `git stash list`.
-- 回到工作现场: `git stash pop STASH_NAME`或者`git stash apply STASH_NAME`, 两者的区别在于: 前者会主动删除该次工作现场, 后者不会, 必须手动删除`git stash drop STASH_NAME`.
+  - 查看工作现场: `git stash list`.
+  - 回到工作现场: `git stash pop STASH_NAME`或者`git stash apply STASH_NAME`, 两者的区别在于: 前者会主动删除该次工作现场, 后者不会, 必须手动删除`git stash drop STASH_NAME`.
+  - 需要注意的是, 如果保留工作现场时, 在工作目录中存在更新, 且在暂存区内也存在更新时, 这时候恢复工作现场(`git stash apply/pop`)时, 会默认将暂存区的内容放到工作目录下(不会自动在帮你放到暂存区, 即所有的变化都是反映在工作目录下). 这时候可以通过`--index`使其动态添加到暂存区(和保存之前一致).
+  - 当我们保存工作现场(`git stash`)时, 如果只想保留工作目录的变化, 不想保留暂存区的变化(默认两个都会保存), 这时候可以通过添加`--keep-index`命令.
+  - 当我们保留工作现场(`git stash`)时, 默认只保存已经在索引中(版本库中)的文件, 对于新增的文件, 是不会处理的. 这时候可以添加`-u或者--include-untracked`来进行处理.
+  - 如果我们需要对暂存的工作现场重新工作, 但是不想影响到主仓库. 可以新建一个分支进行绑定处理, `git stash branch BRANCH_NAME STASH_NAME`, 就会对对应的工作现场新建一个分支进行处理(注这里会默认切换分支).
+  - 与清理相对应的就是清理: `git clean`, 用以移除工作目录中未追踪的文件列表. 如清除所有未追踪的文件和文件夹(及其子目录): `git clean -d -f`. 这是一个高危操作, 推荐在清理之前, 通过`-n`来确认是否清理正确的文件. 默认不会清除`gitignore`中的文件, 如果想要一并清除添加`-x`参数. 同样推荐使用交互模式保证清理文件的正确性`-i`.
 - 本地分支上传到远程仓库: `git push REMOTE_NAME LOCAL_BARANCH_NAME:REMOTE_BRANCH_NAME`, 这样就可以将本地的分支推送到远程.
 - 创建远程仓库的分支: `git checkout -b LOCAL_BRANCH_NAME REMOTE_NAME/REMOTE_BRANCH_NAME`或者`git branch --track LOCAL_BRANCH_NAME REMOTE_NAME/REMOTE_BRANCH_NAME`, 这样就会基于远程分支在本地创建对应的分支, 一般推荐两者分支名一致.
 - 标签信息, 标签分为两种: `轻量标签`(只是某一次提交的引用)和`附注标签`(含有完整的标签信息, 包括作者, 时间等, 可以进行校验).
@@ -195,6 +200,7 @@ git log --pretty="%h - %s" --author=gitster --since="2008-10-01" \
 - 查看所有的配置的信息: `git config --list`.
 - 查看具体的配置信息: `git config CONFIG_NAME(如user.email)`.
 - 配置别名: `git config --global alias.ALIAS ACTUAL_NAME`, 如: `git config --global alias.st status`使用`git st`来指代`git status`, 自定义显示: `git config --global alias.lg "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"`.
+- 更新配置(包括别名): `git config --global --edit`.
 
 ### 更新 fork 仓库
 
@@ -205,6 +211,51 @@ git log --pretty="%h - %s" --author=gitster --since="2008-10-01" \
 - 获取原仓库的最新更新: `git fetch upstream`.
 - 合并到本地分支。切换到本地 master 分支，合并 upstream/master 分支: `git merge upstream/master`.
 - 更新 fork 仓库: `git push origin master`.
+
+### Reset和Checkout
+
+理解两者的区别时,先明白`HEAD`,`暂存区`和`工作目录`的区别. 其中后两者和上面的定义一样, 这里简单的复述了`HEAD`的定义: 当前分支所引用的指针(总是指向该分支的最后一次分支), 指向版本库树中的一个commit的指针. 如果想要查看具体指向的指针地址: `git cat-file -p HEAD`. 也可以查看当前版本库中每个文件当前版本的哈希值: `git ls-tree -r HEAD`.
+
+`commit`级别中的`reset`的处理步骤(`git reset COMMIT_ID`):
+
+1. 修改`HEAD`指针的位置, 移动到对应`COMMIT_ID`的位置. 等同于`git reset --soft COMMIT_ID`.
+2. 将暂存区的内容重置为对应`COMMIT_ID`的版本库中内容. 等同于`git reset --mixed COMMIT_ID`. 注意, `--mixed`是可选的, 默认就是这个级别.
+3. 将工作目录的内容重置为对应`COMMIT_ID`版本库中的内容. 等同于`git reset --hard COMMIT_ID`. 注意这是非常危险的, 会覆盖本地的内容.(如果已经提交到版本库, 可以通过`git reflog`找回).
+
+文件级别中的`reset`的处理步骤(`git reset [COMMIT_ID] FILE_NAME`), 注`COMMIT_ID`可选, 不填默认是`HEAD`, 即当前指向的版本库中的版本:
+
+1. 跳过修改`HEAD`的指针位置.(不进行处理)
+2. 修改暂存区中对应的文件, 使其和对应版本的文件内容相同. (结束).
+
+即通过`reset`之后, 默认只会修改版本库中的文件, 不会修改`HEAD`和`工作目录`中的内容. 这时候通过`git status`就可以很明显的看出这个差别.
+
+通过上面的上面的原理可以完成一些特殊的操作, 如**合并提交**. 假设版本库内容为`v1 - v2 - v3`当前HEAD所在的位置为`v3`. 现在想要合并`v2`和`v3`.
+
+1. `git reset --soft v1`, 将`HEAD`切换到`v1`的位置.
+2. `git commit` 完成. 这时候暂存区和本地工作目录的内容还是`v3`的版本, 直接提交就可以直接从`v1`直达`v3`. 也就完成了**合并提交**的功能.
+
+`commit`级别中的`checkout`处理步骤(`git checkout BRANCH/COMMIT_ID`):
+
+1. 修改`HEAD`指针的位置, 移动到对应`COMMIT_ID`的位置.
+2. 将暂存区的内容重置为对应`COMMIT_ID`的版本库中内容.
+3. 将工作目录的内容和对应`COMMIT_ID`版本库中的内容进行合并, 注意不是重置(而是合并).
+
+处理的逻辑非常类似`git reset --hard COMMIT_ID`. 但是有一点不同的是, 工作目录的内容会进行简单的合并, 而不是强制重置. 另一个区别的是, `reset`会移动`HEAD`分支的指向, 而`checkout`只会移动`HEAD`自身到另一个分支, 一般不推荐切换到另一个提交里面.
+
+文件级别中的`checkout`处理步骤, `git checkout COMMIT_ID FILENAME`处理结果等同于(`git reset --hard [branch] file`). 这样对工作目录不安全, 会覆盖工作目录的内容(虽然`HEAD`指针不会变化).
+
+总结:
+
+||HEAD|Index|Workdir|WD Safe?|
+|-|:-|:-|:-|:-|
+|Commit Level|||||
+|reset --soft [commit]|REF|NO|NO|YES|
+|reset [commit]|REF|YES|NO|YES
+|reset --hard [commit]|REF|YES|YES|NO
+|checkout [commit]|HEAD|YES|YES|YES
+|File Level|||||
+|reset (commit) [file]|NO|YES|NO|YES
+|checkout (commit) [file]|NO|YES|YES|NO
 
 ### 子模块处理(submodule)
 
@@ -220,27 +271,18 @@ git log --pretty="%h - %s" --author=gitster --since="2008-10-01" \
 
 当我们不小心提交了一个错误的提交, 我们需要撤销这次提交怎么办呢? 使用`git revert COMMIT_ID`即可, 这样会在当前的头部生成一个新的提交, 这个提交的内容就是撤销了这次提交的内容, 当然你还可以进行自定义的修改, 然后使用`git commit --amend`附加到这次提交即可. 最后推送到远程就完成了.
 
-### 更新上次提交
+### 重写提交历史
 
-[官方解决方案](https://help.github.com/en/articles/changing-a-commit-message)
+重写提交历史会修改提交的`SHA-1`的校验和, 不推荐在已提交的记录中进行修改, 一般用于本地使用.
 
-如果提交尚未推送到远程, 可以通过`git commit --amend`修改提交的注释信息或者追加修改.
+修改提交信息, 通过`git commit --amend`修改提交的注释信息或者追加修改, [参照官方解决方案](https://help.github.com/en/articles/changing-a-commit-message)
 
-- 修改注释信息: `git commit --amend`, 打开编辑页面, 修改注释信息, 选择`:wq`即可.
-- 追加修改信息: 首先将需要追加的修改信息, 添加到暂存区, 提交时使用`git commit -amend`, 直接保存退出即可.
+这里的修改包括修改评论, 添加一些文件, 移除文件等等. 如给上次提交新增一个文件(`git add`)或者移除一个文件(`git rm`), 然后通过`git commit --amend`追加补丁即可.
 
-如果未提交到远程, 则可以首先通过`reflog`查看具体的操作日志, 然后使用`reset`跳转到对应的错误提交中, 使用`git commit --amend`更新提交信息, 然后使用`cherry-pick`将之后需要保留的提交保存下来.
+如果需要修改多个提交信息或者上上(或者很多次)次的提交信息. 这时候就必须使用`rebase`来完成.注意这里只推荐在本地使用, 不要对已经提交的commit进行变基.
 
-如果提交到了远程,就需要使用`rebase`命令, 具体操作参照官方解决方案:
-
-- On the command line, navigate to the repository that contains the commit you want to amend.
-- Use the git rebase -i HEAD~n command to display a list of the last n commits in your default text editor.
-
-```java
-git rebase -i HEAD~3 // Displays a list of the last 3 commits on the current branch
-```
-
-The list will look similar to the following:
+- 确定需要更改的提交是第几个. 可以通过`git reflog`或者`git log -g`来确认. 如确定要修改的是第三个.
+- 进入`rebase`配置页面: `git rebase -i HEAD~3`, 注意这里的`-i`是指以交互的形式处理. 这时候页面应该如下打开:
 
 ```java
 pick e499d89 Delete CNAME
@@ -262,17 +304,122 @@ pick f7fde4a Change the commit message but push the same commit.
 // Note that empty commits are commented out
 ```
 
-- Replace pick with reword before each commit message you want to change.
+- 选中你需要更改的那个提交(注意这里的顺序是倒序的), 将`pick`修改为`edit`或者`reword`可以参照下面的命令解释. 保存退出.
+- 然后按照提示, 更新文件(如果需要的话), 添加到暂存区, 使用`git commit --amend`修改提交信息(参照修改上一次的提交的操作方法).(如果选择了多个提交更新, 就会重复这个过程).
+- 使用命令`git rebase --continue`, 完成处理.
+
+#### 拓展
+
+通过`rebase`还可以完成很多功能, 如**移除提交**:
 
 ```java
 pick e499d89 Delete CNAME
-reword 0c39034 Better README
-reword f7fde4a Change the commit message but push the same commit.
+pick 0c39034 Better README
+pick f7fde4a Change the commit message but push the same commit.
 ```
 
-- Save and close the commit list file.
-- In each resulting commit file, type the new commit message, save the file, and close it.
-- Force-push the amended commits. `git push --force`(maybe you need pull first).
+修改为:
+
+```java
+pick e499d89 Delete CNAME
+pick 0c39034 Better README
+```
+
+**修改提交的排序**:
+
+```java
+pick e499d89 Delete CNAME
+pick 0c39034 Better README
+pick f7fde4a Change the commit message but push the same commit.
+```
+
+修改为:
+
+```java
+pick e499d89 Delete CNAME
+pick f7fde4a Change the commit message but push the same commit.
+pick 0c39034 Better README
+```
+
+**压缩提交**:
+
+```java
+pick e499d89 Delete CNAME
+pick 0c39034 Better README
+pick f7fde4a Change the commit message but push the same commit.
+```
+
+修改为:
+
+```java
+pick e499d89 Delete CNAME
+squash f7fde4a Change the commit message but push the same commit.
+squash 0c39034 Better README
+```
+
+**拆分提交**:
+
+如将提交: `310154e updated README formatting and added blame`拆分为`updated README formatting`和`added blame`.
+
+1. 进入配置页面`git rebase -i HEAD~2`, 修改为`edit`.
+
+   ```java
+   edit 310154e updated README formatting and added blame
+   pick e499d89 Delete CNAME
+   ```
+
+2. 进入前一个提交`git reset HEAD^`(注意这里是第二个, 按照具体情况来进入). 现在就在需要更新的提交中了.
+3. 提交第一个文件: `git add xx` -> `git commit -m 'do something'`.
+4. 提交第二个文件: `git add xx` -> `git commit -m 'do something'`.
+5. 进行变基: `git rebase --continue`.
+
+### 核武器选项: `filter-branch`
+
+批量修改历史记录, 如修改全局的邮箱地址或从每一个提交中移除一个文件, 这时候可以使用`filter-branch`. 推荐在一个测试分支上处理, 如果处理结果符合你的要求, 再硬重置`master`分支.
+
+#### 每一个提交中移除文件
+
+如有人不小心添加了一个密码文件, 而你需要开源项目, 需要在整个历史记录中擦除该文件的提交历史.
+
+```java
+git filter-branch --tree-filter 'rm -f passwords.txt' HEAD
+```
+
+#### 使用子目录作为新的根目录
+
+当你导入一个项目时, 项目文件夹有很多, 如`trunk`,`tags`,`.back`等等. 但是实际上有用的就是`trunk`, 你不想关注其他文件夹的提交.
+
+```java
+git filter-branch --subdirectory-filter trunk HEAD
+```
+
+#### 全局修改邮箱地址
+
+你开始工作时忘记运行`git config`来设置你的名字与邮箱地址，或者你想要开源一个项目并且修改所有你的工作邮箱地址为你的个人邮箱地址。任何情形下，你也可以通过`filter-branch`来一次性修改多个提交中的邮箱地址。 需要小心的是只修改你自己的邮箱地址，所以你使用`--commit-filter`.
+
+```shell
+$git filter-branch --commit-filter '
+   if [ "$GIT_AUTHOR_EMAIL" = "schacon@localhost" ];
+   then
+         GIT_AUTHOR_NAME="Scott Chacon";
+         GIT_AUTHOR_EMAIL="schacon@example.com";
+         git commit-tree "$@";
+   else
+   fi' HEAD
+```
+
+如果多次使用`filter-branch`出现报错:
+
+```shell
+A previous backup already exists in refs/original/
+Force overwriting the backup with -f
+```
+
+这里的备份是上一次`filter-branch`的处理备份, 如果你确认上一次的处理结果, 可以使用以下命令清除备份:
+
+```shell
+git update-ref -d refs/original/refs/heads/master
+```
 
 ### cherry-pick
 
