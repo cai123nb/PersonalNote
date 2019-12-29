@@ -37,8 +37,11 @@ Git 本地存储分成三大部分:
   - 查看暂存区和版本库(最近的一次提交的)的差异: `git diff --cached`或者`git diff --staged`.
 
 - 提交暂存区里文件到版本库中: `git commit -m "COMMENTS_INFO"`, 将当前暂存区里的所有变化提交给版本库.
+
 - 查看版本库中的提交历史记录: `git log`, 可以查看每次提交的信息.
+
 - 查看用户的操作记录: `git reflog`, 可以看到用户每次在版本库中进行的操作.
+
 - 版本回退或者转移: `git reset VERSION_NUMBER`, 其中`VERSION_NUMBER`可以通过`git log`查看, 或者通过`git reflog`查看. 这里默认转移的方式为`mixed`, 即会将版本转移导致的变化存储到暂存区中, 同时你在本地的修改不会废弃(还存在). 如果想要放弃所有本地更改(强制回到一个一模一样的对应版本), 可以添加`--hard`.
 - 废弃工作目录中的文件更改: `git checkout -- FILE_NAME`, 将工作目录中的文件回退到暂存区的版本, 也就是废弃了在提交暂存区这段时间的更改(提示, 如果工作目录**删除**某个文件, 但是已经提交到暂存区中, 使用这个命令也是可以恢复到工作目录的).
 - 废弃暂存区中的文件更改: `git reset HEAD FILE_NAME`, 常用于提交前检查文件`git status`, 发现有几个文件不想提交, 但是已经添加到了暂存区. 使用该命令会将文件更改回退到工作目录, 如果工作目录也不想保留这些更改, 只需要使用上一条命令即可(提示, 如果暂存区中不小心使用`git rm`删除了某个文件, 但是版本库中还没删除, 可以使用这个命令恢复到暂存区, 恢复到工作目录, 使用上个命令即可).
@@ -76,7 +79,9 @@ Git 本地存储分成三大部分:
   - 与清理相对应的就是清理: `git clean`, 用以移除工作目录中未追踪的文件列表. 如清除所有未追踪的文件和文件夹(及其子目录): `git clean -d -f`. 这是一个高危操作, 推荐在清理之前, 通过`-n`来确认是否清理正确的文件. 默认不会清除`gitignore`中的文件, 如果想要一并清除添加`-x`参数. 同样推荐使用交互模式保证清理文件的正确性`-i`.
 
 - 本地分支上传到远程仓库: `git push REMOTE_NAME LOCAL_BARANCH_NAME:REMOTE_BRANCH_NAME`, 这样就可以将本地的分支推送到远程.
+
 - 创建远程仓库的分支: `git checkout -b LOCAL_BRANCH_NAME REMOTE_NAME/REMOTE_BRANCH_NAME`或者`git branch --track LOCAL_BRANCH_NAME REMOTE_NAME/REMOTE_BRANCH_NAME`, 这样就会基于远程分支在本地创建对应的分支, 一般推荐两者分支名一致.
+
 - 标签信息, 标签分为两种: `轻量标签`(只是某一次提交的引用)和`附注标签`(含有完整的标签信息, 包括作者, 时间等, 可以进行校验).
 
   - 创建轻量标签: `git tag TAG_NAME`, 默认给当前提交打上标签.
@@ -255,7 +260,7 @@ git log --pretty="%h - %s" --author=gitster --since="2008-10-01" \
 
 总结:
 
--                        | HEAD | Index | Workdir | WD Safe?
+summary                  | HEAD | Index | Workdir | WD Safe?
 :----------------------- | :--- | :---- | :------ | :-------
 Commit Level             | -    | -     | -       | -
 reset --soft [commit]    | REF  | NO    | NO      | YES
@@ -380,6 +385,7 @@ squash 0c39034 Better README
 2. 进入前一个提交`git reset HEAD^`(注意这里是第二个, 按照具体情况来进入). 现在就在需要更新的提交中了.
 
 3. 提交第一个文件: `git add xx` -> `git commit -m 'do something'`.
+
 4. 提交第二个文件: `git add xx` -> `git commit -m 'do something'`.
 5. 进行变基: `git rebase --continue`.
 
