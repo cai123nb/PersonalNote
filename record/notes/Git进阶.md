@@ -253,7 +253,7 @@ git log --pretty="%h - %s" --author=gitster --since="2008-10-01" \
 |reset [commit]|REF|YES|NO|YES|
 |reset --hard [commit]|REF|YES|YES|NO|
 |checkout [commit]|HEAD|YES|YES|YES|
-|File Level|||||
+|File Level|-|-|-|-|
 |reset (commit) [file]|NO|YES|NO|YES|
 |checkout (commit) [file]|NO|YES|YES|NO|
 
