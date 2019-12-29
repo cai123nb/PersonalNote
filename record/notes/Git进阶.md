@@ -31,9 +31,11 @@ Git 本地存储分成三大部分:
 - 提交文件变化到暂存区: `git add FILE_NAME`, 将`FILE_NAME`文件的变更提交给`暂存区`.
 - 提交所有文件变化到暂存区: `git add .`, 将`工作目录`中所有文件的变化都提交给`暂存区`.
 - 查看差异, `git diff`:
+
   - 查看工作目录和暂存区文件差异: `git status`, 可以查看到文件级别的差异性. `git diff`, 可以查看到文字级别的差异性.
   - 查看工作目录和版本库中(最近的一次提交)文件的差异(文字级别): `git diff HEAD`.
   - 查看暂存区和版本库(最近的一次提交的)的差异: `git diff --cached`或者`git diff --staged`.
+
 - 提交暂存区里文件到版本库中: `git commit -m "COMMENTS_INFO"`, 将当前暂存区里的所有变化提交给版本库.
 - 查看版本库中的提交历史记录: `git log`, 可以查看每次提交的信息.
 - 查看用户的操作记录: `git reflog`, 可以看到用户每次在版本库中进行的操作.
@@ -41,6 +43,7 @@ Git 本地存储分成三大部分:
 - 废弃工作目录中的文件更改: `git checkout -- FILE_NAME`, 将工作目录中的文件回退到暂存区的版本, 也就是废弃了在提交暂存区这段时间的更改(提示, 如果工作目录**删除**某个文件, 但是已经提交到暂存区中, 使用这个命令也是可以恢复到工作目录的).
 - 废弃暂存区中的文件更改: `git reset HEAD FILE_NAME`, 常用于提交前检查文件`git status`, 发现有几个文件不想提交, 但是已经添加到了暂存区. 使用该命令会将文件更改回退到工作目录, 如果工作目录也不想保留这些更改, 只需要使用上一条命令即可(提示, 如果暂存区中不小心使用`git rm`删除了某个文件, 但是版本库中还没删除, 可以使用这个命令恢复到暂存区, 恢复到工作目录, 使用上个命令即可).
 - 关联远程仓库:`git remote add REMOTE_NAME xxx.git`, 这里的`REMOTE_NAME`一般会取`origin`(习惯问题).
+
   - 拷贝远程仓库: `git clone xx.git`.
   - 拉取远程仓库的更新: `git pull REMOTE_NAME REMOTE_BRANCH_NAME`.
   - 向远程仓库推送变化: `git push REMOTE_NAME REMOTE_BRANCH_NAME`, 这里可以给远程仓库推送变化, 注意可能存在冲突(别人已经提交过了, 你的不是最新的), 那就需要拉取下来(上一条), 然后解决冲突, 再次提交.
@@ -49,7 +52,9 @@ Git 本地存储分成三大部分:
   - 查看某一个远程分支的具体情况: `git remote show REMOTE_NAME`.
   - 修改远程仓库的别名: `git remote rename ORIGIN_REMOTE_NAME CURRENT_REMOTE_NAME`.
   - 删除远程仓库: `git remote rm REMOTE_NAME`.
+
 - 分支情况(branch):
+
   - 新建分支: `git branch BRANCH_NAME`.
   - 切换分支: `git checkout BRANCH_NAME`.
   - 新建和切换分支: `git checkout -b BRANCH_NAME`.
@@ -59,7 +64,9 @@ Git 本地存储分成三大部分:
   - 查看未合并到当前分支的分支: `git branch --no-merged`, 这类分支进行删除会失败,报错. `git`认为这些工作没有保存, 当然可以强制删除`-D`.
   - 合并分支: `git merge MERGE_BRANCH_NAME`, 注意的是, 如果出现了冲突, 就需要修改冲突文件, 然后提交. 默认合并分支时会删除分支信息, 如果想保留可以使用`--no-ff`参数, 如`git merge --no-ff -m "merge with no-ff" dev`.
   - 删除分支: `git branch -d BRANCH_NAME`, 注意, 如果在分支未合并的时候进行删除就会报错, 如果这时候不想保留分支代码, 可以强制删除将`-d`替换为`-D`.
+
 - 保留工作现场: `git stash`, 该命令会将现在工作目录中的更改临时存储, 这时你可以自由地切换分支了.
+
   - 查看工作现场: `git stash list`.
   - 回到工作现场: `git stash pop STASH_NAME`或者`git stash apply STASH_NAME`, 两者的区别在于: 前者会主动删除该次工作现场, 后者不会, 必须手动删除`git stash drop STASH_NAME`.
   - 需要注意的是, 如果保留工作现场时, 在工作目录中存在更新, 且在暂存区内也存在更新时, 这时候恢复工作现场(`git stash apply/pop`)时, 会默认将暂存区的内容放到工作目录下(不会自动在帮你放到暂存区, 即所有的变化都是反映在工作目录下). 这时候可以通过`--index`使其动态添加到暂存区(和保存之前一致).
@@ -67,9 +74,11 @@ Git 本地存储分成三大部分:
   - 当我们保留工作现场(`git stash`)时, 默认只保存已经在索引中(版本库中)的文件, 对于新增的文件, 是不会处理的. 这时候可以添加`-u或者--include-untracked`来进行处理.
   - 如果我们需要对暂存的工作现场重新工作, 但是不想影响到主仓库. 可以新建一个分支进行绑定处理, `git stash branch BRANCH_NAME STASH_NAME`, 就会对对应的工作现场新建一个分支进行处理(注这里会默认切换分支).
   - 与清理相对应的就是清理: `git clean`, 用以移除工作目录中未追踪的文件列表. 如清除所有未追踪的文件和文件夹(及其子目录): `git clean -d -f`. 这是一个高危操作, 推荐在清理之前, 通过`-n`来确认是否清理正确的文件. 默认不会清除`gitignore`中的文件, 如果想要一并清除添加`-x`参数. 同样推荐使用交互模式保证清理文件的正确性`-i`.
+
 - 本地分支上传到远程仓库: `git push REMOTE_NAME LOCAL_BARANCH_NAME:REMOTE_BRANCH_NAME`, 这样就可以将本地的分支推送到远程.
 - 创建远程仓库的分支: `git checkout -b LOCAL_BRANCH_NAME REMOTE_NAME/REMOTE_BRANCH_NAME`或者`git branch --track LOCAL_BRANCH_NAME REMOTE_NAME/REMOTE_BRANCH_NAME`, 这样就会基于远程分支在本地创建对应的分支, 一般推荐两者分支名一致.
 - 标签信息, 标签分为两种: `轻量标签`(只是某一次提交的引用)和`附注标签`(含有完整的标签信息, 包括作者, 时间等, 可以进行校验).
+
   - 创建轻量标签: `git tag TAG_NAME`, 默认给当前提交打上标签.
   - 创建附注标签: `git tag -a TAG_NAME -m "TAG_INFO"`, 默认给当前提交打上标签.
   - 查看标签: `git tag`.
@@ -131,23 +140,23 @@ Git 本地存储分成三大部分:
 
 其中一个重要的组合就是`format`, 自定义输出格式, 支持的参数有:
 
-|参数|说明|
-|:-|:-|
-|%H|提交对象(commit)的完整哈希字串|
-|%h|提交对象的简短哈希字串|
-|%T|树对象(tree)的完整哈希字串|
-|%t|树对象的简短哈希字串|
-|%P|父对象(parent)的完整哈希字串|
-|%p|父对象的简短哈希字串|
-|%an|作者(author)的名字|
-|%ae|作者的电子邮件地址|
-|%ad|作者修订日期(可以用 --date= 选项定制格式)||
-|%ar|作者修订日期，按多久以前的方式显示|
-|%cn|提交者(committer)的名字|
-|%ce|提交者的电子邮件地址|
-|%cd|提交日期|
-|%cr|提交日期，按多久以前的方式显示|
-|%s|提交说明|
+参数  | 说明
+:-- | :-------------------------
+%H  | 提交对象(commit)的完整哈希字串
+%h  | 提交对象的简短哈希字串
+%T  | 树对象(tree)的完整哈希字串
+%t  | 树对象的简短哈希字串
+%P  | 父对象(parent)的完整哈希字串
+%p  | 父对象的简短哈希字串
+%an | 作者(author)的名字
+%ae | 作者的电子邮件地址
+%ad | 作者修订日期(可以用 --date= 选项定制格式) |
+%ar | 作者修订日期，按多久以前的方式显示
+%cn | 提交者(committer)的名字
+%ce | 提交者的电子邮件地址
+%cd | 提交日期
+%cr | 提交日期，按多久以前的方式显示
+%s  | 提交说明
 
 如:
 
@@ -160,29 +169,29 @@ a11bef0 - Scott Chacon, 6 years ago : first commit
 
 另外的一些常见选项有:
 
-|参数|说明|
-|:-|:-|
-|-p|按补丁格式显示每个更新之间的差异。|
-|--stat|显示每次更新的文件修改统计信息。|
-|--shortstat|只显示 --stat 中最后的行数修改添加移除统计。|
-|--name-only|仅在提交信息后显示已修改的文件清单。|
-|--name-status|显示新增、修改、删除的文件清单。|
-|--abbrev-commit|仅显示 SHA-1 的前几个字符，而非所有的 40 个字符。|
-|--relative-date|使用较短的相对时间显示(比如，“2 weeks ago”)。|
-|--graph|显示 ASCII 图形表示的分支合并历史。|
-|--pretty|使用其他格式显示历史提交信息。可用的选项包括 oneline，short，full，fuller 和 format(后跟指定格式)。|
+参数              | 说明
+:-------------- | :-----------------------------------------------------------------
+-p              | 按补丁格式显示每个更新之间的差异。
+--stat          | 显示每次更新的文件修改统计信息。
+--shortstat     | 只显示 --stat 中最后的行数修改添加移除统计。
+--name-only     | 仅在提交信息后显示已修改的文件清单。
+--name-status   | 显示新增、修改、删除的文件清单。
+--abbrev-commit | 仅显示 SHA-1 的前几个字符，而非所有的 40 个字符。
+--relative-date | 使用较短的相对时间显示(比如，"2 weeks ago")。
+--graph         | 显示 ASCII 图形表示的分支合并历史。
+--pretty        | 使用其他格式显示历史提交信息。可用的选项包括 oneline，short，full，fuller 和 format(后跟指定格式)。
 
 另外`git log`还支持按照不同条件来筛选提交记录:
 
-|参数|说明|
-|:-|:-|
-|-(n)|仅显示最近的 n 条提交|
-|--since, --after|仅显示指定时间之后的提交。|
-|--until, --before|仅显示指定时间之前的提交。|
-|--author|仅显示指定作者相关的提交。|
-|--committer|仅显示指定提交者相关的提交。|
-|--grep|仅显示含指定关键字的提交|
-|-S|仅显示添加或移除了某个关键字的提交|
+参数                | 说明
+:---------------- | :----------------
+-(n)              | 仅显示最近的 n 条提交
+--since, --after  | 仅显示指定时间之后的提交。
+--until, --before | 仅显示指定时间之前的提交。
+--author          | 仅显示指定作者相关的提交。
+--committer       | 仅显示指定提交者相关的提交。
+--grep            | 仅显示含指定关键字的提交
+-S                | 仅显示添加或移除了某个关键字的提交
 
 如: 要查看 Git 仓库中，2008 年 10 月期间，Junio Hamano 提交的但未合并的测试文件，可以用下面的查询命令:
 
@@ -246,16 +255,16 @@ git log --pretty="%h - %s" --author=gitster --since="2008-10-01" \
 
 总结:
 
-|-|HEAD|Index|Workdir|WD Safe?|
-|:-|:-|:-|:-|:-|
-|Commit Level|-|-|-|-|
-|reset --soft [commit]|REF|NO|NO|YES|
-|reset [commit]|REF|YES|NO|YES|
-|reset --hard [commit]|REF|YES|YES|NO|
-|checkout [commit]|HEAD|YES|YES|YES|
-|File Level|-|-|-|-|
-|reset (commit) [file]|NO|YES|NO|YES|
-|checkout (commit) [file]|NO|YES|YES|NO|
+-                        | HEAD | Index | Workdir | WD Safe?
+:----------------------- | :--- | :---- | :------ | :-------
+Commit Level             | -    | -     | -       | -
+reset --soft [commit]    | REF  | NO    | NO      | YES
+reset [commit]           | REF  | YES   | NO      | YES
+reset --hard [commit]    | REF  | YES   | YES     | NO
+checkout [commit]        | HEAD | YES   | YES     | YES
+File Level               | -    | -     | -       | -
+reset (commit) [file]    | NO   | YES   | NO      | YES
+checkout (commit) [file] | NO   | YES   | YES     | NO
 
 ### 子模块处理(submodule)
 
@@ -363,12 +372,13 @@ squash 0c39034 Better README
 
 1. 进入配置页面`git rebase -i HEAD~2`, 修改为`edit`.
 
-   ```java
-   edit 310154e updated README formatting and added blame
-   pick e499d89 Delete CNAME
-   ```
+  ```java
+  edit 310154e updated README formatting and added blame
+  pick e499d89 Delete CNAME
+  ```
 
 2. 进入前一个提交`git reset HEAD^`(注意这里是第二个, 按照具体情况来进入). 现在就在需要更新的提交中了.
+
 3. 提交第一个文件: `git add xx` -> `git commit -m 'do something'`.
 4. 提交第二个文件: `git add xx` -> `git commit -m 'do something'`.
 5. 进行变基: `git rebase --continue`.
