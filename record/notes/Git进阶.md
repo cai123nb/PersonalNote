@@ -43,8 +43,11 @@ Git 本地存储分成三大部分:
 - 查看用户的操作记录: `git reflog`, 可以看到用户每次在版本库中进行的操作.
 
 - 版本回退或者转移: `git reset VERSION_NUMBER`, 其中`VERSION_NUMBER`可以通过`git log`查看, 或者通过`git reflog`查看. 这里默认转移的方式为`mixed`, 即会将版本转移导致的变化存储到暂存区中, 同时你在本地的修改不会废弃(还存在). 如果想要放弃所有本地更改(强制回到一个一模一样的对应版本), 可以添加`--hard`.
+
 - 废弃工作目录中的文件更改: `git checkout -- FILE_NAME`, 将工作目录中的文件回退到暂存区的版本, 也就是废弃了在提交暂存区这段时间的更改(提示, 如果工作目录**删除**某个文件, 但是已经提交到暂存区中, 使用这个命令也是可以恢复到工作目录的).
+
 - 废弃暂存区中的文件更改: `git reset HEAD FILE_NAME`, 常用于提交前检查文件`git status`, 发现有几个文件不想提交, 但是已经添加到了暂存区. 使用该命令会将文件更改回退到工作目录, 如果工作目录也不想保留这些更改, 只需要使用上一条命令即可(提示, 如果暂存区中不小心使用`git rm`删除了某个文件, 但是版本库中还没删除, 可以使用这个命令恢复到暂存区, 恢复到工作目录, 使用上个命令即可).
+
 - 关联远程仓库:`git remote add REMOTE_NAME xxx.git`, 这里的`REMOTE_NAME`一般会取`origin`(习惯问题).
 
   - 拷贝远程仓库: `git clone xx.git`.
@@ -58,14 +61,18 @@ Git 本地存储分成三大部分:
 
 - 分支情况(branch):
 
-  - 新建分支: `git branch BRANCH_NAME`.
+  - 新建分支: `git branch BRANCH_NAME (COMMIT_ID)`, 注意如果不传递`commit_id`则默认是从当前`HEAD`所在的提交中建立分支.
   - 切换分支: `git checkout BRANCH_NAME`.
   - 新建和切换分支: `git checkout -b BRANCH_NAME`.
   - 查看所有分支: `git branch`, 带`*`为当前分支.
   - 查看分支的详细信息(对应提交): `git branch -v`
   - 查看已经合并到当前分支的分支: `git branch --merged`, 对于已经合并的分支(除了`*`)就可以进行删除了.
   - 查看未合并到当前分支的分支: `git branch --no-merged`, 这类分支进行删除会失败,报错. `git`认为这些工作没有保存, 当然可以强制删除`-D`.
-  - 合并分支: `git merge MERGE_BRANCH_NAME`, 注意的是, 如果出现了冲突, 就需要修改冲突文件, 然后提交. 默认合并分支时会删除分支信息, 如果想保留可以使用`--no-ff`参数, 如`git merge --no-ff -m "merge with no-ff" dev`.
+  - 合并分支: `git merge MERGE_BRANCH_NAME`, 注意的是, 如果出现了冲突, 就需要修改冲突文件, 然后提交.
+
+    - 默认合并分支时会删除分支信息, 如果想保留可以使用`--no-ff`参数, 如`git merge --no-ff -m "merge with no-ff" dev`.
+    - 如果在合并时想要忽略空白信息, 可以添加参数`-Xignore-all-space 或 -Xignore-space-change`.
+
   - 删除分支: `git branch -d BRANCH_NAME`, 注意, 如果在分支未合并的时候进行删除就会报错, 如果这时候不想保留分支代码, 可以强制删除将`-d`替换为`-D`.
 
 - 保留工作现场: `git stash`, 该命令会将现在工作目录中的更改临时存储, 这时你可以自由地切换分支了.
@@ -256,7 +263,7 @@ git log --pretty="%h - %s" --author=gitster --since="2008-10-01" \
 
 处理的逻辑非常类似`git reset --hard COMMIT_ID`. 但是有一点不同的是, 工作目录的内容会进行简单的合并, 而不是强制重置. 另一个区别的是, `reset`会移动`HEAD`分支的指向, 而`checkout`只会移动`HEAD`自身到另一个分支, 一般不推荐切换到另一个提交里面.
 
-文件级别中的`checkout`处理步骤, `git checkout COMMIT_ID FILENAME`处理结果等同于(`git reset --hard [branch] file`). 这样对工作目录不安全, 会覆盖工作目录的内容(虽然`HEAD`指针不会变化).
+文件级别中的`checkout`处理步骤, `git checkout COMMIT_ID FILENAME`处理结果等同于(`git reset --hard [branch] file`). 这样对工作目录不安全, 会覆盖工作目录的内容(虽然`HEAD`指针不会变化). 如果不添加`COMMIT_ID`, 就默认废弃本地更新, 而是替换成暂存区的内容.
 
 总结:
 
@@ -271,6 +278,8 @@ File Level               | -    | -     | -       | -
 reset (commit) [file]    | NO   | YES   | NO      | YES
 checkout (commit) [file] | NO   | YES   | YES     | NO
 
+checkout file 会同时修改index和worid dir吗.
+
 ### 子模块处理(submodule)
 
 `GIT`通过子模块来处理项目依赖问题, 如果依赖其他项目, 可以通过子模块依赖的方式导入依赖.
@@ -278,8 +287,41 @@ checkout (commit) [file] | NO   | YES   | YES     | NO
 - 本地添加子模块依赖: `git submodule add https://xxxxx.git`, 这时候就会拷贝对应的模块信息到本地并生成`.gitmodules`配置文件.
 - 查看子模块的文件的变更: `git diff --cached --submodule`.
 - 拷贝存在子模块的项目: `git clone --recursive https://xxxx.git`, 这时候会拷贝对应的项目并且会拷贝对应依赖的子模块. 注意, 如果不添加`--recursive`参数就会拷贝一个空的文件夹, 这时候需要使用`git submodule init`进行子模块初始化.
-- 对子模块进行远程更新: `git submodule update --remote`. 默认使用 master 分支.
+- 对子模块进行远程更新: `git submodule update --remote`. 默认使用 master 分支. 更新追踪的远程分支名称:`git config -f .gitmodules submodule.SUBMODULE_NAME.branch BRANCH_NAME`. 这里会将新的分支信息写入配置中, 如果推送到远端会影响其他人(如果你只想自己用).
+- 设置`git status`默认显示子模块的信息, `git config status.submodulesummary 1`.
+- 当我们在子模块上进行工作时, 我们需要在子模块下建立一个对应的分支, 不然直接使用`git submodule update`会让子模块处于`游离的状态`.
+
+  - 首先进入子模块, 检出一个分支对应: `git checkout BRNACH_NAME`.
+  - 拉取远程的更新: `git submodule update --morete --merge`, 进行合并.
+  - 进行修改, 然后提交. 注意这里还没有推送, 这时候的`submodule`只对你一个人可见,有效.
+  - 拉取远程进行更新: `git submodule update --morete --rebase`.
+  - 推送到远程. 注意这一步一定要执行, 不然本地主仓库管理的子模块版本, 对于其他人是拉取不到的(只在你的本地).
+
 - 更多操作细节,[请查询官方文档](https://git-scm.com/book/zh/v2/Git-%E5%B7%A5%E5%85%B7-%E5%AD%90%E6%A8%A1%E5%9D%97)
+
+为了防止在我们提交主仓库代码时, 本地子模块更新没有推送上去的情况(这时候会导致其他人无法拉取的子模块的改动). `git`提供了`check`的配置: `--recurse-submodules`, 如果值为`check`则会在每一次提交的时候检查一遍子模块本地更新是否提交, 如果存在未提交的时候, 自动失败. `git push --recurse-submodules=check`. 另个参数则为`on-demand`, 如果发现存在本地子模块更新没有推送的情况, 会尝试帮你推送子模块, 如果成功就继续推送主仓库代码, 否则失败. 推荐在子模块开发时, 设置`push`默认配置: `git config push.recurseSubmodules check --global`, 这样就不用每次都输入额外的命令(`--recurse-submodules=check`), 也不用担心忘记输入额外的命令了.
+
+为了方便多个子模块的统一操作, `git`提供了`foreach`命令符, 用于批量操作子模块:
+
+```shell
+git submodule foreach 'git stash' // 批量保存子模块的进度
+git submodule foreach 'git checkout -b featureA' // 在所有子模块中新建分支并切换
+git diff; git submodule foreach 'git diff' // 查看项目内所有变化, 包括所有子模块内容变化
+```
+
+### 离线神器打包
+
+`Git`可以将它的数据"打包"到一个文件中。 这在许多场景中都很有用。 有可能你的网络中断了，但你又希望将你的提交传给你的合作者们。 可能你不在办公网中并且出于安全考虑没有给你接入内网的权限。 可能你的无线、有线网卡坏掉了。 可能你现在没有共享服务器的权限，你又希望通过邮件将更新发送给别人，却不希望通过`format-patch`的方式传输 40 个提交。
+
+这些情况下`git bundle`就会很有用。`bundle`命令会将`git push`命令所传输的所有内容打包成一个二进制文件，你可以将这个文件通过邮件或者闪存传给其他人，然后解包到其他的仓库中。
+
+假设你有一个项目想要分享给别人: `git bundle create repo.bundle HEAD master`, 这里就会将当前仓库的`master`分支的数据打包成`repo.bundle`文件. 你可以通过`U盘`或者`邮件`发送给别人.
+
+当你接收了一个这个`repo.bundle`文件, 你需要解压在本地然后进行开发: `git clone repo.bundle repo`, 将对应的文件在`repo`文件夹中解析成一个`git`仓库.
+
+这时候她在这个仓库中开发了一部分代码, 提交了三个提交. 我们需要拷贝回去. 如当前的提交记录为:`xxx... - 8723 - 92a3(你的) - 89a1(你的) - 782c(你的)`. 我们需要将我们的工作打包拷贝给别人: `git bundle create commits.bundle master ^8723`, 这样会将她的提交打包成`commits.bundle`文件. 注意这里起点需要选取最后的一个父节点(不要全是你的), 否则`git`无法校验是否是同一个源头.
+
+当你收到这样的一个`commits.bundle`时, 可以先进行校验是否是合法的`git`包(是否是同一个祖先): `git bundle verify ../commits.bundle`, 然后将内容取出并添加到另一个分支里面: `git fetch ../commits.bundle master:other-master`, 这样就会将文件包里的内容, 负载在`other-master`分支上.
 
 ### 更改中间的某次提交
 
@@ -387,6 +429,7 @@ squash 0c39034 Better README
 3. 提交第一个文件: `git add xx` -> `git commit -m 'do something'`.
 
 4. 提交第二个文件: `git add xx` -> `git commit -m 'do something'`.
+
 5. 进行变基: `git rebase --continue`.
 
 ### 核武器选项: `filter-branch`
@@ -444,6 +487,24 @@ git update-ref -d refs/original/refs/heads/master
 - 切换到主分支(主体分支), 使用`git cherry-pick VERSION_NUMBER`, 合并即可, 这里的版本号可以通过`git log`查看到. 注意, 如果出现冲突, 那就需要解决完冲突, 进行提交.
 - 保留原提交的基本信息: `git cherry-pick -x VERSION_NUMBER`.
 - 选择某个时间段的提交信息, 进行合并: `git cherry_pick START_VERSION_NUMBER^...END_VERSION_NUMBER`, 注意这里的`^...`, 这表示包括左边的起点, 如果去掉`^`, 就不会包括左边的起始点.
+
+### 二分查找
+
+假设你刚刚在线上环境部署了你的代码，接着收到一些 bug 反馈，但这些 bug 在你之前的开发环境里没有出现 过，这让你百思不得其解。 你重新查看了你的代码，发现这个问题是可以被重现的，但是你不知道哪里出了问 题。你可以用二分法`git bisect`来找到这个问题。 假设上个版本是`v1.0`是正常的, 而当前的版本`v2.0`是不正常的. 提交记录为: `v1.0 - 982a3 - 89c34 - a8489c - 8923cc - v2.0`.
+
+1. 启动二分查找, `git bisect start`.
+2. 定义当前状态为错误状态: `git bisect bad`.
+3. 定义当前已知状态为好的提交点: `git bisect good v1.0`. 确定了提交的范围, 这时候`git`会自动跳转到中间的提交点. 你这时候需要校验一下, 当前提交是不是正常的.
+4. 校验当前提交点是否正常: `git bisect RESULT`, 注意`result`为`good`或者`bad`. `git`会依据当前提交点, 重新定位范围, 自动跳转到中间提交点.
+5. 重复上面的步骤, 直到只剩下一个提交.
+6. 确定了提交问题, 重置二分查找: `git bisect reset`, 重新回到最开始的位置.
+
+当然还有一个更懒的方法, 使用脚本自动执行, 在脚本中定义正常和不正常的条件:
+
+```shell
+$git bisect start HEAD v1.0
+$git bisect run test-error.sh
+```
 
 ## 常见问题
 
