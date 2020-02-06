@@ -778,9 +778,9 @@ Essentials    | 1     | 3:1
 
 如单词`Elasticsearch`在文档中关联的倒排列表为:
 
-TF | Position | Offset
-:- | :------- | :-----
-1  | 1        | 10:23
+Position | Offset
+:------- | :-----
+1        | 10:23
 
 ElasticSearch的JSON文件中的每一个字段, 都有自己的倒排索引. 也可以指定某些字段不做索引.
 
