@@ -776,11 +776,13 @@ Essentials    | 1     | 3:1
     - 位置(Position): 单词在文档分词的位置, 用于语句搜索.
     - 偏移(Offset): 记录单词开始和结束的位置, 实现高亮显示.
 
-如单词`Elasticsearch`在文档中关联的倒排列表为:
+如单词`Elasticsearch`在文档中关联的倒排列表为
 
-Position | Offset
-:------- | :-----
-1        | 10:23
+Doc Id | TF | Position | Offset
+:----- | :- | :------- | :-----
+1      | 1  | 1        | 10:23
+2      | 1  | 0        | 0:13
+3      | 1  | 0        | 0:13
 
 ElasticSearch的JSON文件中的每一个字段, 都有自己的倒排索引. 也可以指定某些字段不做索引.
 
