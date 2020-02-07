@@ -26,8 +26,8 @@
 
 常见的集合方式:
 
-- `应用程序 -> 写入/更新 -> 数据库 -> ELK -> 查询(应用程序)`
-- `beats(采集) -> redis/kafka/rabbitmq(缓冲) -> logstash(收集和预处理) -> elk(处理) -> kibana/grafana(可视化)`
+- `应用程序 -> 写入/更新 -> 数据库 -> es -> 查询(应用程序)`
+- `beats(采集) -> redis/kafka/rabbitmq(缓冲) -> logstash(收集和预处理) -> es(处理) -> kibana/grafana(可视化)`
 
 主要使用场景:
 
@@ -369,7 +369,8 @@ GET _cat/shards
 #### 创建文档
 
 ```json
-PUT users/_create/1
+// 注意es7.x, 使用: POST users/_create/1, 以下为es6.x使用格式.
+PUT users/_doc/1/_create
 {
   "firstName": "Jack",
   "lastName": "Johnson",
@@ -401,8 +402,7 @@ PUT users/_create/1
 #### 获取文档
 
 ```json
-// 注意es7.x, 使用: POST users/_create/1, 以下为es6.x使用格式.
-GET users/_doc/1/_create
+GET users/_doc/1
 
 // 返回结果
 {
