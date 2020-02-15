@@ -788,3 +788,1356 @@ ElasticSearch的JSON文件中的每一个字段, 都有自己的倒排索引. �
 
 - 优点: 节省存储空间.
 - 缺点: 字段无法被搜索.
+
+### 分词器简介
+
+- Analysis: 将全文本转换一系列单词(term/token)的过程, 也叫分词.
+- Analysis通过Analyzer实现, 可以使用es内置的分词器或者按需定制化分词器.
+- 除了在数据写入的时候进行分词处理, 在查询的时候(匹配Query)的时候也分词器进行处理(一般默认是相同的).
+
+#### Analyzer的组成
+
+`Character Filters -> Tokenizer -> Token Filters`:
+
+- `Character Filters`: 针对原始文本进行处理, 如去除`html`标签.
+- `Tokenizer`: 按照规则进行切词.
+- `Token Filters`: 对切分之后的结果进行进一步加工, 如大写转小写, 删除`stopwards`, 增加同义词等等.
+
+#### es内置的分词器
+
+- `Standard Analyzer`: 默认分词器,按词切分,小写处理.
+- `Simple Analyzer`: 按照非字母切分(符号过滤), 小写处理.
+- `Stop Analyzer`: 小写处理, 停用词过滤(the, a, is)
+- `Whitespace Analyzer`: 按照空格切分, 不转小写.
+- `Keyword Analyzer`: 不分词, 直接将输入当输出.
+- `Pattern Analyzer`: 正则表达式, 默认\W+(非字符分隔).
+- `Language`: 提供了30多种常见语言的分词器.
+- `Customer Analyzer`: 自定义分词器.
+
+#### 分词器API的使用
+
+```json
+// 指定分词器进行分词
+GET /_analyze
+{
+  "analyzer": "standard",
+  "text": "Mastering Elasticsearch, elasticsearch in action"
+}
+
+// 指定索引字段所对应的分词器进行分词
+POST books/_analyze
+{
+  "field": "title",
+  "text": "Mastering Elasticsearch"
+}
+
+// 自定义分词器进行分词
+POST /_analyze
+{
+  "tokenizer": "standard",
+  "filter": ["lowercase"],
+  "text": "Mastering Elasticsearch"
+}
+```
+
+#### 常见标准分词器介绍
+
+`Standard Analyzer`:
+
+![StandardAnalyzer](https://image.cjyong.com/StandardAnalyzer.png)
+
+```json
+// standard
+POST /_analyze
+{
+  "analyzer": "standard",
+  "text": "2 running Quick brown-foxes leap over lazy dogs in the summer evening."
+}
+
+// result
+{
+  "tokens" : [
+    {
+      "token" : "2",
+      "start_offset" : 0,
+      "end_offset" : 1,
+      "type" : "<NUM>",
+      "position" : 0
+    },
+    {
+      "token" : "running",
+      "start_offset" : 2,
+      "end_offset" : 9,
+      "type" : "<ALPHANUM>",
+      "position" : 1
+    },
+    {
+      "token" : "quick",
+      "start_offset" : 10,
+      "end_offset" : 15,
+      "type" : "<ALPHANUM>",
+      "position" : 2
+    },
+    {
+      "token" : "brown",
+      "start_offset" : 16,
+      "end_offset" : 21,
+      "type" : "<ALPHANUM>",
+      "position" : 3
+    },
+    {
+      "token" : "foxes",
+      "start_offset" : 22,
+      "end_offset" : 27,
+      "type" : "<ALPHANUM>",
+      "position" : 4
+    },
+    {
+      "token" : "leap",
+      "start_offset" : 28,
+      "end_offset" : 32,
+      "type" : "<ALPHANUM>",
+      "position" : 5
+    },
+    {
+      "token" : "over",
+      "start_offset" : 33,
+      "end_offset" : 37,
+      "type" : "<ALPHANUM>",
+      "position" : 6
+    },
+    {
+      "token" : "lazy",
+      "start_offset" : 38,
+      "end_offset" : 42,
+      "type" : "<ALPHANUM>",
+      "position" : 7
+    },
+    {
+      "token" : "dogs",
+      "start_offset" : 43,
+      "end_offset" : 47,
+      "type" : "<ALPHANUM>",
+      "position" : 8
+    },
+    {
+      "token" : "in",
+      "start_offset" : 48,
+      "end_offset" : 50,
+      "type" : "<ALPHANUM>",
+      "position" : 9
+    },
+    {
+      "token" : "the",
+      "start_offset" : 51,
+      "end_offset" : 54,
+      "type" : "<ALPHANUM>",
+      "position" : 10
+    },
+    {
+      "token" : "summer",
+      "start_offset" : 55,
+      "end_offset" : 61,
+      "type" : "<ALPHANUM>",
+      "position" : 11
+    },
+    {
+      "token" : "evening",
+      "start_offset" : 62,
+      "end_offset" : 69,
+      "type" : "<ALPHANUM>",
+      "position" : 12
+    }
+  ]
+}
+```
+
+`Simple Analyzer`:
+
+![SimpleAnalyzer](https://image.cjyong.com/SimpleAnalyzer.png)
+
+```json
+// simple
+POST /_analyze
+{
+  "tokenizer": "simple",
+  "text": "2 running Quick brown-foxes leap over lazy dogs in the summer evening."
+}
+
+// result
+{
+  "tokens" : [
+    {
+      "token" : "running",
+      "start_offset" : 2,
+      "end_offset" : 9,
+      "type" : "word",
+      "position" : 0
+    },
+    {
+      "token" : "quick",
+      "start_offset" : 10,
+      "end_offset" : 15,
+      "type" : "word",
+      "position" : 1
+    },
+    {
+      "token" : "brown",
+      "start_offset" : 16,
+      "end_offset" : 21,
+      "type" : "word",
+      "position" : 2
+    },
+    {
+      "token" : "foxes",
+      "start_offset" : 22,
+      "end_offset" : 27,
+      "type" : "word",
+      "position" : 3
+    },
+    {
+      "token" : "leap",
+      "start_offset" : 28,
+      "end_offset" : 32,
+      "type" : "word",
+      "position" : 4
+    },
+    {
+      "token" : "over",
+      "start_offset" : 33,
+      "end_offset" : 37,
+      "type" : "word",
+      "position" : 5
+    },
+    {
+      "token" : "lazy",
+      "start_offset" : 38,
+      "end_offset" : 42,
+      "type" : "word",
+      "position" : 6
+    },
+    {
+      "token" : "dogs",
+      "start_offset" : 43,
+      "end_offset" : 47,
+      "type" : "word",
+      "position" : 7
+    },
+    {
+      "token" : "in",
+      "start_offset" : 48,
+      "end_offset" : 50,
+      "type" : "word",
+      "position" : 8
+    },
+    {
+      "token" : "the",
+      "start_offset" : 51,
+      "end_offset" : 54,
+      "type" : "word",
+      "position" : 9
+    },
+    {
+      "token" : "summer",
+      "start_offset" : 55,
+      "end_offset" : 61,
+      "type" : "word",
+      "position" : 10
+    },
+    {
+      "token" : "evening",
+      "start_offset" : 62,
+      "end_offset" : 69,
+      "type" : "word",
+      "position" : 11
+    }
+  ]
+}
+```
+
+`Whitespace Analyzer`:
+
+![WhitespaceAnalyzer](https://image.cjyong.com/WhitespaceAnalyzer.png)
+
+```json
+// simple
+POST /_analyze
+{
+  "tokenizer": "whitespace",
+  "text": "2 running Quick brown-foxes leap over lazy dogs in the summer evening."
+}
+
+// result
+{
+  "tokens" : [
+    {
+      "token" : "2",
+      "start_offset" : 0,
+      "end_offset" : 1,
+      "type" : "word",
+      "position" : 0
+    },
+    {
+      "token" : "running",
+      "start_offset" : 2,
+      "end_offset" : 9,
+      "type" : "word",
+      "position" : 1
+    },
+    {
+      "token" : "Quick",
+      "start_offset" : 10,
+      "end_offset" : 15,
+      "type" : "word",
+      "position" : 2
+    },
+    {
+      "token" : "brown-foxes",
+      "start_offset" : 16,
+      "end_offset" : 27,
+      "type" : "word",
+      "position" : 3
+    },
+    {
+      "token" : "leap",
+      "start_offset" : 28,
+      "end_offset" : 32,
+      "type" : "word",
+      "position" : 4
+    },
+    {
+      "token" : "over",
+      "start_offset" : 33,
+      "end_offset" : 37,
+      "type" : "word",
+      "position" : 5
+    },
+    {
+      "token" : "lazy",
+      "start_offset" : 38,
+      "end_offset" : 42,
+      "type" : "word",
+      "position" : 6
+    },
+    {
+      "token" : "dogs",
+      "start_offset" : 43,
+      "end_offset" : 47,
+      "type" : "word",
+      "position" : 7
+    },
+    {
+      "token" : "in",
+      "start_offset" : 48,
+      "end_offset" : 50,
+      "type" : "word",
+      "position" : 8
+    },
+    {
+      "token" : "the",
+      "start_offset" : 51,
+      "end_offset" : 54,
+      "type" : "word",
+      "position" : 9
+    },
+    {
+      "token" : "summer",
+      "start_offset" : 55,
+      "end_offset" : 61,
+      "type" : "word",
+      "position" : 10
+    },
+    {
+      "token" : "evening.",
+      "start_offset" : 62,
+      "end_offset" : 70,
+      "type" : "word",
+      "position" : 11
+    }
+  ]
+}
+```
+
+`Stop Analyzer`:
+
+![StopAnalyzer](https://image.cjyong.com/StopAnalyzer.png)
+
+```json
+// stop
+POST /_analyze
+{
+  "tokenizer": "stop",
+  "text": "2 running Quick brown-foxes leap over lazy dogs in the summer evening."
+}
+
+// result
+{
+  "tokens" : [
+    {
+      "token" : "running",
+      "start_offset" : 2,
+      "end_offset" : 9,
+      "type" : "word",
+      "position" : 0
+    },
+    {
+      "token" : "quick",
+      "start_offset" : 10,
+      "end_offset" : 15,
+      "type" : "word",
+      "position" : 1
+    },
+    {
+      "token" : "brown",
+      "start_offset" : 16,
+      "end_offset" : 21,
+      "type" : "word",
+      "position" : 2
+    },
+    {
+      "token" : "foxes",
+      "start_offset" : 22,
+      "end_offset" : 27,
+      "type" : "word",
+      "position" : 3
+    },
+    {
+      "token" : "leap",
+      "start_offset" : 28,
+      "end_offset" : 32,
+      "type" : "word",
+      "position" : 4
+    },
+    {
+      "token" : "over",
+      "start_offset" : 33,
+      "end_offset" : 37,
+      "type" : "word",
+      "position" : 5
+    },
+    {
+      "token" : "lazy",
+      "start_offset" : 38,
+      "end_offset" : 42,
+      "type" : "word",
+      "position" : 6
+    },
+    {
+      "token" : "dogs",
+      "start_offset" : 43,
+      "end_offset" : 47,
+      "type" : "word",
+      "position" : 7
+    },
+    {
+      "token" : "summer",
+      "start_offset" : 55,
+      "end_offset" : 61,
+      "type" : "word",
+      "position" : 10
+    },
+    {
+      "token" : "evening",
+      "start_offset" : 62,
+      "end_offset" : 69,
+      "type" : "word",
+      "position" : 11
+    }
+  ]
+}
+```
+
+`Keyword Analyzer`:
+
+![StopAnalyzer](https://image.cjyong.com/KeywordAnalyzer.png)
+
+```json
+// keyword
+POST /_analyze
+{
+  "tokenizer": "keyword",
+  "text": "2 running Quick brown-foxes leap over lazy dogs in the summer evening."
+}
+
+// result
+{
+  "tokens" : [
+    {
+      "token" : "2 running Quick brown-foxes leap over lazy dogs in the summer evening.",
+      "start_offset" : 0,
+      "end_offset" : 70,
+      "type" : "word",
+      "position" : 0
+    }
+  ]
+}
+```
+
+`Pattern Analyzer`:
+
+![PatternAnalyzer](https://image.cjyong.com/PatternAnalyzer.png)
+
+```json
+// pattern
+POST /_analyze
+{
+  "tokenizer": "pattern",
+  "text": "2 running Quick brown-foxes leap over lazy dogs in the summer evening."
+}
+
+// result
+{
+  "tokens" : [
+    {
+      "token" : "2",
+      "start_offset" : 0,
+      "end_offset" : 1,
+      "type" : "word",
+      "position" : 0
+    },
+    {
+      "token" : "running",
+      "start_offset" : 2,
+      "end_offset" : 9,
+      "type" : "word",
+      "position" : 1
+    },
+    {
+      "token" : "quick",
+      "start_offset" : 10,
+      "end_offset" : 15,
+      "type" : "word",
+      "position" : 2
+    },
+    {
+      "token" : "brown",
+      "start_offset" : 16,
+      "end_offset" : 21,
+      "type" : "word",
+      "position" : 3
+    },
+    {
+      "token" : "foxes",
+      "start_offset" : 22,
+      "end_offset" : 27,
+      "type" : "word",
+      "position" : 4
+    },
+    {
+      "token" : "leap",
+      "start_offset" : 28,
+      "end_offset" : 32,
+      "type" : "word",
+      "position" : 5
+    },
+    {
+      "token" : "over",
+      "start_offset" : 33,
+      "end_offset" : 37,
+      "type" : "word",
+      "position" : 6
+    },
+    {
+      "token" : "lazy",
+      "start_offset" : 38,
+      "end_offset" : 42,
+      "type" : "word",
+      "position" : 7
+    },
+    {
+      "token" : "dogs",
+      "start_offset" : 43,
+      "end_offset" : 47,
+      "type" : "word",
+      "position" : 8
+    },
+    {
+      "token" : "in",
+      "start_offset" : 48,
+      "end_offset" : 50,
+      "type" : "word",
+      "position" : 9
+    },
+    {
+      "token" : "the",
+      "start_offset" : 51,
+      "end_offset" : 54,
+      "type" : "word",
+      "position" : 10
+    },
+    {
+      "token" : "summer",
+      "start_offset" : 55,
+      "end_offset" : 61,
+      "type" : "word",
+      "position" : 11
+    },
+    {
+      "token" : "evening",
+      "start_offset" : 62,
+      "end_offset" : 69,
+      "type" : "word",
+      "position" : 12
+    }
+  ]
+}
+```
+
+`Language Analyzer`:
+
+```json
+// language - english
+POST /_analyze
+{
+  "tokenizer": "english",
+  "text": "2 running Quick brown-foxes leap over lazy dogs in the summer evening."
+}
+
+// result
+{
+  "tokens" : [
+    {
+      "token" : "2",
+      "start_offset" : 0,
+      "end_offset" : 1,
+      "type" : "<NUM>",
+      "position" : 0
+    },
+    {
+      "token" : "run",
+      "start_offset" : 2,
+      "end_offset" : 9,
+      "type" : "<ALPHANUM>",
+      "position" : 1
+    },
+    {
+      "token" : "quick",
+      "start_offset" : 10,
+      "end_offset" : 15,
+      "type" : "<ALPHANUM>",
+      "position" : 2
+    },
+    {
+      "token" : "brown",
+      "start_offset" : 16,
+      "end_offset" : 21,
+      "type" : "<ALPHANUM>",
+      "position" : 3
+    },
+    {
+      "token" : "fox",
+      "start_offset" : 22,
+      "end_offset" : 27,
+      "type" : "<ALPHANUM>",
+      "position" : 4
+    },
+    {
+      "token" : "leap",
+      "start_offset" : 28,
+      "end_offset" : 32,
+      "type" : "<ALPHANUM>",
+      "position" : 5
+    },
+    {
+      "token" : "over",
+      "start_offset" : 33,
+      "end_offset" : 37,
+      "type" : "<ALPHANUM>",
+      "position" : 6
+    },
+    {
+      "token" : "lazi",
+      "start_offset" : 38,
+      "end_offset" : 42,
+      "type" : "<ALPHANUM>",
+      "position" : 7
+    },
+    {
+      "token" : "dog",
+      "start_offset" : 43,
+      "end_offset" : 47,
+      "type" : "<ALPHANUM>",
+      "position" : 8
+    },
+    {
+      "token" : "summer",
+      "start_offset" : 55,
+      "end_offset" : 61,
+      "type" : "<ALPHANUM>",
+      "position" : 11
+    },
+    {
+      "token" : "even",
+      "start_offset" : 62,
+      "end_offset" : 69,
+      "type" : "<ALPHANUM>",
+      "position" : 12
+    }
+  ]
+}
+```
+
+#### 中文分词的难点
+
+- 中文语句, 切分成一个一个词(而不是一个一个字)
+- 英文中, 单词有自然的空格作为间隔
+- 一句中文中, 在不同的上下文, 有不同的理解
+
+  - 这个苹果, 不大好吃 / 这个苹果, 不大, 好吃
+
+常见的中文分词器: `ICU Analyzer`, `IK`, `THULAC`.
+
+```json
+POST /_analyze
+{
+  "analyzer": "standard",
+  "text": "他说的的确在理"
+}
+
+// result
+{
+  "tokens" : [
+    {
+      "token" : "他",
+      "start_offset" : 0,
+      "end_offset" : 1,
+      "type" : "<IDEOGRAPHIC>",
+      "position" : 0
+    },
+    {
+      "token" : "说",
+      "start_offset" : 1,
+      "end_offset" : 2,
+      "type" : "<IDEOGRAPHIC>",
+      "position" : 1
+    },
+    {
+      "token" : "的",
+      "start_offset" : 2,
+      "end_offset" : 3,
+      "type" : "<IDEOGRAPHIC>",
+      "position" : 2
+    },
+    {
+      "token" : "的",
+      "start_offset" : 3,
+      "end_offset" : 4,
+      "type" : "<IDEOGRAPHIC>",
+      "position" : 3
+    },
+    {
+      "token" : "确",
+      "start_offset" : 4,
+      "end_offset" : 5,
+      "type" : "<IDEOGRAPHIC>",
+      "position" : 4
+    },
+    {
+      "token" : "在",
+      "start_offset" : 5,
+      "end_offset" : 6,
+      "type" : "<IDEOGRAPHIC>",
+      "position" : 5
+    },
+    {
+      "token" : "理",
+      "start_offset" : 6,
+      "end_offset" : 7,
+      "type" : "<IDEOGRAPHIC>",
+      "position" : 6
+    }
+  ]
+}
+
+
+// ik_smart
+POST /_analyze
+{
+  "analyzer": "ik_smart",
+  "text": "他说的的确在理"
+}
+{
+  "tokens" : [
+    {
+      "token" : "他",
+      "start_offset" : 0,
+      "end_offset" : 1,
+      "type" : "CN_CHAR",
+      "position" : 0
+    },
+    {
+      "token" : "说",
+      "start_offset" : 1,
+      "end_offset" : 2,
+      "type" : "CN_CHAR",
+      "position" : 1
+    },
+    {
+      "token" : "的",
+      "start_offset" : 2,
+      "end_offset" : 3,
+      "type" : "CN_CHAR",
+      "position" : 2
+    },
+    {
+      "token" : "的确",
+      "start_offset" : 3,
+      "end_offset" : 5,
+      "type" : "CN_WORD",
+      "position" : 3
+    },
+    {
+      "token" : "在理",
+      "start_offset" : 5,
+      "end_offset" : 7,
+      "type" : "CN_WORD",
+      "position" : 4
+    }
+  ]
+}
+```
+
+### Search API
+
+- URL Search: 在URL中查询参数
+- Request Body Search: 使用es提供的基于JSON格式的更加完备查询语句(DSL).
+
+#### 指定查询的索引
+
+- `/_search`: 集群里所有的索引.
+- `/index1/_search`: index1索引.
+- `index1,index2/_search`: index1和index2.
+- `index*/_search`: index开头的索引.
+
+`URL查询`:
+
+`http://elasticsearch:9200/kibana_sample_data_ecommerce/_search?q=customer_first_name:Eddie`
+
+在`q`后面添加查询参数, KV键值对.
+
+`Request Body`:
+
+```shell
+curl -XGET "http://elasticsearch:9200/kibana_sample_data_ecommerce/_search" -H 'Content-Type: application/json' -d '
+{
+  "query": {
+    "match_all": {}
+  }
+}'
+```
+
+#### 搜索的相关性
+
+- 搜索是用户和搜索引擎的对话.
+- 用户关心搜索结果的相关性
+
+  - 是否可以找到所有相关的内容.
+  - 有多少不相关的内容被返回了
+  - 文档的打分是否合理
+  - 综合业务需求, 平衡结果排名
+
+衡量标准:
+
+- Precision(查准率): 尽可能返回少的无关文档.
+- Recall(查全率): 尽量返回较多的相关文档.
+- Ranking: 是否能够按照相关度进行排序.
+
+#### URI Search详解
+
+`GET /movies/_search?q=2012&df=title&sort=year:desc&from=0&size=10&timeout=1s { "profile": true }`
+
+- `q`: 指定查询语句, 使用Query String Syntax.
+- `df`: 指定默认字段, 不指定时, 会对所有字段进行查询.
+- `sort`: 排序.
+- `form/size`: 分页.
+- `Profile`: 查看查询是如何执行的, 如果设置为`true`,会把执行的过程展示出来.
+
+##### 指定字段查询
+
+如果没有指定字段则为泛查询, 如:
+
+```json
+// 查询所有包含2012字符串的index
+GET /movies/_search?q=2012
+
+// 设置profile之后, 执行的过程:
+"type" : "DisjunctionMaxQuery",
+"description" : "(title.keyword:2012 | id.keyword:2012 | year:[2012 TO 2012] | genre:2012 | @version:2012 | @version.keyword:2012 | id:2012 | genre.keyword:2012 | title:2012)"
+```
+
+指定字段查询:
+
+```json
+// 方式一: 设置df, 默认字段
+GET /movies/_search?q=2012&df=title
+
+// 方式二: 在q后面使用kv结构
+GET /movies/_search?q=title:2012
+
+// 执行过程:
+"type" : "TermQuery",
+"description" : "title:2012"
+```
+
+##### Term or Phrase
+
+- Beautiful Mind等效于Beautiful OR Mind.
+- "Beautiful Mind"等效于Beautiful AND Mind. Phrase查询, 还要求前后顺序保持一致.
+
+```json
+// Phrase search
+GET /movies/_search?q=title:"Beautiful Mind"
+{
+  "profile": "true"
+}
+
+// 执行过程
+"type" : "PhraseQuery",
+"description" : """title:"beautiful mind"""",
+
+
+// Term search
+GET /movies/_search?q=title:(Beautiful Mind)
+{
+  "profile": "true"
+}
+// 执行过程
+"type" : "BooleanQuery",
+"description" : "title:beautiful title:mind",
+```
+
+##### 逻辑运算
+
+在分组内(`()`)默认是, `OR`关系, 此外还支持`AND`, `NOT`, `MUST`, `MUST NOT`逻辑操作:
+
+```json
+// AND search
+GET /movies/_search?q=title:(Beautiful AND Mind)
+{
+  "profile": "true"
+}
+
+// OR search
+GET /movies/_search?q=title:(Beautiful OR Mind)
+{
+  "profile": "true"
+}
+
+// NOT search
+GET /movies/_search?q=title:(Beautiful NOT Mind)
+{
+  "profile": "true"
+}
+
+// must search, %2B在URL编码中为+
+GET /movies/_search?q=title:(Beautiful %2BMind)
+{
+  "profile": "true"
+}
+
+// must not search, %2B在URL编码中为+
+GET /movies/_search?q=title:(-Beautiful %2BMind)
+{
+  "profile": "true"
+}
+```
+
+##### 范围与数学运算
+
+- 范围查询: []表示闭合区间, {}表示开区间. 如`year:{1989 TO 2018], year:[* TO 2018]`
+- 算数符号: `year:>2010, year:(>2010 && <2018), year:(+>2010 +<2018)`
+
+##### 正则查询/通配符查询
+
+- 通配符查询(查询效率低, 占用内存高, 不建议使用)
+
+  - ?:一个字符, _: 0或者多个字符: `title:mi?d/title:be_`
+
+- 正则表达式: `title:[bt]oy`
+
+- 模糊查询: `title:befutifl~1,title:"lord rings"~2`
+
+```json
+// 通配符查询，title中包含b开头字母的
+GET /movies/_search?q=title:b*
+{
+  "profile": "true"
+}
+
+// 模糊匹配&近似匹配, 预防单词输入错误，如beautifl
+GET /movies/_search?q=title:beautifl~1
+{
+  "profile": "true"
+}
+
+// 允许在Lord Rings内部插入两个单词
+GET /movies/_search?q=title:"Lord Rings"~2
+{
+  "profile": "true"
+}
+```
+
+#### Request Body详解
+
+将查询语句通过`HTTP Request Body`发送给ES. 如下面的例子:
+
+```json
+POST kibana_sample_data_ecommerce/_search
+{
+  "profile": true,  //显示执行过程
+  "sort": [{"order_date":"desc"}],  //按照下单日期降序排序
+  "_source": ["order_date"],  //只取order_date字段信息,
+  "from": 10, //分页
+  "size": 5,
+  "query": {
+    "match_all": {}
+  }
+}
+```
+
+##### 脚本字段
+
+对返回结果中的字段进行处理, 如:
+
+```json
+GET kibana_sample_data_ecommerce/_search
+{
+  "script_fields": {
+    "new_field": {  // field的新名称
+      "script": {
+        "lang": "painless",
+        "source": "doc['order_date'].value + 'hello'" // 结果内容
+      }
+    }
+  },
+  "from": 0,
+  "size": 5,
+  "query": {
+    "match_all": {}
+  }
+}
+```
+
+##### Term/PharseSearch
+
+```json
+// TERM search
+POST movies/_search
+{
+  "query": {
+    "match": {
+      "title": "Last Christmas"
+    }
+  }
+}
+
+POST movies/_search
+{
+  "query": {
+    "match": {
+      "title": {
+        "query": "Last Christmas",
+        "operator": "and"
+      }
+    }
+  }
+}
+
+// Phase search
+POST movies/_search
+{
+  "query": {
+    "match_phrase": {
+      "title": {
+        "query": "one love",
+        "slop": 1 // 允许中间插入一个单词
+      }
+    }
+  }
+}
+```
+
+##### QueryString查询
+
+`Query String`: 类似`URI Query`:
+
+```json
+POST /users/_search
+{
+  "query": {
+    "query_string": {
+      "default_field": "name",
+      "query": "Ruan AND Yiming"
+    }
+  }
+}
+
+POST /users/_search
+{
+  "query": {
+    "query_string": {
+      "fields": ["name", "about"],
+      "query": "(Ruan AND Yiming) OR (Java AND Elasticsearch)"
+    }
+  }
+}
+```
+
+`Simple Query String`:
+
+- 类似`Query String`, 只支持部分语法, 会忽略错误的语法.
+- 不支持`AND, OR, NOT`, 会当做字符串进行处理.
+- Term之间默认关系为`OR`, 可以指定`Operator`.
+- 支持部分逻辑: `+`: AND, `-`: NOT, `|`替代OR.
+
+```json
+POST /users/_search
+{
+  "query": {
+    "simple_query_string": {
+      "fields": ["name"],
+      "query": "Ruan Yiming",
+      "default_operator": "AND"
+    }
+  }
+}
+```
+
+### Mapping
+
+- Mapping类似数据库中的`schema`的定义:
+
+  - 定义索引中字段名称
+  - 定义字段的数据类型, 如字符串, 数字, 布尔值...
+  - 字段, 倒排索引相关的配置
+
+- Mapping会把JSON文档隐射成Lucene所需要的扁平格式
+
+- 一个Mapping属于一个索引的Type.
+
+`字段的数据类型`:
+
+- 简单类型: Text/Keyword, Date, Integer/Floating, Boolean, IPv4/IPv6.
+- 复杂类型: 对象和嵌套对象.
+- 特殊类型: geo_point & geo_shape / percolator
+
+#### Dynamic Mapping
+
+- 写入文档时, 如果索引不存在, 会自动创建一个索引.
+- `Dynamic Mapping`使得我们不需要手动定义`Mapping`, 而是通过自动推断得出字段类型(注意这里的推断, 不一定百分百符合预期).
+
+#### 能否更改Mapping的字段
+
+- 新增字段:
+
+  - Dynamic设为true时, 一旦新增字段写入, Mapping也同时被更新.
+  - Dynamic设为false时, 一旦新增字段写入, Mapping不会更新, 新增字段的数据无法被索引, 但是信息会出现在_source中.
+  - Dynamic设置Strict, 文档写入失败.
+
+- 已有字段, 一旦有数据写入, 就不再支持修改字段定义. 如果希望改变字段类型, 必须Reindex API, 重建索引.
+
+新建时, 设置`dynamic`:
+
+```json
+PUT movies
+{
+  "mappings": {
+    "_doc": {
+      "dynamic": "false"
+    }
+  }
+}
+
+// 更新dynamic
+PUT movies/_mapping
+{
+  "dynamic": "false"
+}
+```
+
+#### 自定义Mapping
+
+- 可以参考API手册, 纯手写.
+- 为了减少输入的工作量, 减少出错的步骤, 可以参照以下步骤:
+
+  - 创建一个临时的index, 写入一些样本数据
+  - 通过访问Mapping API获得临时文件的动态Mapping定义
+  - 修改后用, 使用该配置创建你的索引
+  - 删除临时索引
+
+在`mapping`中可以设置字段的`index`值, 默认为`true`, 如果设置为`false`, 该字段则无法被搜索. 其中字段的索引(倒排索引)可以设置不同的级别:
+
+- docs: 记录 doc id.(只记录关联文档的ID)
+- freqs: 记录 doc id 和 term frequencies.
+- positions: 记录 doc id / term frequencies / term position
+- offsets: 记录 doc id / term frequencies / term position / character offects
+
+`Text字段`默认的索引级别为`positions`, 其他默认为`docs`. 记录的内容越多, 占用存储空间越大.
+
+对于某些需要进行`NULL`值进行搜索, 可以在`mapping`中设置`null_value`, 记住只有`keyword`类型字段才允许设置该字段.
+
+`copy_to`字段, 则是可以将字段的值拷贝到目标字段, 满足一些特定的需求(类似_all的功能). 但是`copy_to`生成的新字段, 不会出现在`_source`中.
+
+##### 多字段类型
+
+可以在字段定义中, 在某一个字段中添加新字段以满足不同的需求, 也就是多字段类型. 如:
+
+```json
+PUT products
+{
+  "mappings": {
+    "properties": {
+      "company": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "comment": {
+        "type": "text",
+        "fields": {
+          "english_comment": {
+            "type": "text",
+            "analyzer": "english",
+            "search_analyzer": "english"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+### Index Template
+
+帮助你设定`Mappings`和`Settings`, 并按照一定的规则自动匹配到新创建的索引上.
+
+- Template只在创建的时候, 才会产生作用. 修改模板不会影响已创建的索引.
+- 可以设定多个索引模板, 这些设置会被`merge`在一起.
+- 可以指定`order`, 控制`merge`的过程(就是覆盖的过程, order低的模板, 会先应用. 即会被后面的覆盖掉).
+
+如:
+
+```json
+PUT _template/template_default
+{
+  "index_patterns": ["*"], //匹配那些索引
+  "order": 0,
+  "version": 1,
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0
+  }
+}
+```
+
+#### Dynamic Template
+
+设置在特定的`index`中, 会根据`ES`识别的数据类型, 结合字段名称, 动态设置字段类型. 如:
+
+- is开头的字段设置为boolean.
+- long_开头的字段都设置为long类型.
+
+```json
+PUT my_index
+{
+  "mappings": {
+    "dynamic_templates": [
+      {
+        "strings_as_boolean": {
+        "match_mapping_type": "string",
+        "match": "is*",
+        "mapping": {
+          "type": "boolean"
+        }
+      }
+    }
+    ]
+  }
+}
+```
+
+### 聚合分析简介
+
+聚合分析分类:
+
+- Bucket Aggregation: 一些列满足特定条件的文档的集合, 类似于SQL中的分组.
+- Metric Aggregation: 一些数学运算, 可以对文档字段进行统计分析. 如最大值, 最小值, 平均值等.
+- Pipeline Aggregation: 对其他的聚合结果进行二次聚合.
+- Matrix Aggregation: 对多个字段操作并提供一个结果矩阵.
+
+`Bucket`例子:
+
+```json
+GET kibana_sample_data_flights/_search
+{
+  "size": 0,
+  "aggs": {
+    "flight_dest": {
+      "terms": {
+        "field": "DestCountry"  //根据目的地进行分组
+      }
+    }
+  }
+}
+```
+
+`Metric`例子:
+
+```json
+GET kibana_sample_data_flights/_search
+{
+  "size": 0,
+  "aggs": {
+    "flight_dest": {
+      "terms": {
+        "field": "DestCountry"
+      },
+      "aggs": {
+      "average_price": {
+        "avg": {
+          "field": "AvgTicketPrice"
+        }
+      },
+      "max_price": {
+        "max": {
+          "field": "AvgTicketPrice"
+        }
+      },
+      "min_price": {
+        "min": {
+          "field": "AvgTicketPrice"
+        }
+      }
+    }
+    }
+  }
+}
+
+GET kibana_sample_data_flights/_search
+{
+  "size": 0,
+  "aggs": {
+    "flight_dest": {
+      "terms": {
+        "field": "DestCountry"
+      },
+      "aggs": { // 这里进行了嵌套分组, 即: 先按照目标城市分组, 再按照天气分组
+        "weather": {
+          "terms": {
+            "field": "DestWeather"
+          }
+        },
+        "sts_price": {
+          "stats": {
+            "field": "AvgTicketPrice"
+          }
+        }
+      }
+    }
+  }
+}
+```
