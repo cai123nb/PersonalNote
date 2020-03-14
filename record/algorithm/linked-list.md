@@ -90,11 +90,11 @@ boolean hasCycle(SinglyLinkedListNode head) {
 
 逆转一个链表, 如 `head -> 1 -> 2 -> 3 -> null`逆转之后成为: `head -> 3 -> 2 -> 1 -> null`.
 
-## Think Space3
+### Think Space3
 
 思路很多, 然而这里采用一个递归的方式, 详情请参照代码注释.
 
-## Solution 3
+### Solution 3
 
 ```java
 static SinglyLinkedListNode reverse(SinglyLinkedListNode head) {
