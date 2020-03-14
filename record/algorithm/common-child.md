@@ -50,7 +50,7 @@ The longest string that can be formed by deleting zero or more characters from `
 
 ## Thinking space
 
-使用分治法可以很好解决这种情况, 重要的是要存储每一次分治的结果. 具体思路清参照代码注释.
+使用分治法可以很好解决这种情况, 重要的是要存储每一次分治的结果. 具体思路请参照代码注释.
 
 ## Solution
 
