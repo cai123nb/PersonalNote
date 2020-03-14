@@ -1,6 +1,6 @@
 # Special Palindrome Count
 
-算法详情请查看`HackerRank`:[原文 link](https://www.hackerrank.com/challenges/special-palindrome-again/problem).
+回文数计数,算法详情请查看`HackerRank`:[原文 link](https://www.hackerrank.com/challenges/special-palindrome-again/problem).
 
 ## Description
 
