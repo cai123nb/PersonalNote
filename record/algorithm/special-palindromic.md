@@ -1,8 +1,8 @@
-# 1.Special Palindrome Count
+# Special Palindrome Count
 
 算法详情请查看`HackerRank`:[原文 link](https://www.hackerrank.com/challenges/special-palindrome-again/problem).
 
-## 1.1.Description
+## Description
 
 A string is said to be a `special palindromic` string if either of two conditions is met:
 
@@ -15,7 +15,7 @@ For example, given the string `s = mnonopoo`, we have the following special pali
 
 简单描述: 一个字符串中包含多少个回文类型的子字符串. 如`mnonopoo`包含的子回文字符串为:`{m, n, o, n, o, p, o, o, non, ono, opo, oo}`, 计数为12.
 
-### 1.1.1.Function Description
+### Function Description
 
 Complete the substrCount function in the editor below. It should return an integer representing the number of special palindromic substrings that can be formed from the given string.
 
@@ -24,46 +24,46 @@ substrCount has the following parameter(s):
 - `n`: an integer, the length of string s.
 - `s`: a string
 
-### 1.1.2.Input Format
+### Input Format
 
 The first line contains an integer, `n` , the length of `s`. The second line contains the string `s`.
 
-### 1.1.3.Constraints
+### Constraints
 
 - `1 <= n <= 10^6`
 - Each character of the string is a lowercase alphabet, `ascii[a-z]`.
 
-### 1.1.4.Output Format
+### Output Format
 
 Print a single line containing the count of total special palindromic substrings.
 
-## 1.2.Sample
+## Sample
 
-### 1.2.1.Sample Input
+### Sample Input
 
 ```java
 5
 asasd
 ```
 
-### 1.2.2.Sample Output
+### Sample Output
 
 ```java
 7
 ```
 
-### 1.2.3.Explanation
+### Explanation
 
 The special palindromic substrings of `s=asasd` are `{a, s, a, s, d, asa, sas}`.
 
-## 1.3.Thinking space
+## Thinking space
 
 可以合理的将问题划分成两种情况:
 
 - 全部元素都相同: 如`a,aaa`, 这时候计数为: `(curr.count * (curr.count + 1)) / 2`. 如`aaa`有: `3 * 4 / 2 = 6`个:`{a1,a2,a3,a1a2,a2a3,a1a2a3}`
 - 中间嵌套其他元素, 如`aabaa`. 这时候的计数就为: 两边相等的个数. 如`aabaaa`就包含2个: `{aba, aabaa}`.
 
-## 1.4.Solution
+## Solution
 
 ```java
 //Record char frequency struct
