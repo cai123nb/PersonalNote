@@ -239,7 +239,7 @@ git log --pretty="%h - %s" --author=gitster --since="2008-10-01" \
 
 `commit`级别中的`reset`的处理步骤(`git reset COMMIT_ID`):
 
-1. 修改`HEAD`指针的位置, 移动到对应`COMMIT_ID`的位置. 等同于`git reset --soft COMMIT_ID`.
+1. 修改`HEAD`指针的位置, 移动到对应`COMMIT_ID`的位置. 等同于`git reset --soft COMMIT_ID`(注意如果`HEAD`指向的是`Master`, 那么`Master`也会进行修改).
 2. 将暂存区的内容重置为对应`COMMIT_ID`的版本库中内容. 等同于`git reset --mixed COMMIT_ID`. 注意, `--mixed`是可选的, 默认就是这个级别.
 3. 将工作目录的内容重置为对应`COMMIT_ID`版本库中的内容. 等同于`git reset --hard COMMIT_ID`. 注意这是非常危险的, 会覆盖本地的内容.(如果已经提交到版本库, 可以通过`git reflog`找回).
 
