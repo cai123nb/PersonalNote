@@ -1,6 +1,6 @@
 # 单链表经典算法题
 
-单链表是非常常见的数据结构, 这里选取三道有关单链表的经典算法题. 虽然简单, 但是思路值得借鉴. 为了统一情况, 统计将链表结构固定如下:
+单链表是非常常见的数据结构, 这里选取四道有关单链表的经典算法题. 虽然简单, 但是思路值得借鉴. 为了统一情况, 统计将链表结构固定如下:
 
 ```java
 class SinglyLinkedListNode {
@@ -111,5 +111,46 @@ static SinglyLinkedListNode reverse(SinglyLinkedListNode head) {
     head.next = null;
     // 返回最终节点
     return remain;
+}
+```
+
+## Merge two sorted linked lists
+
+合并两个排好序的单链表. 如链表一为: `1 -> 3 -> 9 -> null`, 链表二为: `2 -> 6 -> 7 -> 11 -> null`. 合并之后为: `1 -> 2 -> 3 -> 6 -> 7 -> 9 -> 11 -> null`.
+
+### Think Space 4
+
+思路类似于归并排序中, 合并两个排好序的数组. 但是注意区别在于动态修改每个节点的`next`指针, 这里比较容易搞混. 使用递归可以有效降低代码复杂度.
+
+### Solution 4
+
+```java
+static SinglyLinkedListNode mergeLists(SinglyLinkedListNode head1, SinglyLinkedListNode head2) {
+    if (head1 == null && head2 == null) {
+        return null;
+    }
+    if (head1 == null && head2 != null) {
+        return head2;
+    }
+    if (head1 != null && head2 == null) {
+        return head1;
+    }
+    if (head1.data < head2.data) {
+        // if head1 is small than head2, go through head1 next.
+        head1.next = mergeLists(head1.next, head2);
+    } else {
+        // if head1 is big than head2, move head2 to head1 front
+        // store small head2 as smallNode
+        SinglyLinkedListNode smallNode = head2;
+        // move head2 to next node
+        head2 = head2.next;
+        // update smallnode next point to head1(current big one)
+        smallNode.next = head1;
+        // update current head1 point to smallNode
+        head1 = smallNode;
+        // dynamic calculate next node
+        head1.next = mergeLists(head1.next, head2);
+    }
+    return head1;
 }
 ```
