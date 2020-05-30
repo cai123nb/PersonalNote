@@ -125,16 +125,16 @@ static WebApplicationType deduceFromClasspath() {
 如 `spring-boot` jar包下的`META-INF/spring.factories`文件:
 
 ```java
-# PropertySource Loaders
+// # PropertySource Loaders
 org.springframework.boot.env.PropertySourceLoader=\
 org.springframework.boot.env.PropertiesPropertySourceLoader,\
 org.springframework.boot.env.YamlPropertySourceLoader
 
-# Run Listeners
+// # Run Listeners
 org.springframework.boot.SpringApplicationRunListener=\
 org.springframework.boot.context.event.EventPublishingRunListener
 
-# Error Reporters
+// # Error Reporters
 org.springframework.boot.SpringBootExceptionReporter=\
 org.springframework.boot.diagnostics.FailureAnalyzers
 ...
@@ -1464,4 +1464,4 @@ protected void finishRefresh() {
 
 可以看出 `Spring Boot` 下的启动是一件非常繁琐的事情, 它在`Spring`框架下的基础上, 执行了非常多的自定义操作: 如读取`spring.factories`, 注册各类`BeanProcessor`, 生成和启动`WebServer`等等.
 
-由于篇幅的问题, 很多地方都是浅尝辄止, 没有深入探究. 本文主要是让人了解到`Spring`启动的概况, 后续细节研究都将基于此文. 该系列文章也将一直持续维护, 更新. 如有任何意见或者错误, 敬请联系.
+由于篇幅的问题, 很多地方都是浅尝辄止, 没有深入探究. 本文主要是让人了解到`Spring`启动的概况, 后续细节研究都将基于此文. 该系列文章也将一直持续维护, 更新. 如有任何意见或者错误, 敬请邮件联系.
