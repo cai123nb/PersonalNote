@@ -89,7 +89,7 @@ POST employees/_search
 **Demo**:
 
 ```json
-# Metric 聚合，找到最高的工资
+// Metric 聚合，找到最高的工资
 POST employees/_search
 {
   "size": 0,
@@ -102,7 +102,7 @@ POST employees/_search
   }
 }
 
-# 多个 Metric 聚合，找到最低,最高和平均工资
+// 多个 Metric 聚合，找到最低,最高和平均工资
 POST employees/_search
 {
   "size": 0,
@@ -125,7 +125,7 @@ POST employees/_search
   }
 }
 
-# Metric聚合，输出多值(最大,最小,平均,数量,总和)
+// Metric聚合，输出多值(最大,最小,平均,数量,总和)
 POST employees/_search
 {
   "size": 0,
@@ -154,7 +154,7 @@ Bucket聚合同样支持嵌套, 可以在桶里面再进行分组. 在使用`Ter
 **Demo**:
 
 ```json
-# 对 job.keword 进行 Bucket 聚合
+// 对 job.keword 进行 Bucket 聚合
 POST employees/_search
 {
   "size": 0,
@@ -167,7 +167,7 @@ POST employees/_search
   }
 }
 
-# 对 Text 字段进行 terms 聚合查询，返回失败
+// 对 Text 字段进行 terms 聚合查询，返回失败
 POST employees/_search
 {
   "size": 0,
@@ -180,8 +180,8 @@ POST employees/_search
   }
 }
 
-# 对 Text 字段打开 fielddata，支持terms aggregation
-# 再次对 job 进行 bucket聚合, 成功
+// 对 Text 字段打开 fielddata，支持terms aggregation
+// 再次对 job 进行 bucket聚合, 成功
 PUT employees/_mapping
 {
   "properties" : {
@@ -192,7 +192,7 @@ PUT employees/_mapping
   }
 }
 
-# 指定size，不同工种中，年纪最大的3个员工的具体信息
+// 指定size，不同工种中，年纪最大的3个员工的具体信息
 POST employees/_search
 {
   "size": 0,
@@ -221,7 +221,7 @@ POST employees/_search
   }
 }
 
-# 对 salary 进行 range 聚合, 分为 >1000, 1000-20000, <2000三类
+// 对 salary 进行 range 聚合, 分为 >1000, 1000-20000, <2000三类
 POST employees/_search
 {
   "size": 0,
@@ -247,7 +247,7 @@ POST employees/_search
   }
 }
 
-#Salary Histogram,工资0到10万，以 5000一个区间进行分桶
+// Salary Histogram,工资0到10万，以 5000一个区间进行分桶
 POST employees/_search
 {
   "size": 0,
@@ -266,7 +266,7 @@ POST employees/_search
   }
 }
 
-# 嵌套聚合1，按照工作类型分桶，并统计工资信息
+// 嵌套聚合1，按照工作类型分桶，并统计工资信息
 POST employees/_search
 {
   "size": 0,
@@ -286,7 +286,7 @@ POST employees/_search
   }
 }
 
-# 多次嵌套。根据工作类型分桶，然后按照性别分桶，计算工资的统计信息
+// 多次嵌套。根据工作类型分桶，然后按照性别分桶，计算工资的统计信息
 POST employees/_search
 {
   "size": 0,
@@ -353,7 +353,7 @@ PUT index
 **Demo**:
 
 ```json
-# Sibling Pipe: 平均工资最低的工作类型
+// Sibling Pipe: 平均工资最低的工作类型
 POST employees/_search
 {
   "size": 0,
@@ -385,7 +385,7 @@ POST employees/_search
 }
 
 
-# 平均工资最高的工作类型
+// 平均工资最高的工作类型
 POST employees/_search
 {
   "size": 0,
@@ -411,7 +411,7 @@ POST employees/_search
   }
 }
 
-# 平均工资的百分位数
+// 平均工资的百分位数
 POST employees/_search
 {
   "size": 0,
@@ -437,7 +437,7 @@ POST employees/_search
   }
 }
 
-#Parent pipeline 按照年龄对平均工资求导
+// Parent pipeline 按照年龄对平均工资求导
 POST employees/_search
 {
   "size": 0,
@@ -468,7 +468,7 @@ POST employees/_search
   }
 }
 
-#Cumulative_sum
+// Cumulative_sum
 POST employees/_search
 {
   "size": 0,
@@ -495,7 +495,7 @@ POST employees/_search
   }
 }
 
-#Moving Function
+// Moving Function
 POST employees/_search
 {
   "size": 0,
@@ -538,7 +538,7 @@ ES 聚合分析的默认作用范围是 query 的查询结果集, 所以可以�
 **Demo**:
 
 ```json
-# Query, 使用 query 进行范围限定: 年龄大于20
+// Query, 使用 query 进行范围限定: 年龄大于20
 POST employees/_search
 {
   "size": 0,
@@ -559,7 +559,7 @@ POST employees/_search
 }
 
 
-#Filter, 使用 filter 对结果集进行过滤
+// Filter, 使用 filter 对结果集进行过滤
 POST employees/_search
 {
   "size": 0,
@@ -590,8 +590,8 @@ POST employees/_search
   }
 }
 
-# Post field. 一条语句，找出所有的job类型。还能找到聚合后符合条件的结果
-# 首先按照 job.keyword 进行分组, 然后使用 post_filter 筛选所有工作为 Dev Manager 的开发者
+// Post field. 一条语句，找出所有的job类型。还能找到聚合后符合条件的结果
+// 首先按照 job.keyword 进行分组, 然后使用 post_filter 筛选所有工作为 Dev Manager 的开发者
 POST employees/_search
 {
   "aggs": {
@@ -609,7 +609,7 @@ POST employees/_search
 }
 
 
-# 设置 global ,无视query限定
+// 设置 global ,无视query限定
 POST employees/_search
 {
   "size": 0,
@@ -653,8 +653,8 @@ POST employees/_search
 **Demo**:
 
 ```json
-#排序 order
-#count and key
+// 排序 order
+// count and key
 POST employees/_search
 {
   "size": 0,
@@ -682,7 +682,7 @@ POST employees/_search
   }
 }
 
-# 设置按照 avg_salary 子聚合进行排序
+// 设置按照 avg_salary 子聚合进行排序
 POST employees/_search
 {
   "size": 0,
@@ -705,7 +705,7 @@ POST employees/_search
   }
 }
 
-# 设置按照 stats_salary 子聚合中的最小值进行排序
+// 设置按照 stats_salary 子聚合中的最小值进行排序
 POST employees/_search
 {
   "size": 0,
@@ -775,4 +775,4 @@ GET my_flights/_search
 为了解决准确的问题, 一般存在两种解决方案:
 
 - 数据量不大的时候, 通过设置 `primary shard` 为1, 可以实现完全的准确.
-- 数据量较大的时候, 在聚合分析查询中传递`shard_size`参数, 来提高准确度(每次需要额外从Shard中获取数据,来提高准确度). 如上面的查询设置为`3`. 增加计算量, 提高了响应时间, 从而提高准确度. 默认值为((size * 1.5 + 10))
+- 数据量较大的时候, 在聚合分析查询中传递`shard_size`参数, 来提高准确度(每次需要额外从Shard中获取数据,来提高准确度). 如上面的查询设置为`1`. 增加计算量, 提高了响应时间, 从而提高准确度. 默认值为((size * 1.5 + 10))
