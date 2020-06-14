@@ -98,7 +98,8 @@ long retrievalTime = ((System.nanoTime() - start) / 1_000_000);
 System.out.println("Price returned after " + retrievalTime + " msecs");
 ```
 
-![结果展示](https://image.cjyong.com/blog/bj8_4.PNG)
+![结果展示](https://image.cjyong.com/blog/bj8_4.jpg)
+
 优化 getPriceAsync 方法
 
 ```java
@@ -338,8 +339,7 @@ System.out.println("All shops hava now responded in " +
         ((System.nanoTime() - start) / 1_000_000) + " msecs");
 ```
 
-结果截图:
-![结果展示](https://image.cjyong.com/blog/bj8_6.jpg)
+结果截图: ![结果展示](https://image.cjyong.com/blog/bj8_6.jpg)
 
 ## 总结
 
