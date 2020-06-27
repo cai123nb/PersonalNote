@@ -15,6 +15,7 @@
 - 删除对应文件夹: `rm -rf /usr/local/qcloud`.
 
 - 清除定期执行计划: `crontab -r`(注,如果之前自己设置了定期计划, 就需要使用`crontab -e`手动选择删除).
+
 - 查看是否运行: `ps -A | grep agent`.
 
 ## Nginx 相关操作
@@ -22,6 +23,11 @@
 ## 安装
 
 `yum install nginx`.
+
+### 校验配置文件
+
+- 校验配置文件是否正确: `nginx -t`.
+- 重新加载配置文件: `nginx -s reload`.
 
 ### 使用`certbot`进行加密
 
@@ -63,8 +69,7 @@ keytool -importkeystore -srckeystore fullchain_and_key.p12 -srcstoretype PKCS12 
 
 ### 配置 X-Frame-Options 头
 
-配置 X-Frame-Options 头可以防止网站被嵌入到别的网站中的 Frame 中进行劫持攻击. 配置文件: `/etc/nginx/conf.d/default.conf`.
-在 Server 下配置:
+配置 X-Frame-Options 头可以防止网站被嵌入到别的网站中的 Frame 中进行劫持攻击. 配置文件: `/etc/nginx/conf.d/default.conf`. 在 Server 下配置:
 
 ```java
 //设置只有在相同源地址时才可以进行嵌入
@@ -86,8 +91,7 @@ add_header X-Frame-Options SAMEORIGIN;
 
 ### Redis keys无效
 
-当我们使用`keys *`查看所有的key时没有效果.往往是当前数据库不对.
-查看和切换数据库的方法:
+当我们使用`keys *`查看所有的key时没有效果.往往是当前数据库不对. 查看和切换数据库的方法:
 
 - `CONFIG GET databases`: 查看当前几个数据库.
 - `info keyspace`: 查看那几个数据库存在key(存在使用情况)
@@ -134,12 +138,12 @@ grep java.lang.Thread.State dump173 | awk '{print $2$3$4$5}' | sort | uniq -c
 
 ```c
 //笔者的Linux系统为Centos7,系统之间存在差异,请酌情修改
-1. 创建自己的service文件
+1\. 创建自己的service文件
 
 cd /usr/lib/systemd/system/
 vim myServe.service
 
-2. 写入配置信息
+2\. 写入配置信息
 
 [Unit]
 Description=My personal Service
@@ -152,11 +156,11 @@ SuccessExitStatus=143
 [Install]
 WantedBy=multi-user.target
 
-3. 启动服务
+3\. 启动服务
 
 service myServe start
 
-4. 注册开机启动
+4\. 注册开机启动
 
 systemctl enable myservice.service
 ```
@@ -167,11 +171,7 @@ systemctl enable myservice.service
 
 常用命令:
 
-`du -h`: 查看当前文件夹内文件的使用情况
-`du -h filename`: 查看 filename 的文件夹下使用情况.
-`du -ah filename`: 查看 filename 的文件夹及其子文件夹和文件使用情况
-`df -h`: 查看磁盘的使用情况
-`echo "" > filename`: 清空 filename 文件内容
+`du -h`: 查看当前文件夹内文件的使用情况 `du -h filename`: 查看 filename 的文件夹下使用情况. `du -ah filename`: 查看 filename 的文件夹及其子文件夹和文件使用情况 `df -h`: 查看磁盘的使用情况 `echo "" > filename`: 清空 filename 文件内容
 
 ## travis CI 使用
 
@@ -206,7 +206,7 @@ before_install:
 
 **注意,默认生成为`~\/.ssh/id_rsa -d`需要把那个斜杠去掉, 最后为`~/.ssh/id_rsa -d`,并在底部添加对应的权限`- chmod 600 ~/.ssh/id_rsa`, 否则会报错.**
 
-- ‘添加权限·： 在上面配置的下面添加： `- chmod 600 ~/.ssh/id_rsa`.
+- '添加权限·： 在上面配置的下面添加： `- chmod 600 ~/.ssh/id_rsa`.
 - `添加信任站点`: 项目.travis.yml 中添加(ip 地址为你的项目地址)
 
 ```java
