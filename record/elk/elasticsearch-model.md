@@ -594,7 +594,7 @@ PUT tech_blogs/_doc/1
   - 为某个字段设置默认值;重命名某个字段的字段名;对字段值进⾏ Split 操作
   - ⽀持设置 Painless 脚本，对数据进⾏更加复杂的加⼯
 
-而`Ingest Node`的处理方式则是通过`pipeline`: 将通过的文档, 依次按顺序进行处理. `Pipeline`内部就是一组`Processor`之和. `ES`内置了[非常多的处理器](https://www.elastic.co/guide/en/elasticsearch/reference/7.1/ingest-processors.html):
+而`Ingest Node`的处理方式则是通过`pipeline`: 将通过的文档, 依次按顺序进行处理. `Pipeline`内部就是一组`Processor`之和. `ES`内置了[非常多的处理器](https://www.elastic.co/guide/en/elasticsearch/reference/master/ingest-processors.html):
 
 - Split Processor (例: 将给定字段值切分成⼀个数组)
 - Remove / Rename Processor (例:移除⼀个重命名字段)
@@ -736,7 +736,7 @@ POST tech_blogs/_update_by_query?pipeline=blog_pipeline
 
 **Pipeline VS Logstash**:
 
--       | Logstash              | Ingest Node
+feature | Logstash              | Ingest Node
 :------ | :-------------------- | :---------------------------------------
 数据输⼊与输出 | 支持从不同的数据源读取，并写入不同的数据源 | 支持从 ES REST API 获取数据, 并且写入 Elasticsearch
 数据缓冲    | 实现了简单的数据队列，⽀持重写       | 不⽀持缓冲
