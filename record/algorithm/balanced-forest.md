@@ -196,6 +196,8 @@ private static void dfsCalculateMiniValue(Node[] nodes, int position) {
 }
 ```
 
+## Reference
+
 - [HackRank算法链接](https://www.hackerrank.com/challenges/balanced-forest)
 - [DFS Wikipedia](https://en.wikipedia.org/wiki/Depth-first_search)
 - [DFS 相关应用](https://blog.csdn.net/weixin_43272781/article/details/82959089)
