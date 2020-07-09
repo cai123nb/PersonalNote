@@ -21,9 +21,7 @@
 
 目前`RabbitMq`的最新版本为: 3.8.5\. 基于[AMQP 0-9-1](https://www.rabbitmq.com/resources/specs/amqp0-9-1.pdf).
 
-## 入门实例
-
-### 简单应用: 消息队列
+## 简单应用: 消息队列
 
 ![smaple-one](https://image.cjyong.com/sample-one.webp)
 
@@ -70,7 +68,7 @@ DeliverCallback deliverCallback = (consumerTag, delivery) -> {
 channel.basicConsume(QUEUE_NAME, true, deliverCallback, consumerTag -> { });
 ```
 
-### 进阶应用:工作队列
+## 进阶应用:工作队列
 
 ![work queue](https://image.cjyong.com/sample-two.webp)
 
@@ -104,7 +102,7 @@ private static void doWork(String message) throws InterruptedException {
 }
 ```
 
-#### 消费者确认
+### 消费者确认
 
 这里提出一个问题: 如何保证消息被正确的消费掉了呢? 消息是否在发给消费者的中途丢失了? 消息是否在消费者内部正确处理完毕了(如消息处理到一半,服务突然挂了)? 为了处理这些问题, `RabbitMq`提供了消费者消息确认的一种方式. 前面的例子, 都是通过设置`autoAck`为`false`显式关闭了消费者消息确认. 是时候开启消息确认了:
 
@@ -135,7 +133,7 @@ channel.basicConsume(TASK_QUEUE_NAME, autoAck, deliverCallback, consumerTag -> {
 rabbitmqctl list_queues name messages_ready messages_unacknowledged
 ```
 
-#### 持久性
+### 持久性
 
 前面处理消费者出现问题之后, 如何保证消息不会被丢失: 通过消费者确认. 但是如果`RabbitMq`服务挂掉了, 如何保证消息的不会丢失呢?
 
@@ -160,7 +158,7 @@ channel.basicPublish("", "queue_durable",
 
 需要注意的是, 这里的持久化并不是强的持久性, 并没有办法保证百分百持久到磁盘: 在`mq`接收到消息到持久化到磁盘之间存在一段时间间隙, 没办法保证消息不会丢失.
 
-#### 公平推送
+### 公平推送
 
 前面讲到, `mq`是按照轮询的方式一次给每一个消费者推送消息, 保证每个消费者都会获取一样数量的消息. 但是往往并不能达到最佳的性能:
 
@@ -169,7 +167,7 @@ channel.basicPublish("", "queue_durable",
 
 对于这种情况, `RabbitMQ`提供了一种思路, 设置每一个每个消费者的最大未确认数(`prefetchCount`)属性, 如果现在某一个消费者的未读消息达到了这个计数, 就不会继续往这个消费者推送消息了. 如设置为1, 如果一个消费者在处理一个很重的消息, 这时候, mq轮完一圈, 准备给他发消息的时候, 发现这个消费者的`未确认消息数`是1, 到达了限制, 就不会继续给这个消费者推送消息了.
 
-### 发布与订阅
+## 发布与订阅
 
 ![exchange](https://image.cjyong.com/exchanges.png)
 
@@ -183,7 +181,7 @@ rabbitmqctl list_exchanges
 
 其中`Exchange`提供了很多默认的类型: `direct`, `topic`, `headers` 和 `fanout`.
 
-#### Fanout Exchange
+### Fanout Exchange
 
 `fanout Exchange`会默认将所有的消息传递给绑定的所有队列. 而我们需要时候却非常简单:
 
@@ -208,7 +206,7 @@ String queueName = channel.queueDeclare().getQueue();
 channel.queueBind(queueName, EXCHANGE_NAME, "");
 ```
 
-#### Direct Exchange
+### Direct Exchange
 
 ![direct-exchange](https://image.cjyong.com/direct-exchange.png)
 
@@ -230,7 +228,18 @@ channel.exchangeDeclare(EXCHANGE_NAME, "direct");
 channel.basicPublish(EXCHANGE_NAME, BindingKey, null, message.getBytes());
 ```
 
-### 生产者确认
+### Topic Exchange
+
+![topic exchange](https://image.cjyong.com/topic-exchange.png)
+
+`Topic Exchange`比`Direct Exchange`更加自由, 支持匿名和随机的消息订阅. 使用`*`和`#`来代表随机的`binding key`:
+
+- `*`: 代表任意一个随机的子类型. 如: `*.orange`可以匹配: `a.orange, b.orange...`.
+- `#`: 则代表零个或者一个的随机子类型. 如: `app.#`可以匹配: `app, app.orange, app.red....`.
+
+使用方式和前面的`direct exchange`完全一致.
+
+## 生产者确认
 
 前面讲到了消费者确认, 可以很大程度上保证消息被消费者正确消费. 但是在生产者的时候, 如何保证消息被正确的放到队列中了呢? 其实那就是生产者确认了. `RabbitMq`提供了三种不同的确认方式:
 
