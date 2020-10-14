@@ -1,6 +1,6 @@
 # Synchronized
 
-[header](https://image.cjyong.com/syn-header.png)
+![header](https://image.cjyong.com/syn-header.png)
 
 Synchronized是Java原生的同步关键字, 通过该关键字保证了在多线程访问时数据的原子性. 这是JVM实现的内置锁, 锁的获取和释放都是由JVM自己进行控制, 因此JVM也对该synchronized做了很多优化.
 
