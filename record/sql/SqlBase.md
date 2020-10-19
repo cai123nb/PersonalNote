@@ -6,20 +6,169 @@ SQL(Structured Query Language)是关系数据库中标准语言, 也是通用的
 
 SQL 是在 1974 年由 Boyce 和 Chamberlin 提出,最早叫做 Sequel, 并在 IBM 公司研制的关系数据库管理系统原型 System R 上实现.1986 年 10 月, 美国国家标准局(American National Standard Institute)的数据库委员会 X3H2 批准了 SQL 作为关系数据库语言的美国标准. 同年公布了 SQL 标准文本(简称 SQL-86).1987 年, 国际标准化组织(International Organization for Standardization, ISO)也通过了该标准.
 
+## Mysql数据类型
+
+数据类型主要分为三种: **数值类型**, **字符串类型**, **日期类型**.
+
+### 数值类型
+
+类型           | 大小           | 范围(有符号)                                    | 范围(无符号UNSIGNED)          | 用途
+:----------- | :----------- | :----------------------------------------- | :----------------------- | :------------
+TINYINT      | 1 byte(4bit) | -128 - 127                                 | 0 - 255                  | 小整数,如月份,年龄等
+SMALLINT     | 2 byte       | -32768 - 32767                             | 0 - 65535                | 小整数,如海拔等
+MEDIUMINT    | 3 byte       | -8,388,608 - 8,388,607                     | 0 - 16,777,215           | 大整数
+INT,INTEGER  | 4 byte       | -2,147,483,648 - 2,147,483,647             | 0 - 4,294,967,295        | 大整数
+BIGINT       | 8 byte       | -9223372036854775808 - 9223372036854775807 | 0 - 18446744073709551615 | 大整数
+FLOAT        | 4 byte       | -                                          | -                        | 单精度浮点数
+DOUBLE       | 8 byte       | -                                          | -                        | 双精度浮点数
+DECIMAL(P,D) | by P,D       | DECIMAL(5,2): -999.99 - 999.99             | -                        | 定点小数, 常用作货币存储
+
+### 字符串类型
+
+类型         | 大小                  | 用途
+:--------- | :------------------ | :------------
+CHAR       | 0 - 255 byte        | 定长字符串
+VARCHAR    | 0 - 65535 byte      | 变长字符串
+TINYBLOB   | 0 - 255 byte        | 不超过255字节的二进制数
+TINYTEXT   | 0 - 255 byte        | 短文本
+BLOB       | 0 - 65535 byte      | 二进制文本
+TEXT       | 0 - 65535 byte      | 文本数据
+MEDIUMBLOB | 0 - 16777215 byte   | 二进制中等长度文本
+MEDIUMTEXT | 0 - 16777215 byte   | 中等长度文本
+LONGBLOB   | 0 - 4294967295 byte | 二进制长文本
+LONGTEXT   | 0 - 4294967295 byte | 长文本
+
+### 日期类型
+
+类型        | 大小     | 范围                                        | 格式                  | 用途
+:-------- | :----- | :---------------------------------------- | :------------------ | :--
+DATE      | 3 byte | 1000-01-01 - 9999-12-31                   | YYYY-MM-DD          | 日期
+TIME      | 3 byte | -838:59:59 - 838:59:59                    | HH:MM:SS            | 时间值
+YEAR      | 1 byte | 1901 - 2155                               | YYYY                | 年份
+DATETIME  | 8 byte | 1000-01-01 00:00:00 - 9999:12:31 23:59:59 | YYYY-MM-DD HH:MM:SS | 时间值
+TIMESTAMP | 4 byte | 1970-01-01 00:00:00 - 2038-01-19 03:14:07 | YYYYMMDD HHMMSS     | 时间值
+
+## 用户操作
+
+### 新建用户
+
+```sql
+// 创建用户cjyong, 在localhost域名下, 密码为 123456
+CREATE USER "cjyong"@"localhost" IDENTIFIED BY "123456"
+// 更新mysql.user表来创建用户
+INSERT INTO mysql.user(user,host, password,ssl_cipher,x509_issuer,x509_subject) 
+VALUES("cjyong","localhost","123456","","","");
+FLUSH PRIVILEGES;
+// GRANT创建
+GRANT SELECT ON *.* TO "cjyong"@"localhost" IDENTIFIED BY "123456";
+FLUSH PRIVILEGES;
+```
+
+### 删除用户
+
+```sql
+DROP USR "cjyong"@"localhost";
+// 直接删除用户表记录
+DELETE FROM mysql.user WHERE user="cjyong" AND host="localhost";
+FLUSH PRIVILEGES;
+```
+
+### 修改密码和用户名
+
+```sql
+// 修改 root 密码为新的new_password
+mysqladmin -u root -p 123 password 'new_password'
+// 修改数据库user表.
+UPDATE mysql.user SET password=password('new_password') WHERE user='root' AND host='localhost';
+FLUSH PRIVILEGES;
+// 直接设置
+SET PASSWORD=password(‘new_password’);
+FLUSH PRIVILEGES;
+// 修改他人密码
+SET PASSWORD FOR "cjyong"@"localhost"=password("new_password");
+FLUSH PRIVILEGES;
+// 丢失root密码
+// 1.修改my.cnf, 添加配置,跳过认证
+skip-grant-tables
+// 2.重启mysqld服务
+service mysqld restart
+// 3.无密码登录root,修改用户密码为新密码
+mysql -u root
+// 4.上面任选一方法修改,即可
+// 修改用户名
+rename user 'cjyong'@'localhost' to 'cjy'@'localhost';
+```
+
+## 权限管理
+
+### 授权
+
+语法标准为: `grant 权限列表 on 库名.表名 to 用户名@'客户端主机' [identified by '密码' with参数];`.
+
+example:
+
+```sql
+// 给cjyong用户添加db1库下面tb1表的所有权限
+grant all privileges on db1.tb1 TO 'cjyong'@'localhost';
+// 给cjyong用户添加db1库下面所有表的select权限
+grant select on db1.* TO 'cjyong'@'localhost';
+// 给cjyong用户添加所有库下面所有表的select和插入权限
+grant select,insert on *.* TO 'cjyong'@'localhost';
+// 给cjyong用户开发所有权限, 即管理员账号
+grant all privileges on *.* TO 'cjyong'@'localhost';
+// 限制用户cjyong每小时只能查询5次
+grant select on *.* to 'cjyong'@'localhost' identified by '123456' with max_queries_per_hour 5;
+```
+
+相关授权`with参数`:
+
+- MAX_QUERIES_PER_HOUR： 定义每小时允许执行的查询数
+- MAX_UPDATES_PER_HOUR： 定义每小时允许执行的更新数
+- MAX_CONNECTIONS_PER_HOUR： 定义每小时可以建立的连接数
+- MAX_USER_CONNECTIONS：定义单个用户同时可以建立的连接数
+
+### 回收权限
+
+格式为: `REVOKE 权限列表 ON 库名.表名 FROM 用户名@‘客户端主机’`.
+
+example:
+
+```java
+// 查看用户的所有权限
+show grants for 'cjyong'@'localhost';
+// 回收cjyong的删除权限
+REVOKE DELETE ON *.*  FROM 'cjyong'@'%';
+// 回收cjyong用户的所有权限
+REVOKE ALL PRIVILEGES FROM 'cjyong'@'%';
+```
+
 ## 新建语句(CREATE)
 
-### 新建数据库
+### 数据库相关操作
 
-```SQL
+```sql
 /*创建数据库*/
 CREATE DATABASE test;
+// 如果不存在test数据库,才会进行创建
+CREATE DATABASE IF NOT EXISTS test;
+// 创建数据库,并设置字符编码(collate,用于字符比较和排序)
+CREATE DATABASE test CHARACTER SET utf8 COLLATE utf8_bin;
+// 创建数据库, 并设置默认的字符编码
+CREATE DATABASE test DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_bin;
 //切换数据库
 use test;
+// 修改数据库的字符编码
+ALTER DATABASE test CHARACTER set utf8mb4 COLLATE utf8mb4_general_ci;
+// 删除数据库
+DROP DATABASE test;
+// 如果存在, 再进行删除
+DROP DATABASE IF EXISTS test;
+`
 ```
 
 ### 新建表
 
-```SQL
+```sql
 /*情景1 学生表*/
 CREATE TABLE Student (
    Sno CHAR(9) PRIMARY KEY,   /*列级完整性约束, Sno为主键*/
@@ -60,13 +209,20 @@ CREATE TABLE SC (
 );
 ```
 
+外键约束:
+
+- CASCADE: 父表删除时, 级联删除关联的行, 父表更新时, 级联更新关联的行.
+- SET NULL: 父表删除或者更新时, 设置为NULL(需要字段可以为NULL).
+- RESTRICT: 拒绝删除或者更新浮标.
+- NO ACTION: 等同于 RESTRICT, 拒绝.
+
 表的常见数据类型见附录 1.
 
 ### 新建模式
 
-本质上:一个命名空间,一个域,每个表都属于一个模式.
+本质上:一个命名空间,一个域,每个表都属于一个模式, 类似于数据库的概念.
 
-```SQL
+```sql
 CREATE SCHEMA <模式名> AUTHORIZATION <用户名>
 CREATE SCHEMA TEST /*为TEST用户创建一个TEST空间*/
 CREATESCHEMA"S-T" AUTHORIZATION WANG /*为用户WANG创建了一个S-T空间*/
@@ -75,7 +231,7 @@ CREATESCHEMA"S-T" AUTHORIZATION WANG /*为用户WANG创建了一个S-T空间*/
 
 ### 新建索引
 
-```SQL
+```sql
 CREATE [UNIQUE/CLUSTER] INDEX <索引名> ON  <表名>(<列名>[<次序][,<列名>[<次序]]...)
 CREATE UNIQUE INDEXS Stusno ON Student(Sno);
 CREATE UNIQUE INDEX SCno ON SC(Sno ASC, Cno DESC);
@@ -88,41 +244,39 @@ CREATE UNIQUE INDEX SCno ON SC(Sno ASC, Cno DESC);
 
 ### 删除数据库(DROP DATABASE)
 
-```SQL
+```sql
 DROP DATABASE test;
 ```
 
 ### 删除表(DROP DATABASE)
 
-```SQL
+```sql
 DROP TABLE <表名> [RESTRICT|CASCADE]
 DROP TABLE SC RESTRICT;   //删除表SC
 DROP TABLE Student CASCADE;   //删除表Student, SC表也会被级联删除
 ```
 
-RESTRICT: 删除表非常严格, 如 CHECK, 外键, 视图, 触发器等, 如果存在依赖, 则不能删除.
-CASCADE: 删除没有限制, 删除表的时候, 相关依赖的对象都会被一起删除.
+RESTRICT: 删除表非常严格, 如 CHECK, 外键, 视图, 触发器等, 如果存在依赖, 则不能删除. CASCADE: 删除没有限制, 删除表的时候, 相关依赖的对象都会被一起删除.
 
 ### 删除索引(DROP INDEX)
 
-```SQL
+```sql
 DROP INDEX <索引名> ON <表名>
 DROP INDEX Stusname ON Student;
 ```
 
 ### 删除模式(DROP SCHEMA)
 
-```SQL
+```sql
 DROP SCHEMA <模式名> [CASCADE|RESTRICT]
 DROP SCHEMA ZHANG CASCADE;    //删除模式ZHANG, 同时删除在内部的定义的所有表和视图
 ```
 
-CASCADE: 彻底删除, 包括内部创建的所有数据库对象(表, 视图等).
-RESTRICT: 删除时检查是否存在下属数据库对象, 如果存在拒绝删除.
+CASCADE: 彻底删除, 包括内部创建的所有数据库对象(表, 视图等). RESTRICT: 删除时检查是否存在下属数据库对象, 如果存在拒绝删除.
 
 ### 删除表中的数据(DELETE FROM <表名> [WHERE <条件>]
 
-```SQL
+```sql
 DELETE FROM <表名> [WHERE<条件>]
 DELETE FROM SC; //清空SC表
 DELETE FROM Student WHERE Sno='201215128'; //删除学号为201215128的学生.
@@ -133,14 +287,14 @@ DELET FROM SC WHERE Sno IN (SELECT Sno FROM Student WHERE Sdept='CS'); //删除�
 
 ### 修改索引(ALTER INDEX)
 
-```SQL
+```sql
 ALTER INDEX <旧的索引名> RENAME TO <新的索引名>
 ALTER INDEX SCno RENAME TO SCSno
 ```
 
 ### 修改表(ALTER TABLE)
 
-```SQL
+```sql
 ALTER TABLE <表名>
 [ADD [COLUMN] <新列名><数据类型>[完整性约束]]
 [ADD <表级完整性约束>]
@@ -154,7 +308,7 @@ ALTER TABLE Course ADD UNIQUE(Cname);   /* 给Cname添加唯一约束 */
 
 ### 修改表中的数据
 
-```SQL
+```sql
 UPDATE <表名> SET <列名>=<表达式>[,<列名>=<表达式>]...[WHERE<条件>]
 UPDATE Student Set Sage=22 WHERE Sno='201215121';/*将学生201215121的年龄设置为22岁*/
 UPDATE Student Set Sage = Sage + 1; /*将所有学生的年龄加一*/
@@ -170,16 +324,13 @@ INSERT INTO Dept_age(Sdept,Avg_age) SELECT Sdept,AVG(Sage) FROM Student GROUP BY
 
 SQL 提供了 SELECT 语句进行数据查询, 该语句具有灵活的使用方式和丰富的功能. 一般格式为:
 
-SELECT [ALL|DISTINCT] <目标列表达式>[,<目标列表达式>...]
-FROM <表名或者视图名> [,<表名或者视图名>...] | (`<SELECT 语句>`) [AS] <别名>
-[WHERE <条件表达式>]GROUP BY <列名 1>[HAVING <条件表达式>]]
-[ORDER BY <列名 2> [ASC|DESC]];
+SELECT [ALL|DISTINCT] <目标列表达式>[,<目标列表达式>...] FROM <表名或者视图名> [,<表名或者视图名>...] | (`<SELECT 语句>`) [AS] <别名> [WHERE <条件表达式>]GROUP BY <列名 1>[HAVING <条件表达式>]] [ORDER BY <列名 2> [ASC|DESC]];
 
 ### 单表查询
 
 单表查询: 只涉及到一个表的查询.
 
-```SQL
+```sql
 /*查询指定列*/
 SELECT Sno, Sname FROM Student; /* 查找所有全体学生学号和姓名 */
 /*查询所有列*/
@@ -237,7 +388,7 @@ SELECT Sno,AVG(Grade) FROM SC GROUP BY Sno HAVING AVG(Grade)>=90; /* 这是正�
 
 多表查询: 亦称连接查询, 连接两个及以上的表进行查询, 连接方式: 等值连接, 非等值连接, 自身连接, 外连接查询, 复合条件连接查询.
 
-```SQL
+```sql
 /*等值连接和非等值连接: 使用Where子句来完成两个表的连接, 常用:=,>,<,>=,<=,!=,<>等等*/
 SELECT Student.*, SC.* FROM Student,SC WHERE Student.Sno=SC.Sno; /*查询每个学生的选修课情况*/
 SELECT Student.Sno, Sname FROM Student,SC WHERE Student.Sno=SC.Sno AND SC.Cno='2' AND SC.Grade>90; /*查询选修了2号课程且成绩在90分以上的学生学号和姓名*/
@@ -272,30 +423,6 @@ SELECT DISTINCT Sno FROM SC SCX WHERE NOT EXISTS (SELECT * FROM SC SCY WHERE SCY
 /*集合查询: 包括并操作(UNION), 交操作(INERSECT), 差操作(EXCEPT), 但是可以使用多重条件查询替代. 略过*/
 /*派生表查询: FROM中嵌套SELECT语句生成的子表.*/
 ```
-
-## 附录
-
-### 附录 1: 常见的数据类型
-
-| 数据类型                        | 含义                                        |
-| :------------------------------ | :------------------------------------------ |
-| CHAR(n),CHARACTER(n)            | 长度为 N 的定长字符串                       |
-| VARCHAR(n), CHARACTERVARYING(n) | 最大长度为 N 的变长字符串                   |
-| CLOB                            | 字符串大对象                                |
-| BLOB                            | 二进制大对象                                |
-| INT,INTEGER                     | 长整数(4 字节)                              |
-| SMALLINT                        | 短整数(2 字节)                              |
-| BIGINT                          | 大整数(8 字节)                              |
-| NUMERIC(p,d)                    | 定点数, 由 p 位小数组成,小数点后有 d 位小数 |
-| DECIMAL(p,d), DEC(P,d)          | 同上                                        |
-| REAL                            | 取决于机器精度的单精度浮点数                |
-| DOUBLE PRECISION                | 取决于机器精度的双精度浮点数                |
-| FLOAT(n)                        | 可选精度的浮点数, 精度至少为 n 位数字       |
-| BOOLEAN                         | 逻辑布尔量                                  |
-| DATE                            | 日期, 包含年月, 格式为 YYYY-MM-DD           |
-| TIME                            | 时间, 包含时,分,秒, 格式为 HH:MM:SS         |
-| TIMESTAMP                       | 时间戳类型                                  |
-| INTERVAL                        | 时间间隔类型                                |
 
 ## 参考文献
 
