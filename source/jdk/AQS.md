@@ -2,7 +2,7 @@
 
 ![AQS](https://image.cjyong.com/aqs.png)
 
-AQS为基于FIFO等待队列的同步器, 为实现`Lock`提供了必要的底层支持. 我们使用大部分的锁实现都是通过AQS来实现的, 如`CountDownLatch`, `ReentrantLock`, `ReentrantReadWriteLock`等.
+AQS为基于FIFO等待队列的同步器, 为实现`Lock`提供了必要的底层支持. 我们使用的大部分锁都是通过AQS来实现的, 如`CountDownLatch`, `ReentrantLock`, `ReentrantReadWriteLock`等.
 
 ## 简单的排他锁
 
